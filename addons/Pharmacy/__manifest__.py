@@ -21,12 +21,13 @@ Sistema integral de gestión para boticas y farmacias en Perú:
     "website": "https://www.medizano.pe",
     "license": "LGPL-3",
     "assets": {
-        "web._assets_core": [
+        "web.assets_backend": [
             "Pharmacy/static/src/js/pharmacy_main.js",
-            "Pharmacy/static/src/js/pharmacy_pos.js",
+            "Pharmacy/static/src/css/pharmacy_form_fix.css",
         ],
         "point_of_sale._assets_pos": [
             "Pharmacy/static/src/css/pharmacy_pos.css",
+            "Pharmacy/static/src/js/pharmacy_pos.js",
         ],
     },
     "depends": [
