@@ -271,7 +271,8 @@ class PharmacyFrontendApi(http.Controller):
     def _partners(self, resource, query, payload):
         model = request.env["res.partner"].sudo()
         is_supplier = resource.startswith("v1/proveedores")
-        domain = [("is_company", "=", is_supplier)]
+        rank_field = "supplier_rank" if is_supplier else "customer_rank"
+        domain = [("active", "=", True), (rank_field, ">", 0)]
         search = query.get("search") or query.get("filtro")
         if search:
             domain += ["|", ("name", "ilike", search), ("vat", "ilike", search)]
