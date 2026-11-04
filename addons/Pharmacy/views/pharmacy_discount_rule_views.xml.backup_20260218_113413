@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Discount Rule Views -->
+    
+    <!-- Tree View -->
+    <record id="view_pharmacy_discount_rule_tree" model="ir.ui.view">
+        <field name="name">pharmacy.discount.rule.list</field>
+        <field name="model">pharmacy.discount.rule</field>
+        <field name="arch" type="xml">
+            <list string="Discount Rules">
+                <field name="name"/>
+                <field name="max_discount_percent" widget="percentage"/>
+                <field name="max_discount_amount"/>
+                <field name="require_approval"/>
+                <field name="approval_threshold"/>
+                <field name="usage_count"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_pharmacy_discount_rule_form" model="ir.ui.view">
+        <field name="name">pharmacy.discount.rule.form</field>
+        <field name="model">pharmacy.discount.rule</field>
+        <field name="arch" type="xml">
+            <form string="Discount Rule">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Discount Rule Name *"/>
+                        <h1>
+                            <field name="name" required="1" placeholder="e.g. Loyalty Discount, Staff Discount" help="Description of what this discount is for"/>
+                        </h1>
+                    </div>
+                    
+                    <group name="rule_basic" string="Discount Configuration" class="mt-4">
+                        <group name="discount_limits">
+                            <field name="discount_type" required="1" widget="radio" options="{'horizontal': true}" help="Fixed amount or percentage off"/>
+                            <field name="max_discount_percent" required="1" widget="percentage" modifiers="{'required': [['discount_type', '=', 'percentage']]}" help="Maximum discount as percentage"/>
+                            <field name="max_discount_amount" modifiers="{'required': [['discount_type', '=', 'fixed']]}" help="Maximum discount as fixed amount"/>
+                        </group>
+                        <group name="status">
+                            <field name="active" widget="boolean_toggle" help="Enable/disable this discount"/>
+                            <field name="usage_count" readonly="1" decoration-info="usage_count > 0" help="Times this discount was used"/>
+                            <field name="last_used" readonly="1" decoration-info="last_used" help="Last time used"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="User Roles">
+                            <field name="role_ids" widget="many2many_tags" required="1"/>
+                        </page>
+                        
+                        <page string="Approval Settings">
+                            <group>
+                                <group>
+                                    <field name="require_approval"/>
+                                    <field name="approval_threshold" modifiers="{'required': [['require_approval', '=', True]]}"/>
+                                </group>
+                                <group>
+                                    <field name="approval_role_ids" widget="many2many_tags" modifiers="{'required': [['require_approval', '=', True]]}"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Time Restrictions">
+                            <group>
+                                <group>
+                                    <field name="active_from"/>
+                                    <field name="active_to"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Product Restrictions">
+                            <group>
+                                <group>
+                                    <field name="product_ids" widget="many2many_tags"/>
+                                    <field name="category_ids" widget="many2many_tags"/>
+                                </group>
+                                <group>
+                                    <field name="branch_ids" widget="many2many_tags"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Order Conditions">
+                            <group>
+                                <group>
+                                    <field name="min_order_amount"/>
+                                    <field name="max_order_amount"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Description">
+                            <field name="description" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_pharmacy_discount_rule_search" model="ir.ui.view">
+        <field name="name">pharmacy.discount.rule.search</field>
+        <field name="model">pharmacy.discount.rule</field>
+        <field name="arch" type="xml">
+            <search string="Discount Rules">
+                <field name="name"/>
+                <field name="role_ids"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Require Approval" name="require_approval" domain="[('require_approval', '=', True)]"/>
+                <filter string="No Approval Required" name="no_approval" domain="[('require_approval', '=', False)]"/>
+                <separator/>
+                <filter string="Percentage Discount" name="percentage" domain="[('discount_type', '=', 'percentage')]"/>
+                <filter string="Fixed Amount" name="fixed" domain="[('discount_type', '=', 'fixed')]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Discount Type" name="group_discount_type" context="{'group_by': 'discount_type'}"/>
+                    <filter string="User Roles" name="group_roles" context="{'group_by': 'role_ids'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_pharmacy_discount_rule" model="ir.actions.act_window">
+        <field name="name">Discount Rules</field>
+        <field name="res_model">pharmacy.discount.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create discount rules
+            </p>
+            <p>
+                Discount rules control what discounts different user roles can apply
+                and when approval is required.
+            </p>
+        </field>
+    </record>
+              
+</odoo>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Pharmacy-specific Receivable Accounts -->
+        <record id="pharmacy_cash_receivable" model="account.account">
+            <field name="name">Cash Receivable (Efectivo)</field>
+            <field name="code">110001</field>
+            <field name="account_type">asset_receivable</field>
+            <field name="reconcile">True</field>
+        </record>
+        
+        <record id="pharmacy_mpesa_receivable" model="account.account">
+            <field name="name">Billetera Digital Receivable (Yape / Plin)</field>
+            <field name="code">110002</field>
+            <field name="account_type">asset_receivable</field>
+            <field name="reconcile">True</field>
+        </record>
+        
+        <record id="pharmacy_card_receivable" model="account.account">
+            <field name="name">Card Receivable (Tarjetas)</field>
+            <field name="code">110003</field>
+            <field name="account_type">asset_receivable</field>
+            <field name="reconcile">True</field>
+        </record>
+        
+        <record id="pharmacy_insurance_receivable" model="account.account">
+            <field name="name">Insurance Receivable (Seguros y Convenios)</field>
+            <field name="code">110004</field>
+            <field name="account_type">asset_receivable</field>
+            <field name="reconcile">True</field>
+        </record>
+    </data>
+</odoo>

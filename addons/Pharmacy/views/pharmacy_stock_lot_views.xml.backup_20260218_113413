@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Stock Lot List View -->
+        <record id="view_pharmacy_lot_list" model="ir.ui.view">
+            <field name="name">stock.lot.pharmacy.list</field>
+            <field name="model">stock.lot</field>
+            <field name="arch" type="xml">
+                <list string="Batches/Lots">
+                    <field name="name" decoration-danger="expiry_date &lt; current_date" decoration-warning="expiry_date &lt;= (context_today() + relativedelta(months=3)).strftime('%Y-%m-%d')"/>
+                    <field name="product_id"/>
+                    <field name="company_id"/>
+                    <field name="ref" help="Batch reference or lot number"/>
+                    <field name="expiry_date" decoration-danger="expiry_date &lt; current_date" decoration-warning="expiry_date &lt;= (context_today() + relativedelta(months=3)).strftime('%Y-%m-%d')"/>
+                    <field name="product_qty" decoration-warning="product_qty &lt; 10"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Inherit Stock Lot Form View to add Pharmacy Information -->
+        <!-- Temporarily commented out to avoid inheritance issues -->
+        <!--
+        <record id="view_pharmacy_lot_form_inherit" model="ir.ui.view">
+            <field name="name">stock.lot.pharmacy.form.inherit</field>
+            <field name="model">stock.lot</field>
+            <field name="inherit_id" ref="stock.view_production_lot_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="Pharmacy Information">
+                        <group>
+                            <field name="branch_id"/>
+                            <field name="supplier_id"/>
+                            <field name="purchase_price"/>
+                            <field name="sale_price"/>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+        -->
+        
+        <!-- Stock Lot Search View -->
+        <record id="view_pharmacy_lot_search" model="ir.ui.view">
+            <field name="name">stock.lot.pharmacy.search</field>
+            <field name="model">stock.lot</field>
+            <field name="arch" type="xml">
+                <search string="Batches/Lots">
+                    <field name="name"/>
+                    <field name="product_id"/>
+                    <field name="ref"/>
+                    <field name="expiry_date"/>
+                    <filter string="Expired" name="expired" domain="[('expiry_date', '&lt;', current_date)]"/>
+                    <filter string="Expiring Soon" name="expiring_soon" domain="[('expiry_date', '&lt;=', (context_today() + relativedelta(months=3)).strftime('%Y-%m-%d')), ('expiry_date', '&gt;=', current_date)]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+                        <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                        <filter string="Expiry Date" name="group_expiry" context="{'group_by': 'expiry_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Stock Lot Action -->
+        <record id="action_pharmacy_lot" model="ir.actions.act_window">
+            <field name="name">Batches/Lots</field>
+            <field name="res_model">stock.lot</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No batches/lots found
+                </p>
+                <p>
+                    Batches/Lots are used to track inventory items with specific
+                    expiry dates and batch numbers for pharmaceutical products.
+                </p>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

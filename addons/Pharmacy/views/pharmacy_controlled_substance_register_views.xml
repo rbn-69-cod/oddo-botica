@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vistas del Libro Oficial de Medicamentos Controlados (DIGEMID) -->
+    
+    <!-- Vista Lista -->
+    <record id="view_pharmacy_controlled_substance_register_list" model="ir.ui.view">
+        <field name="name">pharmacy.controlled.substance.register.list</field>
+        <field name="model">pharmacy.controlled.substance.register</field>
+        <field name="arch" type="xml">
+            <list string="Libro de Medicamentos Controlados (DIGEMID)">
+                <field name="date" string="Fecha"/>
+                <field name="time" string="Hora"/>
+                <field name="product_id" string="Medicamento Controlado"/>
+                <field name="lot_id" string="Lote"/>
+                <field name="quantity" string="Cantidad Dispensada"/>
+                <field name="patient_name" string="Paciente / DNI"/>
+                <field name="transaction_type" string="Tipo de Movimiento"/>
+                <field name="dispensed_by" string="Dispensado por"/>
+                <field name="branch_id" string="Botica / Sucursal"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Vista Formulario -->
+    <record id="view_pharmacy_controlled_substance_register_form" model="ir.ui.view">
+        <field name="name">pharmacy.controlled.substance.register.form</field>
+        <field name="model">pharmacy.controlled.substance.register</field>
+        <field name="arch" type="xml">
+            <form string="Asiento del Libro Oficial de Controlados">
+                <header>
+                    <button name="verify_record" string="Verificar por Químico Farmacéutico" type="object" 
+                            modifiers="{'invisible': [['verified_by', '!=', False]]}"/>
+                    <button name="print_register_report" string="Imprimir Asiento" type="object"/>
+                    <field name="verified_by" string="Verificado por" readonly="1"/>
+                    <field name="verification_date" string="Fecha de Verificación" readonly="1"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="product_id" string="Medicamento Controlado / Psicotrópico"/>
+                        <h1>
+                            <field name="product_id" options="{'no_create': True}"/>
+                        </h1>
+                        <group>
+                            <field name="lot_id" string="Lote de Fabricación" domain="[('product_id', '=', product_id)]" style="width: 50%%"/>
+                        </group>
+                    </div>
+                    
+                    <group name="registry_details" string="Datos de la Dispensación">
+                        <group name="transaction_info">
+                            <field name="date" string="Fecha"/>
+                            <field name="time" string="Hora"/>
+                            <field name="quantity" string="Cantidad Dispensada"/>
+                            <field name="transaction_type" string="Tipo de Operación"/>
+                        </group>
+                        <group name="patient_meta">
+                            <field name="patient_name" string="Paciente y DNI"/>
+                            <field name="dispensed_by" string="Dispensado por"/>
+                            <field name="prescriber_name" string="Médico Prescriptor"/>
+                            <field name="prescriber_license" string="N° Colegiatura (CMP)"/>
+                            <field name="expiry_date" string="Fecha Vencimiento" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Observaciones y Motivo" name="notes">
+                            <group>
+                                <field name="reason" string="Motivo de Movimiento" modifiers="{'invisible': [['transaction_type', '=', 'sale']]}"/>
+                                <field name="notes" string="Anotaciones Adicionales" nolabel="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Vista Búsqueda -->
+    <record id="view_pharmacy_controlled_substance_register_search" model="ir.ui.view">
+        <field name="name">pharmacy.controlled.substance.register.search</field>
+        <field name="model">pharmacy.controlled.substance.register</field>
+        <field name="arch" type="xml">
+            <search string="Buscar en Libro de Controlados">
+                <field name="date" string="Fecha"/>
+                <field name="product_id" string="Medicamento"/>
+                <field name="transaction_type" string="Tipo Operación"/>
+                <field name="branch_id" string="Sucursal"/>
+                <filter string="Mis Registros" name="my_register" domain="[('dispensed_by', '=', uid)]"/>
+                <separator/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Fecha" name="group_date" context="{'group_by': 'date'}"/>
+                    <filter string="Medicamento" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Tipo de Operación" name="group_transaction_type" context="{'group_by': 'transaction_type'}"/>
+                    <filter string="Sucursal" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Acción -->
+    <record id="action_pharmacy_controlled_substance_register" model="ir.actions.act_window">
+        <field name="name">Libro Oficial de Medicamentos Controlados</field>
+        <field name="res_model">pharmacy.controlled.substance.register</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay movimientos de medicamentos controlados registrados
+            </p>
+            <p>
+                Este registro mantiene el libro oficial exigido por la autoridad sanitaria (DIGEMID)
+                para la trazabilidad de estupefacientes y psicotrópicos con receta médica retenida.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Resumen -->
+    <record id="action_pharmacy_controlled_substance_summary" model="ir.actions.act_window">
+        <field name="name">Resumen de Medicamentos Controlados</field>
+        <field name="res_model">pharmacy.controlled.substance.register</field>
+        <field name="view_mode">graph</field>
+    </record>
+              
+</odoo>

@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Pharmacy Cash-up Views -->
+    
+    <!-- Tree View -->
+    <record id="view_pharmacy_cashup_tree" model="ir.ui.view">
+        <field name="name">pharmacy.cashup.list</field>
+        <field name="model">pharmacy.cashup</field>
+        <field name="arch" type="xml">
+            <list string="Cash-up Records">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="branch_id"/>
+                <field name="cashier_id"/>
+                <field name="expected_total" widget="monetary"/>
+                <field name="actual_total" widget="monetary"/>
+                <field name="total_variance" widget="monetary"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_pharmacy_cashup_form" model="ir.ui.view">
+        <field name="name">pharmacy.cashup.form</field>
+        <field name="model">pharmacy.cashup</field>
+        <field name="arch" type="xml">
+            <form string="Daily Cash Reconciliation">
+                <header>
+                    <button name="action_submit" string="Submit for Review" type="object" 
+                            invisible="status != 'draft'" class="btn-primary"/>
+                    <button name="action_approve" string="Approve" type="object" 
+                            invisible="status != 'submitted'" class="btn-success" groups="Pharmacy.group_pharmacy_manager"/>
+                    <button name="action_reject" string="Reject" type="object" 
+                            invisible="status != 'submitted'" class="btn-danger" groups="Pharmacy.group_pharmacy_manager"/>
+                    <button name="action_view_journal_entries" string="View Journal Entries" type="object"/>
+                    <field name="status" widget="statusbar" 
+                            statusbar_visible="draft,submitted,approved,rejected"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Cash-up Record #"/>
+                        <h1>
+                            <field name="name" readonly="1" class="oe_inline"/>
+                        </h1>
+                    </div>
+                    
+                    <group name="session_details" string="Session Information">
+                        <group name="session_meta">
+                            <field name="date" required="1" help="Date of cash reconciliation"/>
+                            <field name="branch_id" options="{'no_create': True}" required="1" help="Which branch"/>
+                            <field name="session_id" readonly="1" help="Associated POS session"/>
+                        </group>
+                        <group name="cashier_info">
+                            <field name="cashier_id" readonly="1" help="Who performed the cash-up"/>
+                            <field name="approved_by" readonly="1" help="Who approved"/>
+                            <field name="approval_date" readonly="1" help="Approval timestamp"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Expected Amounts">
+                            <group class="alert alert-info mt-2">
+                                <p style="font-size: 12px;">
+                                    These are the expected totals calculated by the system from POS transactions.
+                                </p>
+                            </group>
+                            <group string="System Expected Totals (Auto-calculated)" name="expected_totals">
+                                <group>
+                                    <field name="expected_cash" widget="monetary" readonly="1" help="Cash recorded"/>
+                                    <field name="expected_mpesa" widget="monetary" readonly="1" help="M-Pesa/Mobile money"/>
+                                    <field name="expected_card" widget="monetary" readonly="1" help="Card payments"/>
+                                </group>
+                                <group>
+                                    <field name="expected_insurance" widget="monetary" readonly="1" help="Insurance claims"/>
+                                    <field name="expected_total" widget="monetary" readonly="1" class="font-weight-bold" help="Total expected"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Actual Amounts">
+                            <group class="alert alert-warning mt-2">
+                                <p style="font-size: 12px;">
+                                    Enter the actual amounts you counted during reconciliation. System will calculate variance automatically.
+                                </p>
+                            </group>
+                            <group string="Amounts Actually Counted" name="actual_amounts">
+                                <group>
+                                    <field name="actual_cash" widget="monetary" required="1" help="Actual cash in drawer"/>
+                                    <field name="actual_mpesa" widget="monetary" required="1" help="M-Pesa receipts"/>
+                                    <field name="actual_card" widget="monetary" required="1" help="Card slips/receipts"/>
+                                </group>
+                                <group>
+                                    <field name="actual_insurance" widget="monetary" required="1" help="Insurance receipts"/>
+                                    <field name="actual_total" widget="monetary" readonly="1" class="font-weight-bold" help="Total counted"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Variance Analysis">
+                            <group class="alert alert-danger mt-2" invisible="total_variance == 0">
+                                <p style="font-size: 12px;">
+                                    <strong>Variance Detected:</strong> Actual differs from expected. Please review and provide reason.
+                                </p>
+                            </group>
+                            <group string="Variance Breakdown" name="variance_details">
+                                <group>
+                                    <field name="cash_variance" widget="monetary" readonly="1" help="Cash difference"/>
+                                    <field name="mpesa_variance" widget="monetary" readonly="1" help="M-Pesa difference"/>
+                                    <field name="card_variance" widget="monetary" readonly="1" help="Card difference"/>
+                                </group>
+                                <group>
+                                    <field name="insurance_variance" widget="monetary" readonly="1" help="Insurance difference"/>
+                                    <field name="total_variance" widget="monetary" readonly="1" class="font-weight-bold" help="Total variance"/>
+                                </group>
+                            </group>
+                            <group invisible="total_variance == 0">
+                                <field name="variance_reason" nolabel="1" required="1" placeholder="Explain any discrepancies (e.g., returned goods, advance payments, errors)..." 
+                                        rows="4"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_pharmacy_cashup_search" model="ir.ui.view">
+        <field name="name">pharmacy.cashup.search</field>
+        <field name="model">pharmacy.cashup</field>
+        <field name="arch" type="xml">
+            <search string="Cash-up Records">
+                <field name="name"/>
+                <field name="branch_id"/>
+                <field name="cashier_id"/>
+                <field name="date"/>
+                <filter string="Today" name="today" domain="[('date', '=', current_date)]"/>
+                <filter string="This Week" name="this_week" 
+                        domain="[('date', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="This Month" name="this_month" 
+                        domain="[('date', '>=', context_today().strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('status', '=', 'draft')]"/>
+                <filter string="Submitted" name="submitted" domain="[('status', '=', 'submitted')]"/>
+                <filter string="Approved" name="approved" domain="[('status', '=', 'approved')]"/>
+                <filter string="Rejected" name="rejected" domain="[('status', '=', 'rejected')]"/>
+                <separator/>
+                <filter string="With Variance" name="with_variance" 
+                        domain="[('total_variance', '!=', 0)]"/>
+                <filter string="Significant Variance" name="significant_variance" 
+                        domain="['|', ('total_variance', '>', 1000), ('total_variance', '&lt;', -1000)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Branch" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                    <filter string="Cashier" name="group_cashier" context="{'group_by': 'cashier_id'}"/>
+                    <filter string="Date" name="group_date" context="{'group_by': 'date'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_pharmacy_cashup" model="ir.actions.act_window">
+        <field name="name">Cash-up Management</field>
+        <field name="res_model">pharmacy.cashup</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create cash-up records
+            </p>
+            <p>
+                Cash-up records track daily cash reconciliation and variances
+                for each branch and cashier session.
+            </p>
+        </field>
+    </record>
+              
+    <!-- Price Change Views -->
+    
+    <!-- Tree View -->
+    <record id="view_pharmacy_price_change_tree" model="ir.ui.view">
+        <field name="name">pharmacy.price.change.list</field>
+        <field name="model">pharmacy.price.change</field>
+        <field name="arch" type="xml">
+            <list string="Price Change History">
+                <field name="product_id"/>
+                <field name="change_date"/>
+                <field name="old_price" widget="monetary"/>
+                <field name="new_price" widget="monetary"/>
+                <field name="price_difference" widget="monetary"/>
+                <field name="percentage_change" widget="percentage"/>
+                <field name="changed_by"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_pharmacy_price_change_form" model="ir.ui.view">
+        <field name="name">pharmacy.price.change.form</field>
+        <field name="model">pharmacy.price.change</field>
+        <field name="arch" type="xml">
+            <form string="Price Change">
+                <header>
+                    <button name="action_approve" string="Approve" type="object" 
+                            modifiers="{'invisible': [['status', '!=', 'pending']]}"/>
+                    <button name="action_reject" string="Reject" type="object" 
+                            modifiers="{'invisible': [['status', '!=', 'pending']]}"/>
+                    <button name="action_apply_price" string="Apply Price" type="object" 
+                            modifiers="{'invisible': [['status', '!=', 'approved']]}"/>
+                    <field name="status" widget="statusbar" 
+                            statusbar_visible="pending,approved,rejected"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="product_id" string="Product for Price Change"/>
+                        <h1>
+                            <field name="product_id" options="{'no_create': True}"/>
+                        </h1>
+                    </div>
+                    
+                    <group name="price_meta">
+                        <group name="change_info">
+                            <field name="change_date" readonly="1"/>
+                            <field name="changed_by" readonly="1"/>
+                            <field name="branch_id" options="{'no_create': True}"/>
+                        </group>
+                        <group name="comparisons">
+                            <field name="old_price" widget="monetary"/>
+                            <field name="new_price" widget="monetary"/>
+                            <field name="price_difference" widget="monetary" decoration-danger="price_difference > 0"/>
+                            <field name="percentage_change" widget="percentage" decoration-danger="percentage_change > 0"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Approval">
+                            <group>
+                                <group>
+                                    <field name="requires_approval" readonly="1"/>
+                                    <field name="approved_by" readonly="1"/>
+                                    <field name="approval_date" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Reason">
+                            <group>
+                                <field name="reason" nolabel="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_pharmacy_price_change" model="ir.actions.act_window">
+        <field name="name">Price Change History</field>
+        <field name="res_model">pharmacy.price.change</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No price changes recorded
+            </p>
+            <p>
+                Track all price changes with approval workflow and audit trail.
+            </p>
+        </field>
+    </record>
+              
+</odoo>

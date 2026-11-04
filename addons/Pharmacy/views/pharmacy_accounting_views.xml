@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vistas de Arqueo y Cierre de Caja (Cash-up) -->
+    
+    <!-- Vista Lista -->
+    <record id="view_pharmacy_cashup_tree" model="ir.ui.view">
+        <field name="name">pharmacy.cashup.list</field>
+        <field name="model">pharmacy.cashup</field>
+        <field name="arch" type="xml">
+            <list string="Registros de Arqueo de Caja">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="branch_id"/>
+                <field name="cashier_id"/>
+                <field name="expected_total" widget="monetary"/>
+                <field name="actual_total" widget="monetary"/>
+                <field name="total_variance" widget="monetary"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Vista Formulario -->
+    <record id="view_pharmacy_cashup_form" model="ir.ui.view">
+        <field name="name">pharmacy.cashup.form</field>
+        <field name="model">pharmacy.cashup</field>
+        <field name="arch" type="xml">
+            <form string="Conciliación Diaria de Caja">
+                <header>
+                    <button name="action_submit" string="Enviar a Revisión" type="object" 
+                            invisible="status != 'draft'" class="btn-primary"/>
+                    <button name="action_approve" string="Aprobar" type="object" 
+                            invisible="status != 'submitted'" class="btn-success" groups="Pharmacy.group_pharmacy_manager"/>
+                    <button name="action_reject" string="Rechazar" type="object" 
+                            invisible="status != 'submitted'" class="btn-danger" groups="Pharmacy.group_pharmacy_manager"/>
+                    <button name="action_view_journal_entries" string="Ver Asientos Contables" type="object"/>
+                    <field name="status" widget="statusbar" 
+                            statusbar_visible="draft,submitted,approved,rejected"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nº de Arqueo de Caja"/>
+                        <h1>
+                            <field name="name" readonly="1" class="oe_inline"/>
+                        </h1>
+                    </div>
+                    
+                    <group name="session_details" string="Información de la Sesión">
+                        <group name="session_meta">
+                            <field name="date" required="1" help="Fecha de la conciliación de caja"/>
+                            <field name="branch_id" options="{'no_create': True}" required="1" help="Botica / Sucursal"/>
+                            <field name="session_id" readonly="1" help="Sesión de Punto de Venta asociada"/>
+                        </group>
+                        <group name="cashier_info">
+                            <field name="cashier_id" readonly="1" help="Cajero que realizó el arqueo"/>
+                            <field name="approved_by" readonly="1" help="Usuario que aprobó el arqueo"/>
+                            <field name="approval_date" readonly="1" help="Fecha y hora de aprobación"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Montos Esperados (Sistema)">
+                            <group class="alert alert-info mt-2">
+                                <p style="font-size: 12px;">
+                                    Montos totales calculados automáticamente por el sistema según las ventas registradas en el POS.
+                                </p>
+                            </group>
+                            <group string="Totales Calculados por el Sistema" name="expected_totals">
+                                <group>
+                                    <field name="expected_cash" widget="monetary" readonly="1" help="Efectivo registrado en el sistema"/>
+                                    <field name="expected_mpesa" string="Yape / Plin Esperado" widget="monetary" readonly="1" help="Cobros esperados por Yape / Plin / Billetera digital"/>
+                                    <field name="expected_card" widget="monetary" readonly="1" help="Pagos con tarjeta"/>
+                                </group>
+                                <group>
+                                    <field name="expected_insurance" widget="monetary" readonly="1" help="Reclamos de seguros / convenios"/>
+                                    <field name="expected_total" widget="monetary" readonly="1" class="font-weight-bold" help="Total general esperado"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Montos Reales (Contados)">
+                            <group class="alert alert-warning mt-2">
+                                <p style="font-size: 12px;">
+                                    Ingrese los importes físicos contados durante el cierre. El sistema calculará las diferencias automáticamente.
+                                </p>
+                            </group>
+                            <group string="Importes Reales Contados en Caja" name="actual_amounts">
+                                <group>
+                                    <field name="actual_cash" widget="monetary" required="1" help="Efectivo físico en gaveta"/>
+                                    <field name="actual_mpesa" string="Yape / Plin Real" widget="monetary" required="1" help="Comprobantes / capturas de Yape o Plin"/>
+                                    <field name="actual_card" widget="monetary" required="1" help="Vouchers / comprobantes de POS tarjeta"/>
+                                </group>
+                                <group>
+                                    <field name="actual_insurance" widget="monetary" required="1" help="Comprobantes de seguros"/>
+                                    <field name="actual_total" widget="monetary" readonly="1" class="font-weight-bold" help="Total general contado"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Análisis de Diferencias">
+                            <group class="alert alert-danger mt-2" invisible="total_variance == 0">
+                                <p style="font-size: 12px;">
+                                    <strong>Diferencia detectada:</strong> El monto contado no coincide con el esperado por el sistema. Por favor revise y detalle la justificación.
+                                </p>
+                            </group>
+                            <group string="Desglose de Diferencias" name="variance_details">
+                                <group>
+                                    <field name="cash_variance" widget="monetary" readonly="1" help="Diferencia en efectivo"/>
+                                    <field name="mpesa_variance" string="Diferencia Yape / Plin" widget="monetary" readonly="1" help="Diferencia en Yape / Plin"/>
+                                    <field name="card_variance" widget="monetary" readonly="1" help="Diferencia en tarjetas"/>
+                                </group>
+                                <group>
+                                    <field name="insurance_variance" widget="monetary" readonly="1" help="Diferencia en seguros"/>
+                                    <field name="total_variance" widget="monetary" readonly="1" class="font-weight-bold" help="Diferencia total neta"/>
+                                </group>
+                            </group>
+                            <group invisible="total_variance == 0">
+                                <field name="variance_reason" nolabel="1" required="1" placeholder="Explique las discrepancias o sobrantes/faltantes detectados..." 
+                                        rows="4"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Vista Búsqueda -->
+    <record id="view_pharmacy_cashup_search" model="ir.ui.view">
+        <field name="name">pharmacy.cashup.search</field>
+        <field name="model">pharmacy.cashup</field>
+        <field name="arch" type="xml">
+            <search string="Registros de Arqueo de Caja">
+                <field name="name"/>
+                <field name="branch_id"/>
+                <field name="cashier_id"/>
+                <field name="date"/>
+                <filter string="Hoy" name="today" domain="[('date', '=', current_date)]"/>
+                <filter string="Esta Semana" name="this_week" 
+                        domain="[('date', '>=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Este Mes" name="this_month" 
+                        domain="[('date', '>=', context_today().strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter string="Borrador" name="draft" domain="[('status', '=', 'draft')]"/>
+                <filter string="Enviado" name="submitted" domain="[('status', '=', 'submitted')]"/>
+                <filter string="Aprobado" name="approved" domain="[('status', '=', 'approved')]"/>
+                <filter string="Rechazado" name="rejected" domain="[('status', '=', 'rejected')]"/>
+                <separator/>
+                <filter string="Con Diferencia" name="with_variance" 
+                        domain="[('total_variance', '!=', 0)]"/>
+                <filter string="Diferencia Significativa" name="significant_variance" 
+                        domain="['|', ('total_variance', '>', 100), ('total_variance', '&lt;', -100)]"/>
+                <separator/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Botica / Sucursal" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                    <filter string="Cajero" name="group_cashier" context="{'group_by': 'cashier_id'}"/>
+                    <filter string="Fecha" name="group_date" context="{'group_by': 'date'}"/>
+                    <filter string="Estado" name="group_status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Acción -->
+    <record id="action_pharmacy_cashup" model="ir.actions.act_window">
+        <field name="name">Arqueos y Cierres de Caja</field>
+        <field name="res_model">pharmacy.cashup</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear arqueos de caja
+            </p>
+            <p>
+                Los registros de arqueo permiten cuadrar las ventas de cada turno y botica,
+                detectando diferencias en efectivo, tarjetas o transferencias electrónicas.
+            </p>
+        </field>
+    </record>
+              
+    <!-- Vistas de Historial de Cambios de Precio -->
+    
+    <!-- Vista Lista -->
+    <record id="view_pharmacy_price_change_tree" model="ir.ui.view">
+        <field name="name">pharmacy.price.change.list</field>
+        <field name="model">pharmacy.price.change</field>
+        <field name="arch" type="xml">
+            <list string="Historial de Cambios de Precio">
+                <field name="product_id"/>
+                <field name="change_date"/>
+                <field name="old_price" widget="monetary"/>
+                <field name="new_price" widget="monetary"/>
+                <field name="price_difference" widget="monetary"/>
+                <field name="percentage_change" widget="percentage"/>
+                <field name="changed_by"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Vista Formulario -->
+    <record id="view_pharmacy_price_change_form" model="ir.ui.view">
+        <field name="name">pharmacy.price.change.form</field>
+        <field name="model">pharmacy.price.change</field>
+        <field name="arch" type="xml">
+            <form string="Cambio de Precio">
+                <header>
+                    <button name="action_approve" string="Aprobar" type="object" 
+                            invisible="status != 'pending'"/>
+                    <button name="action_reject" string="Rechazar" type="object" 
+                            invisible="status != 'pending'"/>
+                    <button name="action_apply_price" string="Aplicar Precio" type="object" 
+                            invisible="status != 'approved'"/>
+                    <field name="status" widget="statusbar" 
+                            statusbar_visible="pending,approved,rejected"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="product_id" string="Producto para Modificación de Precio"/>
+                        <h1>
+                            <field name="product_id" options="{'no_create': True}"/>
+                        </h1>
+                    </div>
+                    
+                    <group name="price_meta">
+                        <group name="change_info">
+                            <field name="change_date" readonly="1"/>
+                            <field name="changed_by" readonly="1"/>
+                            <field name="branch_id" options="{'no_create': True}"/>
+                        </group>
+                        <group name="comparisons">
+                            <field name="old_price" widget="monetary"/>
+                            <field name="new_price" widget="monetary"/>
+                            <field name="price_difference" widget="monetary" decoration-danger="price_difference > 0"/>
+                            <field name="percentage_change" widget="percentage" decoration-danger="percentage_change > 0"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Aprobación">
+                            <group>
+                                <group>
+                                    <field name="requires_approval" readonly="1"/>
+                                    <field name="approved_by" readonly="1"/>
+                                    <field name="approval_date" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Motivo">
+                            <group>
+                                <field name="reason" nolabel="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Acción -->
+    <record id="action_pharmacy_price_change" model="ir.actions.act_window">
+        <field name="name">Historial de Cambios de Precio</field>
+        <field name="res_model">pharmacy.price.change</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Sin cambios de precio registrados
+            </p>
+            <p>
+                Lleve un control de auditoría de los cambios de precio de venta en medicamentos y productos.
+            </p>
+        </field>
+    </record>
+              
+</odoo>

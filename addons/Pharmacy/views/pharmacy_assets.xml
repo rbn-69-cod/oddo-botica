@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Pharmacy CSS Assets Only -->
+        <record id="pharmacy_assets_css" model="ir.asset">
+            <field name="name">pharmacy.assets.css</field>
+            <field name="bundle">web.assets_backend</field>
+            <field name="path">Pharmacy/static/src/css/pharmacy_form_fix.css</field>
+        </record>
+        
+    </data>
+</odoo>

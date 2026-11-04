@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Pharmacy Patient Views -->
+        
+        <!-- Tree View -->
+        <record id="view_pharmacy_patient_list" model="ir.ui.view">
+            <field name="name">pharmacy.patient.list</field>
+            <field name="model">pharmacy.patient</field>
+            <field name="arch" type="xml">
+                <list string="Patients">
+                    <field name="patient_code"/>
+                    <field name="name"/>
+                    <field name="phone"/>
+                    <field name="age"/>
+                    <field name="total_prescriptions"/>
+                    <field name="last_visit_date"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record id="view_pharmacy_patient_form" model="ir.ui.view">
+            <field name="name">pharmacy.patient.form</field>
+            <field name="model">pharmacy.patient</field>
+            <field name="arch" type="xml">
+                <form string="Patient Profile">
+                    <header>
+                        <button name="action_view_prescriptions" type="object" string="View Prescriptions" class="btn-primary"/>
+                        <button name="action_view_dispensing" type="object" string="View Dispensing" class="btn-secondary"/>
+                        <button name="action_view_insurance" type="object" string="View Insurance" class="btn-info"/>
+                        <field name="active" widget="boolean_toggle"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Patient Full Name *"/>
+                            <h1>
+                                <field name="name" placeholder="e.g. John Doe" required="1"/>
+                            </h1>
+                            <label for="patient_code" string="Patient Code"/>
+                            <p>
+                                <field name="patient_code" readonly="1" class="oe_inline"/>
+                            </p>
+                        </div>
+                        
+                        <group name="patient_contact_info" string="Contact &amp; Personal Information">
+                            <group name="left_contact">
+                                <field name="phone" widget="phone" placeholder="e.g. +254712345678"/>
+                                <field name="email" widget="email" placeholder="e.g. john@example.com"/>
+                                <field name="date_of_birth" required="1"/>
+                            </group>
+                            <group name="right_contact">
+                                <field name="national_id" placeholder="e.g. 12345678"/>
+                                <field name="gender" required="1" widget="radio" options="{'horizontal': true}"/>
+                                <field name="age" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <group name="medical_basics" string="Medical Information">
+                            <field name="blood_group" placeholder="Select blood type"/>
+                            <field name="allergies" placeholder="List any known allergies"/>
+                            <field name="chronic_conditions" placeholder="List chronic conditions (e.g. Diabetes, Hypertension)"/>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Address Information">
+                                <group>
+                                    <field name="street" placeholder="Street address"/>
+                                </group>
+                                <group>
+                                    <group>
+                                        <field name="street2" placeholder="Apartment/Unit"/>
+                                        <field name="city" placeholder="City"/>
+                                        <field name="state_id" placeholder="State/Province"/>
+                                    </group>
+                                    <group>
+                                        <field name="zip" placeholder="Postal code"/>
+                                        <field name="country_id" placeholder="Country"/>
+                                    </group>
+                                </group>
+                            </page>
+                            
+                            <page string="Insurance Policies">
+                                <group string="Current &amp; Past Insurance Policies" class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        Manage patient's insurance coverage. Add, modify or archive policies here.
+                                    </p>
+                                </group>
+                                <field name="insurance_ids" nolabel="1">
+                                    <list>
+                                        <field name="insurer_id"/>
+                                        <field name="plan_id"/>
+                                        <field name="member_number"/>
+                                        <field name="status" decoration-success="status == 'active'" decoration-warning="status == 'suspended'" decoration-danger="status == 'expired'"/>
+                                        <field name="valid_from" optional="hide"/>
+                                        <field name="valid_to" optional="hide"/>
+                                    </list>
+                                    <form>
+                                        <sheet>
+                                            <group string="Insurance Policy Details">
+                                                <group name="insurer_plan">
+                                                    <field name="insurer_id" required="1" options="{'no_create': True}"/>
+                                                    <field name="plan_id" required="1" options="{'no_create': True}"/>
+                                                    <field name="member_number" required="1" placeholder="e.g. INS-2024-001"/>
+                                                </group>
+                                                <group name="dates">
+                                                    <field name="valid_from" required="1" help="Policy start date"/>
+                                                    <field name="valid_to" required="1" help="Policy end date"/>
+                                                    <field name="status" readonly="1"/>
+                                                </group>
+                                            </group>
+                                            <group string="Policy Information">
+                                                <group>
+                                                    <field name="policy_number" placeholder="Optional: Policy reference number"/>
+                                                    <field name="card_number" placeholder="Optional: Insurance card number"/>
+                                                </group>
+                                                <group>
+                                                    <field name="relationship_to_member" help="e.g. Self, Spouse, Child"/>
+                                                </group>
+                                            </group>
+                                            <group string="Coverage Details">
+                                                <group>
+                                                    <field name="coverage_percentage" widget="percentage" help="Percentage covered by insurer"/>
+                                                    <field name="copay_percentage" widget="percentage" help="Patient's co-payment percentage"/>
+                                                </group>
+                                            </group>
+                                            <group>
+                                                <field name="notes" nolabel="1" placeholder="Additional notes about this policy..."/>
+                                            </group>
+                                        </sheet>
+                                    </form>
+                                </field>
+                            </page>
+                            
+                            <page string="Prescriptions">
+                                <group string="Patient Prescriptions" class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        View-only list of prescriptions issued to this patient.
+                                    </p>
+                                </group>
+                                <field name="prescription_ids" readonly="1" nolabel="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="prescription_date"/>
+                                        <field name="prescriber_name"/>
+                                        <field name="status" decoration-info="status == 'draft'" decoration-success="status == 'active'" decoration-warning="status in ['partially_dispensed']" decoration-danger="status == 'expired'"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Activity Statistics">
+                                <group string="Patient Activity Metrics">
+                                    <group>
+                                        <field name="total_prescriptions" readonly="1" help="Total prescriptions received"/>
+                                        <field name="total_dispensing" readonly="1" help="Total dispensing transactions"/>
+                                    </group>
+                                    <group>
+                                        <field name="last_visit_date" readonly="1" help="Last pharmacy visit"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Kanban View -->
+        <record id="view_pharmacy_patient_kanban" model="ir.ui.view">
+            <field name="name">pharmacy.patient.kanban</field>
+            <field name="model">pharmacy.patient</field>
+            <field name="arch" type="xml">
+                <kanban string="Patients">
+                    <field name="id"/>
+                    <field name="name"/>
+                    <field name="patient_code"/>
+                    <field name="phone"/>
+                    <field name="age"/>
+                    <field name="gender"/>
+                    <field name="total_prescriptions"/>
+                    <field name="last_visit_date"/>
+                    <field name="active"/>
+                    <templates>
+                        <t t-name="card">
+                            <div class="oe_kanban_card oe_kanban_global_click">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                        <div class="o_kanban_record_subtitle">
+                                            <field name="patient_code"/> | Age: <field name="age"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <div><field name="phone"/></div>
+                                        <div>Prescriptions: <field name="total_prescriptions"/></div>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="active" widget="boolean_toggle"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+        
+        <!-- Search View -->
+        <record id="view_pharmacy_patient_search" model="ir.ui.view">
+            <field name="name">pharmacy.patient.search</field>
+            <field name="model">pharmacy.patient</field>
+            <field name="arch" type="xml">
+                <search string="Search Patients">
+                    <field name="name"/>
+                    <field name="patient_code"/>
+                    <field name="phone"/>
+                    <field name="email"/>
+                    <field name="national_id"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <filter string="Male" name="male" domain="[('gender', '=', 'male')]"/>
+                    <filter string="Female" name="female" domain="[('gender', '=', 'female')]"/>
+                    <separator/>
+                    <filter string="Has Prescriptions" name="has_prescriptions" domain="[('total_prescriptions', '>', 0)]"/>
+                    <filter string="Recent Visits" name="recent_visits" domain="[('last_visit_date', '>=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Gender" name="group_gender" context="{'group_by': 'gender'}"/>
+                        <filter string="Age Range" name="group_age" context="{'group_by': 'age'}"/>
+                        <filter string="City" name="group_city" context="{'group_by': 'city'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Action -->
+        <record id="action_pharmacy_patient" model="ir.actions.act_window">
+            <field name="name">Patients</field>
+            <field name="res_model">pharmacy.patient</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first patient
+                </p>
+                <p>
+                    Patients are the core of the pharmacy management system. Each patient can have
+                    prescriptions, insurance policies, and dispensing records.
+                </p>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

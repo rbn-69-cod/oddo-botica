@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Pharmacy Promotion Views -->
+        
+        <!-- List View -->
+        <record id="view_pharmacy_promotion_list" model="ir.ui.view">
+            <field name="name">pharmacy.promotion.list</field>
+            <field name="model">pharmacy.promotion</field>
+            <field name="arch" type="xml">
+                <list string="Promotions">
+                    <field name="code"/>
+                    <field name="name"/>
+                    <field name="promotion_type"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="discount_percentage"/>
+                    <field name="active" widget="boolean_toggle"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record id="view_pharmacy_promotion_form" model="ir.ui.view">
+            <field name="name">pharmacy.promotion.form</field>
+            <field name="model">pharmacy.promotion</field>
+            <field name="arch" type="xml">
+                <form string="Promotion">
+                    <header>
+                        <field name="active" widget="boolean_toggle"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" placeholder="Promotion Name"/>
+                            </h1>
+                            <h2>
+                                <field name="code" placeholder="Promotion Code"/>
+                            </h2>
+                        </div>
+                        
+                        <group>
+                            <group>
+                                <field name="promotion_type"/>
+                                <field name="discount_type"/>
+                                <field name="discount_percentage" invisible="discount_type != 'percentage'"/>
+                                <field name="discount_amount" invisible="discount_type != 'fixed'"/>
+                            </group>
+                            <group>
+                                <field name="start_date"/>
+                                <field name="end_date"/>
+                                <field name="max_uses"/>
+                                <field name="uses_count" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Applicable Products">
+                                <field name="product_ids">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="default_code"/>
+                                        <field name="list_price"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Applicable Branches">
+                                <field name="branch_ids">
+                                    <list>
+                                        <field name="code"/>
+                                        <field name="name"/>
+                                        <field name="city"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Conditions">
+                                <group>
+                                    <field name="min_purchase_amount"/>
+                                    <field name="min_quantity"/>
+                                </group>
+                            </page>
+                            
+                            <page string="Description">
+                                <field name="description" placeholder="Promotion description and terms..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Search View -->
+        <record id="view_pharmacy_promotion_search" model="ir.ui.view">
+            <field name="name">pharmacy.promotion.search</field>
+            <field name="model">pharmacy.promotion</field>
+            <field name="arch" type="xml">
+                <search string="Search Promotions">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <filter string="Current" name="current" domain="[('start_date', '&lt;=', context_today()), ('end_date', '&gt;=', context_today())]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Type" name="group_type" context="{'group_by': 'promotion_type'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Action -->
+        <record id="action_pharmacy_promotion" model="ir.actions.act_window">
+            <field name="name">Promotions</field>
+            <field name="res_model">pharmacy.promotion</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first promotion
+                </p>
+                <p>
+                    Promotions allow you to offer discounts on products for specific periods.
+                    Configure promotion codes, discount amounts, and applicable products here.
+                </p>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

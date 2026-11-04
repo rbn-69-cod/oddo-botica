@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="res_config_settings_view_form_pharmacy" model="ir.ui.view">
+            <field name="name">res.config.settings.view.form.pharmacy</field>
+            <field name="model">res.config.settings</field>
+            <field name="priority" eval="90"/>
+            <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form" position="inside">
+                    <app data-string="MediZano Perú" string="MediZano Perú" name="Pharmacy">
+                        <!-- Bloque 1: Consulta DNI / RUC con Decolecta -->
+                        <block title="Consulta de DNI y RUC (Decolecta API)" id="decolecta_settings">
+                            <setting id="decolecta_token_setting" string="Autenticación Decolecta" help="Configure el token API obtenido en https://decolecta.com para consultar DNI y RUC automáticamente.">
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="decolecta_api_token" class="col-lg-3 o_light_label" string="Token / API Key"/>
+                                        <field name="decolecta_api_token" password="True" placeholder="Ingrese token de Decolecta"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="decolecta_api_url" class="col-lg-3 o_light_label" string="URL Base"/>
+                                        <field name="decolecta_api_url" class="oe_inline"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="decolecta_api_timeout" class="col-lg-3 o_light_label" string="Timeout (segundos)"/>
+                                        <field name="decolecta_api_timeout" class="oe_inline"/>
+                                    </div>
+                                    <div class="mt16">
+                                        <button name="action_test_decolecta_connection" type="object" string="Probar Conexión con Decolecta" class="btn-secondary" icon="fa-check-circle"/>
+                                    </div>
+                                </div>
+                            </setting>
+                        </block>
+
+                        <!-- Bloque 2: Facturación Electrónica SUNAT -->
+                        <block title="Facturación Electrónica SUNAT (Perú)" id="sunat_settings">
+                            <setting id="sunat_config_setting" string="Entorno y Proveedor PSE" help="Configure el proveedor de facturación electrónica y entorno (BETA pruebas o Producción).">
+                                <div class="content-group">
+                                    <div class="row mt16">
+                                        <label for="sunat_environment" class="col-lg-3 o_light_label"/>
+                                        <field name="sunat_environment"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="sunat_provider" class="col-lg-3 o_light_label"/>
+                                        <field name="sunat_provider"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="sunat_api_url" class="col-lg-3 o_light_label"/>
+                                        <field name="sunat_api_url" placeholder="https://api.pse.pe o https://api.nubefact.com"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <label for="sunat_api_token" class="col-lg-3 o_light_label"/>
+                                        <field name="sunat_api_token" password="True" placeholder="Token provisto por su PSE"/>
+                                    </div>
+                                    <div class="row mt8">
+                                        <field name="sunat_auto_send" class="oe_inline"/>
+                                        <label for="sunat_auto_send" class="o_light_label"/>
+                                    </div>
+                                </div>
+                            </setting>
+                        </block>
+                    </app>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
+

@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Pharmacy Branch Views -->
+        
+        <!-- List View -->
+        <record id="view_pharmacy_branch_list" model="ir.ui.view">
+            <field name="name">pharmacy.branch.list</field>
+            <field name="model">pharmacy.branch</field>
+            <field name="arch" type="xml">
+                <list string="Branches">
+                    <field name="code"/>
+                    <field name="name"/>
+                    <field name="city"/>
+                    <field name="phone"/>
+                    <field name="manager_id"/>
+                    <field name="total_sales" widget="monetary"/>
+                    <field name="stock_value" widget="monetary"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record id="view_pharmacy_branch_form" model="ir.ui.view">
+            <field name="name">pharmacy.branch.form</field>
+            <field name="model">pharmacy.branch</field>
+            <field name="arch" type="xml">
+                <form string="Branch Configuration">
+                    <header>
+                        <button name="action_view_sales" type="object" string="View Sales" class="btn-primary"/>
+                        <button name="action_view_claims" type="object" string="View Claims" class="btn-secondary"/>
+                        <button name="action_view_stock" type="object" string="View Inventory" class="btn-info"/>
+                        <field name="active" widget="boolean_toggle"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Branch Name *"/>
+                            <h1>
+                                <field name="name" placeholder="e.g. Nairobi Central" required="1"/>
+                            </h1>
+                            <label for="code" string="Branch Code"/>
+                            <p>
+                                <field name="code" placeholder="e.g. BR-001" readonly="1" class="oe_inline"/>
+                            </p>
+                        </div>
+                        
+                        <group name="branch_admin" string="Branch Administration">
+                            <group name="management">
+                                <field name="manager_id" options="{'no_create': True}" help="Branch manager"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                            <group name="details">
+                                <field name="default_pricelist_id" help="Default pricing for customers"/>
+                                <field name="currency_id" options="{'no_create': True}"/>
+                            </group>
+                        </group>
+                        
+                        <group name="branch_contact" string="Branch Contact Information">
+                            <group>
+                                <field name="phone" widget="phone" placeholder="e.g. +254712345678"/>
+                                <field name="email" widget="email" placeholder="e.g. branch@pharmacy.com"/>
+                            </group>
+                            <group>
+                                <field name="website" widget="url" placeholder="Optional: branch website"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Address &amp; Location">
+                                <group string="Physical Address">
+                                    <field name="street" placeholder="Street address"/>
+                                </group>
+                                <group>
+                                    <group>
+                                        <field name="street2" placeholder="Building/Suite"/>
+                                        <field name="city" placeholder="City" required="1"/>
+                                        <field name="state_id" placeholder="State/Region"/>
+                                    </group>
+                                    <group>
+                                        <field name="zip" placeholder="Postal code"/>
+                                        <field name="country_id" placeholder="Country"/>
+                                    </group>
+                                </group>
+                            </page>
+                            
+                            <page string="Performance Metrics">
+                                <group string="Financial Summary">
+                                    <group>
+                                        <field name="total_sales" widget="monetary" readonly="1"/>
+                                        <field name="stock_value" widget="monetary" readonly="1"/>
+                                    </group>
+                                    <group>
+                                        <field name="total_claims" widget="monetary" readonly="1"/>
+                                    </group>
+                                </group>
+                            </page>
+                            
+                            <page string="Inventory Locations">
+                                <group class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        Storage locations and shelving configured for this branch.
+                                    </p>
+                                </group>
+                                <field name="location_ids" nolabel="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="usage"/>
+                                        <field name="location_type"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="POS Stations">
+                                <group class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        Point of Sale configurations for dispensing and sales transactions.
+                                    </p>
+                                </group>
+                                <field name="pos_config_ids" nolabel="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="active" decoration-success="active == True" decoration-muted="active == False"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Accounting Journals">
+                                <group class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        Accounting journals for recording transactions at this branch.
+                                    </p>
+                                </group>
+                                <field name="journal_ids" nolabel="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="type"/>
+                                        <field name="currency_id"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Kanban View -->
+        <record id="view_pharmacy_branch_kanban" model="ir.ui.view">
+            <field name="name">pharmacy.branch.kanban</field>
+            <field name="model">pharmacy.branch</field>
+            <field name="arch" type="xml">
+                <kanban string="Branches">
+                    <field name="id"/>
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="city"/>
+                    <field name="total_sales"/>
+                    <field name="stock_value"/>
+                    <field name="active"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_card oe_kanban_global_click #{!record.active.raw_value ? 'o_kanban_disabled' : ''}">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="code"/> - <field name="name"/>
+                                        </strong>
+                                        <div class="o_kanban_record_subtitle">
+                                            <field name="city"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <span>Sales: </span>
+                                                <field name="total_sales" widget="monetary"/>
+                                            </div>
+                                            <div class="col-6">
+                                                <span>Stock: </span>
+                                                <field name="stock_value" widget="monetary"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="active" widget="boolean_toggle"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+        
+        <!-- Search View -->
+        <record id="view_pharmacy_branch_search" model="ir.ui.view">
+            <field name="name">pharmacy.branch.search</field>
+            <field name="model">pharmacy.branch</field>
+            <field name="arch" type="xml">
+                <search string="Search Branches">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="city"/>
+                    <field name="manager_id"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <filter string="My Branches" name="my_branches" domain="[('manager_id', '=', uid)]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="City" name="group_city" context="{'group_by': 'city'}"/>
+                        <filter string="Manager" name="group_manager" context="{'group_by': 'manager_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Action -->
+        <record id="action_pharmacy_branch" model="ir.actions.act_window">
+            <field name="name">Branches</field>
+            <field name="res_model">pharmacy.branch</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first branch
+                </p>
+                <p>
+                    Branches represent different pharmacy locations. Each branch has its own
+                    inventory, POS configuration, and financial records.
+                </p>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

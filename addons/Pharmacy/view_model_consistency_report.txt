@@ -1,0 +1,9 @@
+PHARMACY MANAGEMENT MODULE - VIEW-MODEL CONSISTENCY REPORT
+======================================================================
+
+missing_model: Model 'pos.order' not found
+  File: /Users/pc/.gemini/antigravity/scratch/pharmacy-odooo-demo/views/pos_order_pharmacy_views.xml
+
+missing_model: Model 'res.company' not found
+  File: /Users/pc/.gemini/antigravity/scratch/pharmacy-odooo-demo/views/pharmacy_company_views.xml
+

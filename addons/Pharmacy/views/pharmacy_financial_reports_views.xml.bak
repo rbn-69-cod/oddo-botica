@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Financial Reports Views -->
+    
+    <!-- Sales by Branch Report -->
+    <record id="view_report_pharmacy_sales_branch_tree" model="ir.ui.view">
+        <field name="name">report.pharmacy.sales.branch.list</field>
+        <field name="model">report.pharmacy.sales.branch</field>
+        <field name="arch" type="xml">
+            <list string="Sales by Branch">
+                <field name="date"/>
+                <field name="branch_id"/>
+                <field name="cashier_id"/>
+                <field name="total_sales" widget="monetary"/>
+                <field name="cash_sales" widget="monetary"/>
+                <field name="mpesa_sales" widget="monetary"/>
+                <field name="card_sales" widget="monetary"/>
+                <field name="insurance_sales" widget="monetary"/>
+                <field name="total_orders"/>
+
+            </list>
+        </field>
+    </record>
+    
+    <record id="view_report_pharmacy_sales_branch_graph" model="ir.ui.view">
+        <field name="name">report.pharmacy.sales.branch.graph</field>
+        <field name="model">report.pharmacy.sales.branch</field>
+        <field name="arch" type="xml">
+            <graph string="Sales by Branch" type="bar">
+                <field name="date"/>
+                <field name="total_sales" operator="sum"/>
+                <field name="branch_id" groups="True"/>
+            </graph>
+        </field>
+    </record>
+    
+    <record id="view_report_pharmacy_sales_branch_pivot" model="ir.ui.view">
+        <field name="name">report.pharmacy.sales.branch.pivot</field>
+        <field name="model">report.pharmacy.sales.branch</field>
+        <field name="arch" type="xml">
+            <pivot string="Sales by Branch">
+                <field name="total_sales" type="measure"/>
+                <field name="insurance_sales" type="measure"/>
+                <field name="date" type="row"/>
+                <field name="branch_id" type="col"/>
+            </pivot>
+        </field>
+    </record>
+    
+    <record id="action_report_pharmacy_sales_branch" model="ir.actions.act_window">
+        <field name="name">Sales by Branch Report</field>
+        <field name="res_model">report.pharmacy.sales.branch</field>
+        <field name="view_mode">list,graph,pivot</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No sales data available
+            </p>
+            <p>
+                This report shows sales breakdown by branch, date, and payment method.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Expiry Report -->
+    <record id="view_report_pharmacy_expiry_tree" model="ir.ui.view">
+        <field name="name">report.pharmacy.expiry.tree</field>
+        <field name="model">report.pharmacy.expiry</field>
+        <field name="arch" type="xml">
+            <list string="Stock Expiry Report">
+                <field name="expiry_date"/>
+                <field name="days_to_expiry"/>
+                <field name="expiry_bucket"/>
+                <field name="branch_id"/>
+                <field name="product_id"/>
+                <field name="lot_id"/>
+                <field name="quantity"/>
+                <field name="value" widget="monetary"/>
+                <field name="cost_price" widget="monetary"/>
+            </list>
+        </field>
+    </record>
+    
+    <record id="view_report_pharmacy_expiry_graph" model="ir.ui.view">
+        <field name="name">report.pharmacy.expiry.graph</field>
+        <field name="model">report.pharmacy.expiry</field>
+        <field name="arch" type="xml">
+            <graph string="Stock Expiry Analysis" type="pie">
+                <field name="expiry_bucket"/>
+                <field name="value" operator="sum"/>
+            </graph>
+        </field>
+    </record>
+    
+    <record id="action_report_pharmacy_expiry" model="ir.actions.act_window">
+        <field name="name">Stock Expiry Report</field>
+        <field name="res_model">report.pharmacy.expiry</field>
+        <field name="view_mode">list,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No expiry data available
+            </p>
+            <p>
+                This report shows stock expiry analysis by branch and expiry buckets.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Stock Movement Report -->
+    <record id="view_report_pharmacy_stock_movement_tree" model="ir.ui.view">
+        <field name="name">report.pharmacy.stock.movement.tree</field>
+        <field name="model">report.pharmacy.stock.movement</field>
+        <field name="arch" type="xml">
+            <list string="Stock Movement Analysis">
+                <field name="branch_id"/>
+                <field name="product_id"/>
+                <field name="category_id"/>
+                <field name="current_stock"/>
+                <field name="qty_sold_30d"/>
+                <field name="qty_sold_60d"/>
+                <field name="qty_sold_90d"/>
+                <field name="days_of_stock"/>
+                <field name="movement_category"/>
+            </list>
+        </field>
+    </record>
+    
+    <record id="view_report_pharmacy_stock_movement_graph" model="ir.ui.view">
+        <field name="name">report.pharmacy.stock.movement.graph</field>
+        <field name="model">report.pharmacy.stock.movement</field>
+        <field name="arch" type="xml">
+            <graph string="Stock Movement Analysis" type="bar">
+                <field name="movement_category"/>
+                <field name="current_stock" operator="sum"/>
+            </graph>
+        </field>
+    </record>
+    
+    <record id="action_report_pharmacy_stock_movement" model="ir.actions.act_window">
+        <field name="name">Stock Movement Analysis</field>
+        <field name="res_model">report.pharmacy.stock.movement</field>
+        <field name="view_mode">list,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No movement data available
+            </p>
+            <p>
+                This report analyzes stock movement patterns and identifies fast/slow moving items.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Claims Summary Report -->
+    <record id="view_report_pharmacy_claims_summary_tree" model="ir.ui.view">
+        <field name="name">report.pharmacy.claims.summary.tree</field>
+        <field name="model">report.pharmacy.claims.summary</field>
+        <field name="arch" type="xml">
+            <list string="Insurance Claims Summary">
+                <field name="month"/>
+                <field name="branch_id"/>
+                <field name="insurer_id"/>
+                <field name="plan_id"/>
+                <field name="total_claims"/>
+                <field name="submitted_claims"/>
+                <field name="approved_claims"/>
+                <field name="rejected_claims"/>
+                <field name="total_claimed_amount" widget="monetary"/>
+                <field name="total_approved_amount" widget="monetary"/>
+                <field name="approval_rate" widget="percentage"/>
+                <field name="outstanding_amount" widget="monetary"/>
+            </list>
+        </field>
+    </record>
+    
+    <record id="view_report_pharmacy_claims_summary_graph" model="ir.ui.view">
+        <field name="name">report.pharmacy.claims.summary.graph</field>
+        <field name="model">report.pharmacy.claims.summary</field>
+        <field name="arch" type="xml">
+            <graph string="Claims Summary" type="bar">
+                <field name="month"/>
+                <field name="total_approved_amount" operator="sum"/>
+                <field name="insurer_id" groups="True"/>
+            </graph>
+        </field>
+    </record>
+    
+    <record id="view_report_pharmacy_claims_summary_pivot" model="ir.ui.view">
+        <field name="name">report.pharmacy.claims.summary.pivot</field>
+        <field name="model">report.pharmacy.claims.summary</field>
+        <field name="arch" type="xml">
+            <pivot string="Claims Summary">
+                <field name="total_approved_amount" type="measure"/>
+                <field name="approval_rate" type="measure"/>
+                <field name="month" type="row"/>
+                <field name="insurer_id" type="col"/>
+            </pivot>
+        </field>
+    </record>
+    
+    <record id="action_report_pharmacy_claims_summary" model="ir.actions.act_window">
+        <field name="name">Insurance Claims Summary</field>
+        <field name="res_model">report.pharmacy.claims.summary</field>
+        <field name="view_mode">list,graph,pivot</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No claims data available
+            </p>
+            <p>
+                This report summarizes insurance claims by insurer, plan, and time period.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Branch P&L Report -->
+    <record id="view_report_pharmacy_branch_pnl_tree" model="ir.ui.view">
+        <field name="name">report.pharmacy.branch.pnl.tree</field>
+        <field name="model">report.pharmacy.branch.pnl</field>
+        <field name="arch" type="xml">
+            <list string="Branch Profit &amp; Loss">
+                <field name="date"/>
+                <field name="branch_id"/>
+                <field name="total_revenue" widget="monetary"/>
+                <field name="cogs" widget="monetary"/>
+                <field name="gross_profit" widget="monetary"/>
+                <field name="gross_margin_percentage" widget="percentage"/>
+                <field name="total_expenses" widget="monetary"/>
+                <field name="net_profit" widget="monetary"/>
+                <field name="net_margin_percentage" widget="percentage"/>
+            </list>
+        </field>
+    </record>
+    
+    <record id="view_report_pharmacy_branch_pnl_graph" model="ir.ui.view">
+        <field name="name">report.pharmacy.branch.pnl.graph</field>
+        <field name="model">report.pharmacy.branch.pnl</field>
+        <field name="arch" type="xml">
+            <graph string="Branch P&amp;L" type="bar">
+                <field name="date"/>
+                <field name="net_profit" operator="sum"/>
+                <field name="branch_id" groups="True"/>
+            </graph>
+        </field>
+    </record>
+    
+    <record id="action_report_pharmacy_branch_pnl" model="ir.actions.act_window">
+        <field name="name">Branch Profit &amp; Loss</field>
+        <field name="res_model">report.pharmacy.branch.pnl</field>
+        <field name="view_mode">list,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No P&amp;L data available
+            </p>
+            <p>
+                This report shows profit and loss analysis by branch and time period.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Rejection Reasons Report -->
+    <record id="view_report_pharmacy_rejection_reasons_tree" model="ir.ui.view">
+        <field name="name">report.pharmacy.rejection.reasons.tree</field>
+        <field name="model">report.pharmacy.rejection.reasons</field>
+        <field name="arch" type="xml">
+            <list string="Claim Rejection Reasons">
+                <field name="insurer_id"/>
+                <field name="rejection_reason"/>
+                <field name="occurrences"/>
+                <field name="total_rejected_amount" widget="monetary"/>
+                <field name="percentage" widget="percentage"/>
+            </list>
+        </field>
+    </record>
+    
+    <record id="view_report_pharmacy_rejection_reasons_graph" model="ir.ui.view">
+        <field name="name">report.pharmacy.rejection.reasons.graph</field>
+        <field name="model">report.pharmacy.rejection.reasons</field>
+        <field name="arch" type="xml">
+            <graph string="Rejection Reasons" type="pie">
+                <field name="rejection_reason"/>
+                <field name="occurrences" operator="sum"/>
+            </graph>
+        </field>
+    </record>
+    
+    <record id="action_report_pharmacy_rejection_reasons" model="ir.actions.act_window">
+        <field name="name">Claim Rejection Reasons</field>
+        <field name="res_model">report.pharmacy.rejection.reasons</field>
+        <field name="view_mode">list,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No rejection data available
+            </p>
+            <p>
+                This report analyzes claim rejection reasons and frequencies.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Financial Reports Menu -->
+    <menuitem id="menu_pharmacy_financial_reports"
+              name="Financial Reports"
+              parent="menu_pharmacy_accounting"
+              sequence="50"/>
+              
+    <menuitem id="menu_pharmacy_sales_reports"
+              name="Sales Reports"
+              parent="menu_pharmacy_financial_reports"
+              sequence="10"/>
+              
+    <menuitem id="menu_pharmacy_sales_branch"
+              name="Sales by Branch"
+              parent="menu_pharmacy_sales_reports"
+              action="action_report_pharmacy_sales_branch"
+              sequence="10"/>
+              
+    <menuitem id="menu_pharmacy_stock_reports"
+              name="Stock Reports"
+              parent="menu_pharmacy_financial_reports"
+              sequence="20"/>
+              
+    <menuitem id="menu_pharmacy_expiry_report"
+              name="Expiry Report"
+              parent="menu_pharmacy_stock_reports"
+              action="action_report_pharmacy_expiry"
+              sequence="10"/>
+              
+    <menuitem id="menu_pharmacy_movement_report"
+              name="Stock Movement"
+              parent="menu_pharmacy_stock_reports"
+              action="action_report_pharmacy_stock_movement"
+              sequence="20"/>
+              
+    <menuitem id="menu_pharmacy_insurance_reports"
+              name="Insurance Reports"
+              parent="menu_pharmacy_financial_reports"
+              sequence="30"/>
+              
+    <menuitem id="menu_pharmacy_claims_summary"
+              name="Claims Summary"
+              parent="menu_pharmacy_insurance_reports"
+              action="action_report_pharmacy_claims_summary"
+              sequence="10"/>
+              
+    <menuitem id="menu_pharmacy_rejection_reasons"
+              name="Rejection Reasons"
+              parent="menu_pharmacy_insurance_reports"
+              action="action_report_pharmacy_rejection_reasons"
+              sequence="20"/>
+              
+    <menuitem id="menu_pharmacy_profit_loss"
+              name="Profit &amp; Loss"
+              parent="menu_pharmacy_financial_reports"
+              sequence="40"/>
+              
+    <menuitem id="menu_pharmacy_branch_pnl"
+              name="Branch P&amp;L"
+              parent="menu_pharmacy_profit_loss"
+              action="action_report_pharmacy_branch_pnl"
+              sequence="10"/>
+              
+</odoo>

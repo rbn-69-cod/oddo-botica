@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Company Form View Extension for eTIMS Settings -->
+        <record id="view_company_form_etims" model="ir.ui.view">
+            <field name="name">res.company.form.etims</field>
+            <field name="model">res.company</field>
+            <field name="inherit_id" ref="base.view_company_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="Facturación Electrónica SUNAT" name="etims">
+                        <group string="Configuración API SUNAT / PSE / OSE">
+                            <group>
+                                <field name="etims_api_url" string="URL API PSE / SUNAT" placeholder="https://api.pse.pe o https://api.sunat.gob.pe"/>
+                                <field name="etims_api_key" string="Token / Clave de Acceso" password="True" placeholder="Ingrese Token del PSE"/>
+                                <field name="etims_tin_number" string="RUC Emisor" placeholder="20XXXXXXXXX"/>
+                            </group>
+                            <group>
+                                <field name="etims_environment" string="Entorno SUNAT"/>
+                                <field name="etims_auto_submit" string="Envío Automático a SUNAT" widget="boolean_toggle" help="Enviar automáticamente comprobantes a SUNAT al validar"/>
+                            </group>
+                        </group>
+                        <group string="Prueba de Conexión">
+                            <button name="action_test_etims_connection" type="object" string="Probar Conexión SUNAT" class="btn-primary"/>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

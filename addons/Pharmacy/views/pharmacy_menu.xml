@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Menú Principal de Farmacia y Botica -->
+        <menuitem id="menu_pharmacy_root" name="Farmacia y Botica" sequence="10" web_icon="Pharmacy,static/description/icon.png"/>
+        
+        <!-- Menú de Pacientes -->
+        <menuitem id="menu_pharmacy_patients" name="Pacientes" parent="menu_pharmacy_root" sequence="20"/>
+        <menuitem id="menu_pharmacy_patient_list" name="Pacientes" parent="menu_pharmacy_patients" action="action_pharmacy_patient" sequence="10"/>
+        
+        <!-- Menú de Inventario y Lotes -->
+        <menuitem id="menu_pharmacy_inventory" name="Inventario" parent="menu_pharmacy_root" sequence="30"/>
+        <menuitem id="menu_pharmacy_lots" name="Control de Lotes y Vencimientos" parent="menu_pharmacy_inventory" sequence="20"/>
+        <menuitem id="menu_pharmacy_lot_list" name="Lotes y Vencimientos (FEFO)" parent="menu_pharmacy_lots" action="action_pharmacy_lot" sequence="10"/>
+        
+        <!-- Menú de Operaciones y Caja -->
+        <menuitem id="menu_pharmacy_operations" name="Operaciones" parent="menu_pharmacy_root" sequence="40"/>
+        <menuitem id="menu_pharmacy_cashup" name="Arqueo de Caja" parent="menu_pharmacy_operations" sequence="30"/>
+        <menuitem id="menu_pharmacy_cashup_list" name="Cierres de Turno y Arqueos" parent="menu_pharmacy_cashup" action="action_pharmacy_cashup" sequence="10"/>
+        
+        <!-- Menú de Libro Oficial DIGEMID (Controlados) -->
+        <menuitem id="menu_pharmacy_compliance" name="DIGEMID y Controlados" parent="menu_pharmacy_root" sequence="50"/>
+        <menuitem id="menu_pharmacy_controlled_substance_register" name="Libro Oficial de Controlados" parent="menu_pharmacy_compliance" action="action_pharmacy_controlled_substance_register" sequence="10"/>
+        <menuitem id="menu_pharmacy_controlled_substance_summary" name="Resumen de Psicotrópicos" parent="menu_pharmacy_controlled_substance_register" action="action_pharmacy_controlled_substance_summary" sequence="20"/>
+        
+        <!-- Menú de Seguros y Convenios -->
+        <menuitem id="menu_pharmacy_insurance" name="Aseguradoras y Convenios" parent="menu_pharmacy_root" sequence="60"/>
+        <menuitem id="menu_pharmacy_insurers" name="Compañías Aseguradoras" parent="menu_pharmacy_insurance" sequence="10"/>
+        <menuitem id="menu_pharmacy_insurer_list" name="Aseguradoras" parent="menu_pharmacy_insurers" action="action_pharmacy_insurer" sequence="10"/>
+        <menuitem id="menu_pharmacy_insurer_plan_list" name="Planes de Cobertura" parent="menu_pharmacy_insurers" action="action_pharmacy_insurer_plan" sequence="20"/>
+        <menuitem id="menu_pharmacy_coverage_rule" name="Reglas de Cobertura" parent="menu_pharmacy_insurance" action="action_pharmacy_coverage_rule" sequence="30"/>
+        
+        <!-- Menú de Reportes -->
+        <menuitem id="menu_pharmacy_reports" name="Reportes" parent="menu_pharmacy_root" sequence="70"/>
+        <menuitem id="menu_pharmacy_sales_reports" name="Reportes de Ventas" parent="menu_pharmacy_reports" sequence="10"/>
+        <menuitem id="menu_pharmacy_inventory_reports" name="Reportes de Lotes y FEFO" parent="menu_pharmacy_reports" sequence="20"/>
+        <menuitem id="menu_pharmacy_insurance_reports" name="Reportes de Convenios" parent="menu_pharmacy_reports" sequence="30"/>
+        <menuitem id="menu_pharmacy_financial_reports" name="Reportes Financieros" parent="menu_pharmacy_reports" sequence="40"/>
+        
+        <!-- Menú de Contabilidad Farmacéutica -->
+        <menuitem id="menu_pharmacy_accounting" name="Contabilidad" parent="menu_pharmacy_root" sequence="80"/>
+        <menuitem id="menu_pharmacy_cashup_management" name="Gestión de Cierres de Caja" parent="menu_pharmacy_accounting" action="action_pharmacy_cashup" sequence="10"/>
+        <menuitem id="menu_pharmacy_price_change" name="Historial de Precios" parent="menu_pharmacy_accounting" action="action_pharmacy_price_change" sequence="20"/>
+        
+        <!-- Menú de Configuración -->
+        <menuitem id="menu_pharmacy_config" name="Configuración" parent="menu_pharmacy_root" sequence="100"/>
+        <menuitem id="menu_pharmacy_branch" name="Sucursales / Boticas" parent="menu_pharmacy_config" sequence="10"/>
+        <menuitem id="menu_pharmacy_branch_list" name="Boticas y Sedes" parent="menu_pharmacy_branch" action="action_pharmacy_branch" sequence="10"/>
+        <menuitem id="menu_pharmacy_dosage_form" name="Formas Farmacéuticas" parent="menu_pharmacy_config" action="action_pharmacy_dosage_form" sequence="20"/>
+        <menuitem id="menu_pharmacy_discount_rule" name="Reglas de Descuento" parent="menu_pharmacy_config" action="action_pharmacy_discount_rule" sequence="30"/>
+        <menuitem id="menu_pharmacy_promotion" name="Promociones" parent="menu_pharmacy_config" action="action_pharmacy_promotion" sequence="40"/>
+        <menuitem id="menu_pharmacy_pricelist" name="Tarifas y Listas de Precios" parent="menu_pharmacy_config" action="action_product_pricelist_pharmacy" sequence="50"/>
+        
+    </data>
+</odoo>

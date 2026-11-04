@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <!-- Pharmacy Product Card Badges -->
+    <!-- Use with custom POS implementation for pharmacy badges -->
+    
+    <!-- Insurance Payment Popup Template -->
+    <t t-name="pharmacy.InsurancePopup" owl="1">
+        <div class="popup insurance-popup">
+            <div class="modal-header">
+                <h4 class="modal-title">Insurance Coverage Details</h4>
+            </div>
+            <div class="modal-body">
+                <div class="insurance-form-group">
+                    <label>Insurance Provider</label>
+                    <select class="form-control detail" name="insurer_id">
+                        <option value="">-- Select Insurer --</option>
+                        <option value="1">NHIF</option>
+                        <option value="2">AAR Health</option>
+                        <option value="3">Jubilee Health</option>
+                    </select>
+                </div>
+                
+                <div class="insurance-form-group">
+                    <label>Member ID / Card Number</label>
+                    <input type="text" class="form-control detail" name="member_number" placeholder="Enter member ID"/>
+                </div>
+                
+                <div class="insurance-form-group">
+                    <label>Patient Name</label>
+                    <input type="text" class="form-control detail" name="patient_name" placeholder="Enter patient name"/>
+                </div>
+
+                <div class="insurance-form-group">
+                    <label>Prescription Reference (Optional)</label>
+                    <input type="text" class="form-control detail" name="prescription_ref" placeholder="Dr. Name / Rx #"/>
+                </div>
+                
+                <div class="insurance-summary mt-3" style="display:none;">
+                    <p><strong>Coverage:</strong> <span class="coverage-pct">0</span>%</p>
+                    <p><strong>Co-pay:</strong> <span class="copay-pct">0</span>%</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="this.confirmInsurance()">
+                    <i class="fa fa-check"></i> Confirm &amp; Apply
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="this.cancelInsurance()">
+                    <i class="fa fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </t>
+
+</templates>

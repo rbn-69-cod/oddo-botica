@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <!-- Prescription Report Template -->
+    <t t-name="Pharmacy.report_prescription">
+        <div class="article">
+            <div class="text-center">
+                <h2>PRESCRIPTION</h2>
+                <p t-field="doc.company_id.name"/>
+                <p t-field="doc.company_id.phone"/>
+                <p t-field="doc.company_id.email"/>
+            </div>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <strong>Prescription No:</strong> <span t-field="doc.name"/><br/>
+                    <strong>Date:</strong> <span t-field="doc.prescription_date"/><br/>
+                    <strong>Valid Until:</strong> <span t-field="doc.expiry_date"/>
+                </div>
+                <div class="col-6">
+                    <strong>Patient:</strong> <span t-field="doc.patient_id.name"/><br/>
+                    <strong>Patient Code:</strong> <span t-field="doc.patient_id.patient_code"/><br/>
+                    <strong>Age/Gender:</strong> <span t-field="doc.patient_id.age"/>/<span t-field="doc.patient_id.gender"/>
+                </div>
+            </div>
+            
+            <hr/>
+            
+            <div>
+                <strong>Prescriber:</strong> <span t-field="doc.prescriber_name"/><br/>
+                <strong>License:</strong> <span t-field="doc.prescriber_license"/><br/>
+                <strong>Diagnosis:</strong> <span t-field="doc.diagnosis"/>
+            </div>
+            
+            <hr/>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th>Medicine</th>
+                        <th>Strength</th>
+                        <th>Form</th>
+                        <th>Quantity</th>
+                        <th>Dosage Instructions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-set="line_number" t-value="1"/>
+                    <tr t-foreach="doc.line_ids" t-as="line">
+                        <td class="text-center"><t t-esc="line_number"/></td>
+                        <td>
+                            <span t-field="line.product_id.name"/>
+                            <br/>
+                            <small t-field="line.product_id.generic_name" class="text-muted"/>
+                        </td>
+                        <td t-field="line.product_id.strength"/>
+                        <td t-field="line.product_id.get_dosage_form_label()"/>
+                        <td t-field="line.quantity_prescribed"/>
+                        <td>
+                            <span t-field="line.frequency"/>
+                            <br/>
+                            <span t-field="line.dosage_instructions"/>
+                        </td>
+                        <t t-set="line_number" t-value="line_number + 1"/>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <strong>Notes:</strong><br/>
+                    <span t-field="doc.notes"/>
+                </div>
+                <div class="col-6">
+                    <strong>Pharmacist Verification:</strong><br/>
+                    <br/><br/><br/>
+                    <hr/>
+                    <p class="text-center">Signature &amp; Date</p>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Dispensing Label Template -->
+    <t t-name="Pharmacy.report_dispensing_label">
+        <div class="article" style="width: 100mm; height: 50mm;">
+            <div class="text-center">
+                <h4><span t-field="doc.patient_id.name"/></h4>
+                <p><strong>ID:</strong> <span t-field="doc.patient_id.patient_code"/></p>
+            </div>
+            
+            <hr/>
+            
+            <div>
+                <strong><span t-field="doc.product_id.name"/></strong>
+                <br/>
+                <small t-field="doc.product_id.generic_name" class="text-muted"/>
+                <t t-if="doc.product_id.strength">
+                    <br/><span t-field="doc.product_id.strength"/>
+                </t>
+            </div>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <strong>Quantity:</strong> <span t-field="doc.quantity"/><br/>
+                    <strong>Batch:</strong> <span t-field="doc.lot_id.name"/>
+                </div>
+                <div class="col-6">
+                    <strong>Expiry:</strong> <span t-field="doc.lot_id.expiry_date"/><br/>
+                    <strong>Dispensed:</strong> <span t-field="doc.dispensed_date"/>
+                </div>
+            </div>
+            
+            <hr/>
+            
+            <div>
+                <strong>Dosage:</strong><br/>
+                <span t-field="doc.dosage_instructions"/>
+            </div>
+            
+            <hr/>
+            
+            <div class="text-center">
+                <small>
+                    Dispensed by: <span t-field="doc.dispensed_by.name"/><br/>
+                    Branch: <span t-field="doc.branch_id.name"/>
+                </small>
+            </div>
+        </div>
+    </t>
+
+    <!-- Insurance Claim Report Template -->
+    <t t-name="Pharmacy.report_claim">
+        <div class="article">
+            <div class="text-center">
+                <h2>INSURANCE CLAIM</h2>
+                <p t-field="doc.company_id.name"/>
+                <p t-field="doc.company_id.phone"/>
+            </div>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <strong>Claim Reference:</strong> <span t-field="doc.name"/><br/>
+                    <strong>Claim Date:</strong> <span t-field="doc.claim_date"/><br/>
+                    <strong>Submission Date:</strong> <span t-field="doc.submission_date"/>
+                </div>
+                <div class="col-6">
+                    <strong>Status:</strong> <span t-field="doc.status"/><br/>
+                    <strong>Branch:</strong> <span t-field="doc.branch_id.name"/><br/>
+                    <strong>POS Order:</strong> <span t-field="doc.pos_order_id.name"/>
+                </div>
+            </div>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <strong>Insurer:</strong> <span t-field="doc.insurer_id.name"/><br/>
+                    <strong>Plan:</strong> <span t-field="doc.plan_id.name"/>
+                </div>
+                <div class="col-6">
+                    <strong>Member Number:</strong> <span t-field="doc.member_number"/><br/>
+                    <strong>Patient:</strong> <span t-field="doc.patient_name"/>
+                </div>
+            </div>
+            
+            <t t-if="doc.preauth_code">
+                <hr/>
+                <div>
+                    <strong>Pre-authorization Code:</strong> <span t-field="doc.preauth_code"/>
+                </div>
+            </t>
+            
+            <hr/>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th>Product</th>
+                        <th>Batch</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Subtotal</th>
+                        <th>Coverage %</th>
+                        <th>Claimed</th>
+                        <th>Approved</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-set="line_number" t-value="1"/>
+                    <tr t-foreach="doc.line_ids" t-as="line">
+                        <td class="text-center"><t t-esc="line_number"/></td>
+                        <td t-field="line.product_id.name"/>
+                        <td t-field="line.lot_id.name"/>
+                        <td t-field="line.quantity"/>
+                        <td t-field="line.unit_price"/>
+                        <td t-field="line.subtotal"/>
+                        <td t-field="line.coverage_percentage"/>
+                        <td t-field="line.claimed_amount"/>
+                        <td t-field="line.approved_amount"/>
+                        <td t-field="line.status"/>
+                        <t t-set="line_number" t-value="line_number + 1"/>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="7" class="text-right">TOTALS:</th>
+                        <td t-field="doc.total_claimed_amount"/>
+                        <td t-field="doc.total_approved_amount"/>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <strong>Co-pay Amount:</strong> <span t-field="doc.copay_amount"/><br/>
+                    <strong>Total Amount:</strong> <span t-field="doc.total_amount"/>
+                </div>
+                <div class="col-6">
+                    <strong>Approval Date:</strong> <span t-field="doc.approval_date"/><br/>
+                    <strong>Payment Date:</strong> <span t-field="doc.payment_date"/>
+                </div>
+            </div>
+            
+            <t t-if="doc.rejection_reason">
+                <hr/>
+                <div>
+                    <strong>Rejection Reason:</strong><br/>
+                    <span t-field="doc.rejection_reason"/>
+                </div>
+            </t>
+            
+            <t t-if="doc.notes">
+                <hr/>
+                <div>
+                    <strong>Notes:</strong><br/>
+                    <span t-field="doc.notes"/>
+                </div>
+            </t>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <p>Prepared by: _____________________</p>
+                    <p>Date: _____________________</p>
+                </div>
+                <div class="col-6">
+                    <p>Approved by: _____________________</p>
+                    <p>Date: _____________________</p>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Product Label Template -->
+    <t t-name="Pharmacy.report_product_label">
+        <div class="article" style="width: 80mm; height: 40mm;">
+            <div class="text-center">
+                <h5><span t-field="doc.name"/></h5>
+                <t t-if="doc.generic_name">
+                    <small t-field="doc.generic_name" class="text-muted"/>
+                </t>
+            </div>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <strong>Strength:</strong> <span t-field="doc.strength"/><br/>
+                    <strong>Form:</strong> <span t-field="doc.get_dosage_form_label()"/>
+                </div>
+                <div class="col-6">
+                    <strong>Price:</strong> <span t-field="doc.list_price"/><br/>
+                    <strong>Barcode:</strong> <span t-field="doc.barcode"/>
+                </div>
+            </div>
+            
+            <t t-if="doc.is_prescription_required">
+                <hr/>
+                <div class="text-center">
+                    <span class="badge badge-danger">PRESCRIPTION REQUIRED</span>
+                </div>
+            </t>
+            
+            <t t-if="doc.is_controlled_substance">
+                <hr/>
+                <div class="text-center">
+                    <span class="badge badge-warning">CONTROLLED SUBSTANCE</span>
+                </div>
+            </t>
+            
+            <hr/>
+            
+            <div class="text-center">
+                <small>
+                    <span t-field="doc.company_id.name"/><br/>
+                    <span t-field="doc.company_id.phone"/>
+                </small>
+            </div>
+        </div>
+    </t>
+
+    <!-- Cash-up Report Template -->
+    <t t-name="Pharmacy.report_cashup">
+        <div class="article">
+            <div class="text-center">
+                <h2>CASH-UP REPORT</h2>
+                <p t-field="doc.company_id.name"/>
+                <p t-field="doc.company_id.phone"/>
+            </div>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <strong>Cash-up Reference:</strong> <span t-field="doc.name"/><br/>
+                    <strong>Date:</strong> <span t-field="doc.date"/><br/>
+                    <strong>Branch:</strong> <span t-field="doc.branch_id.name"/>
+                </div>
+                <div class="col-6">
+                    <strong>Cashier:</strong> <span t-field="doc.cashier_id.name"/><br/>
+                    <strong>POS Session:</strong> <span t-field="doc.session_id.name"/><br/>
+                    <strong>Status:</strong> <span t-field="doc.status"/>
+                </div>
+            </div>
+            
+            <hr/>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Payment Method</th>
+                        <th>Expected</th>
+                        <th>Actual</th>
+                        <th>Variance</th>
+                        <th>Variance %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Cash</strong></td>
+                        <td t-field="doc.expected_cash"/>
+                        <td t-field="doc.actual_cash"/>
+                        <td t-field="doc.cash_variance"/>
+                        <td>
+                            <t t-if="doc.expected_cash > 0">
+                                <t t-esc="(doc.cash_variance / doc.expected_cash * 100)"/>
+                            </t>
+                            <t t-else="">0</t>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>M-Pesa</strong></td>
+                        <td t-field="doc.expected_mpesa"/>
+                        <td t-field="doc.actual_mpesa"/>
+                        <td t-field="doc.mpesa_variance"/>
+                        <td>
+                            <t t-if="doc.expected_mpesa > 0">
+                                <t t-esc="(doc.mpesa_variance / doc.expected_mpesa * 100)"/>
+                            </t>
+                            <t t-else="">0</t>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Card</strong></td>
+                        <td t-field="doc.expected_card"/>
+                        <td t-field="doc.actual_card"/>
+                        <td t-field="doc.card_variance"/>
+                        <td>
+                            <t t-if="doc.expected_card > 0">
+                                <t t-esc="(doc.card_variance / doc.expected_card * 100)"/>
+                            </t>
+                            <t t-else="">0</t>
+                        </td>
+                    </tr>
+                    <tr class="font-weight-bold">
+                        <td><strong>TOTAL</strong></td>
+                        <td t-field="doc.expected_total"/>
+                        <td t-field="doc.actual_total"/>
+                        <td t-field="doc.total_variance"/>
+                        <td>
+                            <t t-if="doc.expected_total > 0">
+                                <t t-esc="(doc.total_variance / doc.expected_total * 100)"/>
+                            </t>
+                            <t t-else="">0</t>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <t t-if="doc.variance_reason">
+                <hr/>
+                <div>
+                    <strong>Variance Reason:</strong><br/>
+                    <span t-field="doc.variance_reason"/>
+                </div>
+            </t>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <p>Submitted by: _____________________</p>
+                    <p>Date: _____________________</p>
+                </div>
+                <div class="col-6">
+                    <p>Approved by: _____________________</p>
+                    <p>Date: _____________________</p>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Controlled Substances Register Template -->
+    <t t-name="Pharmacy.report_controlled_substances_register">
+        <div class="article">
+            <div class="text-center">
+                <h2>CONTROLLED SUBSTANCES REGISTER</h2>
+                <p t-field="doc.company_id.name"/>
+                <p t-field="doc.company_id.license_number"/>
+            </div>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <strong>Branch:</strong> <span t-field="doc.branch_id.name"/><br/>
+                    <strong>Period:</strong> <span t-field="doc.date"/>
+                </div>
+                <div class="col-6">
+                    <strong>Prepared by:</strong> <span t-field="doc.company_id.partner_id.name"/><br/>
+                    <strong>Date Prepared:</strong> <span t-esc="datetime.datetime.now().strftime('%Y-%m-%d')"/>
+                </div>
+            </div>
+            
+            <hr/>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Product</th>
+                        <th>Batch</th>
+                        <th>Quantity</th>
+                        <th>Patient Name</th>
+                        <th>Patient ID</th>
+                        <th>Prescription</th>
+                        <th>Dispensed By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="docs" t-as="entry">
+                        <td t-field="entry.date"/>
+                        <td t-field="entry.get_time_display()"/>
+                        <td t-field="entry.product_id.name"/>
+                        <td t-field="entry.lot_id.name"/>
+                        <td t-field="entry.quantity"/>
+                        <td t-field="entry.patient_name"/>
+                        <td t-field="entry.patient_id_number"/>
+                        <td t-field="entry.prescription_ref"/>
+                        <td t-field="entry.dispensed_by.name"/>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <hr/>
+            
+            <div class="row">
+                <div class="col-6">
+                    <p>Pharmacist: _____________________</p>
+                    <p>Signature: _____________________</p>
+                </div>
+                <div class="col-6">
+                    <p>Manager: _____________________</p>
+                    <p>Signature: _____________________</p>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

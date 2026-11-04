@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Asistente de Transferencia Entre Boticas / Sucursales -->
+        <record id="view_inter_branch_transfer_wizard" model="ir.ui.view">
+            <field name="name">Inter-Branch Transfer Wizard</field>
+            <field name="model">inter.branch.transfer.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Transferir Productos Entre Boticas">
+                    <group string="Detalles de la Transferencia" class="alert alert-info">
+                        <group>
+                            <field name="source_branch_id" required="1" options="{'no_create': True}" help="Botica de origen que envía mercadería"/>
+                            <field name="destination_branch_id" required="1" options="{'no_create': True}" help="Botica de destino que recibe mercadería"/>
+                        </group>
+                        <group>
+                            <field name="transfer_date" required="1" help="Fecha de la transferencia"/>
+                            <field name="reason" placeholder="Motivo del traslado entre boticas" required="1"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Productos a Transferir">
+                        <p class="text-muted" style="font-size: 12px;">
+                            Agregue los medicamentos o insumos a trasladar. Indicar el lote garantiza la trazabilidad y método FEFO.
+                        </p>
+                    </group>
+                    <field name="line_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="product_id" required="1" help="Medicamento o producto a transferir"/>
+                            <field name="quantity" required="1" help="Cantidad de unidades"/>
+                            <field name="lot_id" domain="[('product_id', '=', product_id), ('is_expired', '=', False)]" help="Lote específico (no vencido)"/>
+                            <field name="uom_id" readonly="1" help="Unidad de medida"/>
+                        </list>
+                    </field>
+                    
+                    <footer>
+                        <button name="action_create_transfer" type="object" string="Crear Transferencia" class="btn-primary" confirm="¿Confirma la creación de esta transferencia entre boticas?"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Asistente de Reporte de Vencimiento de Lotes -->
+        <record id="view_batch_expiry_report_wizard" model="ir.ui.view">
+            <field name="name">Batch Expiry Report Wizard</field>
+            <field name="model">batch.expiry.report.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Generar Informe de Vencimiento de Lotes">
+                    <group string="Filtros del Informe" class="alert alert-info">
+                        <group>
+                            <field name="branch_id" help="Dejar en blanco para todas las boticas"/>
+                            <field name="category_id" help="Dejar en blanco para todas las categorías"/>
+                        </group>
+                        <group>
+                            <field name="date_from" required="1" help="Fecha inicial"/>
+                            <field name="date_to" required="1" help="Fecha final"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Criterios a Incluir">
+                        <p class="text-muted" style="font-size: 12px;">
+                            Seleccione qué medicamentos incluir en el informe.
+                        </p>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="include_expired" help="Incluir productos ya caducados"/>
+                            <field name="include_near_expiry" help="Incluir productos próximos a caducar"/>
+                        </group>
+                        <group>
+                            <label for="near_expiry_days" string="Días Antes del Vencimiento"/>
+                            <field name="near_expiry_days" placeholder="Ej. 30" help="Productos que vencen dentro de este número de días" invisible="not include_near_expiry"/>
+                        </group>
+                    </group>
+                    
+                    <footer>
+                        <button name="action_generate_report" type="object" string="Generar Informe" class="btn-primary"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Asistente de Conciliación de Reclamos a Aseguradoras -->
+        <record id="view_insurance_reconciliation_wizard" model="ir.ui.view">
+            <field name="name">Insurance Claims Reconciliation Wizard</field>
+            <field name="model">insurance.reconciliation.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Conciliar Liquidaciones de Seguros">
+                    <group string="Paso 1: Selección de Aseguradora y Fechas" class="alert alert-info">
+                        <group>
+                            <field name="insurer_id" required="1" options="{'no_create': True}" help="Compañía de seguro a conciliar"/>
+                            <field name="reconciliation_type" required="1" help="Modalidad de conciliación"/>
+                        </group>
+                        <group>
+                            <field name="date_from" required="1" help="Reclamos desde esta fecha"/>
+                            <field name="date_to" required="1" help="Reclamos hasta esta fecha"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Conciliación Manual" invisible="reconciliation_type != 'manual'">
+                            <group string="Paso 2: Seleccionar Reclamos a Conciliar" class="alert alert-warning">
+                                <p style="font-size: 12px;">
+                                    Revise y marque los reclamos aceptados o liquidados según la constancia de pago de la aseguradora.
+                                </p>
+                            </group>
+                            <field name="claim_ids" nolabel="1">
+                                <list>
+                                    <field name="name" readonly="1"/>
+                                    <field name="claim_date" readonly="1"/>
+                                    <field name="total_amount" widget="monetary" readonly="1"/>
+                                    <field name="approved_amount" widget="monetary" readonly="1"/>
+                                    <field name="status" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        
+                        <page string="Importar Estado de Cuenta" invisible="reconciliation_type != 'import'">
+                            <group string="Paso 2: Subir Archivo de Liquidación de la Aseguradora">
+                                <p class="text-muted" style="font-size: 12px;">
+                                    Cargue el archivo provisto por la aseguradora (formato CSV o Excel).
+                                </p>
+                                <field name="statement_file" filename="filename" required="1" help="Seleccione el archivo de liquidación"/>
+                                <field name="filename" invisible="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                    
+                    <footer>
+                        <button name="action_reconcile" type="object" string="Conciliar Reclamos" class="btn-primary" confirm="¿Proceder con la conciliación?"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Asistente de Discrepancias / Mermas en Recepción de Almacén -->
+        <record id="view_stock_picking_variance_wizard" model="ir.ui.view">
+            <field name="name">Stock Picking Variance Wizard</field>
+            <field name="model">stock.picking.variance.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Registrar Discrepancias en Recepción">
+                    <group>
+                        <field name="picking_id" readonly="1" help="Recepción de mercadería asociada"/>
+                    </group>
+                    
+                    <group string="Registro de Discrepancias o Mermas" class="alert alert-warning">
+                        <p style="font-size: 12px;">
+                            Registre cualquier diferencia detectada entre lo facturado/comprado y la mercadería física recibida.
+                        </p>
+                    </group>
+                    
+                    <field name="variance_line_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="product_id" required="1" help="Medicamento o producto con diferencia"/>
+                            <field name="lot_id" domain="[('product_id', '=', product_id)]" help="Lote específico recibido"/>
+                            <field name="expected_quantity" readonly="1" help="Cantidad esperada / según orden"/>
+                            <field name="received_quantity" required="1" help="Cantidad física realmente recibida"/>
+                            <field name="variance_quantity" readonly="1" help="Diferencia (calculada automáticamente)"/>
+                            <field name="variance_type" required="1" help="Faltante, Sobrante, Dañado, etc."/>
+                            <field name="variance_reason" placeholder="Justificación o motivo"/>
+                        </list>
+                    </field>
+                    
+                    <group>
+                        <field name="notes" nolabel="1" placeholder="Observaciones adicionales sobre las discrepancias..." rows="4"/>
+                    </group>
+                    
+                    <footer>
+                        <button name="action_record_variances" type="object" string="Registrar Discrepancias" class="btn-primary"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Asistente de Afiliación de Paciente a Seguro / EPS -->
+        <record id="view_patient_insurance_wizard" model="ir.ui.view">
+            <field name="name">Patient Insurance Enrollment Wizard</field>
+            <field name="model">patient.insurance.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Afiliar Paciente a Plan de Seguro">
+                    <group string="Paso 1: Selección de Paciente y Aseguradora" class="alert alert-info">
+                        <group>
+                            <field name="patient_id" required="1" options="{'no_create': True}" help="Seleccionar el paciente"/>
+                            <field name="insurer_id" required="1" options="{'no_create': True}" help="Seleccionar la compañía de seguros"/>
+                        </group>
+                        <group>
+                            <field name="plan_id" required="1" options="{'no_create': True}" help="Seleccionar el plan de cobertura"/>
+                            <field name="member_number" required="1" placeholder="Ej. POL-2026-00123" help="Número de póliza o código de asegurado"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Paso 2: Vigencia de la Póliza">
+                        <group>
+                            <field name="valid_from" required="1" help="Fecha de inicio de vigencia"/>
+                            <field name="valid_to" required="1" help="Fecha de expiración de vigencia"/>
+                        </group>
+                        <group>
+                            <field name="relationship_to_member" help="Titular, Cónyuge, Hijo/a, Padre/Madre"/>
+                            <field name="policy_number" placeholder="Número de contrato o póliza"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Paso 3: Condiciones de Cobertura">
+                        <group>
+                            <field name="coverage_percentage" widget="percentage" help="% cubierto por la aseguradora"/>
+                            <field name="copay_percentage" widget="percentage" help="% copago a cargo del paciente"/>
+                        </group>
+                        <group>
+                            <field name="monthly_limit" widget="monetary" help="Tope de cobertura mensual"/>
+                            <field name="per_visit_limit" widget="monetary" help="Tope de cobertura por atención"/>
+                        </group>
+                    </group>
+                    
+                    <footer>
+                        <button name="action_enroll" type="object" string="Afiliar Paciente" class="btn-primary" confirm="¿Confirma la afiliación del paciente a este seguro?"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Asistente de Ajuste Físico de Inventario -->
+        <record id="view_stock_adjustment_wizard" model="ir.ui.view">
+            <field name="name">Stock Adjustment Wizard</field>
+            <field name="model">stock.adjustment.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Ajuste Físico de Inventario">
+                    <group string="Detalles del Ajuste" class="alert alert-info">
+                        <group>
+                            <field name="branch_id" required="1" options="{'no_create': True}" help="Botica / Sucursal"/>
+                            <field name="location_id" required="1" options="{'no_create': True}" help="Ubicación o estantería"/>
+                        </group>
+                        <group>
+                            <field name="adjustment_date" required="1" help="Fecha de la toma física"/>
+                            <field name="reason" required="1" help="Motivo del ajuste (conteo físico, merma, rotura, baja por caducidad)" placeholder="Ej. Conteo mensual, Merma por vencimiento, Corrección"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Medicamentos e Insumos a Ajustar">
+                        <p class="text-muted" style="font-size: 12px;">
+                            Indique las cantidades a corregir. Cantidades negativas disminuyen el stock, positivas lo incrementan.
+                        </p>
+                    </group>
+                    <field name="line_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="product_id" required="1" help="Medicamento o producto"/>
+                            <field name="lot_id" domain="[('product_id', '=', product_id)]" help="Lote específico (opcional)"/>
+                            <field name="current_quantity" readonly="1" help="Stock actual en sistema"/>
+                            <field name="adjustment_quantity" required="1" help="Cantidad a sumar o restar (+/-)"/>
+                            <field name="adjustment_type" required="1" help="Tipo de movimiento"/>
+                            <field name="notes" placeholder="Detalle o justificación"/>
+                        </list>
+                    </field>
+                    
+                    <footer>
+                        <button name="action_adjust_stock" type="object" string="Aplicar Ajuste de Stock" class="btn-primary" confirm="¿Confirma la aplicación de estos ajustes de inventario?"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Acciones de Ventana -->
+        
+        <record id="action_inter_branch_transfer_wizard" model="ir.actions.act_window">
+            <field name="name">Transferencia Entre Boticas</field>
+            <field name="res_model">inter.branch.transfer.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+        <record id="action_batch_expiry_report_wizard" model="ir.actions.act_window">
+            <field name="name">Informe de Vencimiento de Lotes</field>
+            <field name="res_model">batch.expiry.report.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+        <record id="action_insurance_reconciliation_wizard" model="ir.actions.act_window">
+            <field name="name">Conciliación de Reclamos a Aseguradoras</field>
+            <field name="res_model">insurance.reconciliation.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+        <record id="action_patient_insurance_wizard" model="ir.actions.act_window">
+            <field name="name">Afiliar Paciente a Seguro</field>
+            <field name="res_model">patient.insurance.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+        <record id="action_stock_adjustment_wizard" model="ir.actions.act_window">
+            <field name="name">Ajuste de Inventario</field>
+            <field name="res_model">stock.adjustment.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+    </data>
+</odoo>

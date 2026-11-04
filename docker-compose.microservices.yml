@@ -1,0 +1,497 @@
+services:
+  # ============================================================
+  # 1. FRONTEND: Angular 17 Contenerizado con Nginx
+  # ============================================================
+  frontend:
+    build:
+      context: ./clients/medizano-frontend
+      dockerfile: Dockerfile
+    container_name: medizano-frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "4200:80"
+    depends_on:
+      - api-gateway
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - medizano-net
+
+  # ============================================================
+  # 2. INFRAESTRUCTURA DE DATOS: PostgreSQL (Interno a Docker)
+  # ============================================================
+  postgres:
+    image: postgres:16
+    container_name: medizano-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-medizano_master_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}
+      TZ: America/Lima
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-microservices-db.sql:/docker-entrypoint-initdb.d/init-microservices-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - medizano-net
+
+  # ============================================================
+  # 3. SERVIDORES SPRING CLOUD: Eureka Server & API Gateway
+  # ============================================================
+  eureka-server:
+    build:
+      context: .
+      dockerfile: infra/medizano-eureka/Dockerfile
+    container_name: medizano-eureka-server
+    restart: always
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8761/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - medizano-net
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: infra/medizano-gateway/Dockerfile
+    container_name: medizano-api-gateway
+    restart: always
+    ports:
+      - "8090:8090"
+    depends_on:
+      - eureka-server
+    environment:
+      SERVER_PORT: 8090
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET es obligatorio}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx200m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8090/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - medizano-net
+
+  # ============================================================
+  # 4. MICROSERVICIOS DE NEGOCIO (Acceso Estrictamente Interno)
+  # ============================================================
+
+  usuario-ms:
+    build:
+      context: .
+      dockerfile: services/medizano-usuario-ms/Dockerfile
+    container_name: medizano-usuario-ms
+    restart: always
+    expose:
+      - "8087"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medizano_usuarios_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET es obligatorio}
+      MEDIZANO_DEFAULT_PASSWORD: ${MEDIZANO_DEFAULT_PASSWORD:?MEDIZANO_DEFAULT_PASSWORD es obligatorio}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx200m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8087/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - medizano-net
+
+  cliente-ms:
+    build:
+      context: .
+      dockerfile: services/medizano-cliente-ms/Dockerfile
+    container_name: medizano-cliente-ms
+    restart: always
+    expose:
+      - "8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medizano_clientes_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx200m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8084/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - medizano-net
+
+  orden-ms:
+    build:
+      context: .
+      dockerfile: services/medizano-orden-ms/Dockerfile
+    container_name: medizano-orden-ms
+    restart: always
+    expose:
+      - "8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medizano_ordenes_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?INTERNAL_SERVICE_TOKEN es obligatorio}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx200m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8082/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - medizano-net
+
+  inventario-ms:
+    build:
+      context: .
+      dockerfile: services/medizano-inventario-ms/Dockerfile
+    container_name: medizano-inventario-ms
+    restart: always
+    expose:
+      - "8085"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medizano_inventario_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?INTERNAL_SERVICE_TOKEN es obligatorio}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-mail.spacemail.com}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:-true}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:-true}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx200m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8085/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - medizano-net
+
+  pago-ms:
+    build:
+      context: .
+      dockerfile: services/medizano-pago-ms/Dockerfile
+    container_name: medizano-pago-ms
+    restart: always
+    expose:
+      - "8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medizano_pagos_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?INTERNAL_SERVICE_TOKEN es obligatorio}
+      PAYPAL_BASE_URL: ${PAYPAL_BASE_URL:-https://api-m.sandbox.paypal.com}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-sandbox_client_id_placeholder}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-sandbox_client_secret_placeholder}
+      PAYPAL_CURRENCY: ${PAYPAL_CURRENCY:-USD}
+      PAYPAL_EXCHANGE_RATE: ${PAYPAL_EXCHANGE_RATE:-3.75}
+      PAYPAL_CHECKOUT_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-TEST-mp-access-token-placeholder}
+      MERCADOPAGO_PUBLIC_KEY: ${MERCADOPAGO_PUBLIC_KEY:-TEST-mp-public-key-placeholder}
+      MERCADOPAGO_BASE_URL: ${MERCADOPAGO_BASE_URL:-https://api.mercadopago.com}
+      MERCADOPAGO_CURRENCY: ${MERCADOPAGO_CURRENCY:-PEN}
+      MERCADOPAGO_WEBHOOK_SECRET: ${MERCADOPAGO_WEBHOOK_SECRET:-webhook_secret_placeholder}
+      MERCADOPAGO_CHECKOUT_BASE_URL: ${APP_BASE_URL:-http://localhost:4200}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx200m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8083/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - medizano-net
+
+  facturacion-ms:
+    build:
+      context: .
+      dockerfile: services/medizano-facturacion-ms/Dockerfile
+    container_name: medizano-facturacion-ms
+    restart: always
+    expose:
+      - "8086"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medizano_facturacion_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN:?INTERNAL_SERVICE_TOKEN es obligatorio}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-mail.spacemail.com}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:-true}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:-true}
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx200m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8086/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - medizano-net
+
+  reportes-ms:
+    build:
+      context: .
+      dockerfile: services/medizano-reportes-ms/Dockerfile
+    container_name: medizano-reportes-ms
+    restart: always
+    expose:
+      - "8089"
+    depends_on:
+      - eureka-server
+      - facturacion-ms
+    environment:
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx160m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8089/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    networks:
+      - medizano-net
+
+  proveedor-ms:
+    build:
+      context: .
+      dockerfile: services/medizano-proveedor-ms/Dockerfile
+    container_name: medizano-proveedor-ms
+    restart: always
+    expose:
+      - "8088"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/medizano_proveedores_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
+      JAVA_TOOL_OPTIONS: "-Xms64m -Xmx200m -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8088/actuator/health | grep -q 'UP' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    networks:
+      - medizano-net
+
+  # ============================================================
+  # 5. SUITE DE OBSERVABILIDAD: Prometheus, Loki, Alloy, Grafana
+  # ============================================================
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: medizano-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./obs/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - medizano-net
+
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: medizano-loki
+    restart: always
+    expose:
+      - "3100"
+    volumes:
+      - ./obs/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3100/ready | grep -q 'ready' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - medizano-net
+
+  grafana-alloy:
+    image: grafana/alloy:v1.1.0
+    container_name: medizano-alloy
+    restart: always
+    volumes:
+      - ./obs/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    depends_on:
+      - loki
+    networks:
+      - medizano-net
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: medizano-grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD es obligatorio}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./obs/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./obs/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./obs/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/health | grep -q 'ok' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - medizano-net
+
+  # ============================================================
+  # 6. MENSAJERÍA ASÍNCRONA: Apache Kafka (KRaft) & Kafka UI
+  # ============================================================
+  kafka:
+    image: apache/kafka:4.3.1
+    container_name: medizano-kafka
+    restart: always
+    ports:
+      - "19092:19092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - medizano-net
+
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:v1.5.0
+    container_name: medizano-kafka-ui
+    restart: always
+    ports:
+      - "18085:8080"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: medizano-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks:
+      - medizano-net
+
+networks:
+  medizano-net:
+    name: medizano-net
+    driver: bridge
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  loki_data:
+  grafana_data:

@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vistas de Precios y Promociones de Farmacia -->
+    
+    <!-- Vistas de Promociones -->
+    
+    <!-- Vista Lista -->
+    <record id="view_pharmacy_promotion_tree" model="ir.ui.view">
+        <field name="name">pharmacy.promotion.list</field>
+        <field name="model">pharmacy.promotion</field>
+        <field name="arch" type="xml">
+            <list string="Promociones">
+                <field name="name"/>
+                <field name="promotion_type"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="usage_count"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Vista Formulario -->
+    <record id="view_pharmacy_promotion_form" model="ir.ui.view">
+        <field name="name">pharmacy.promotion.form</field>
+        <field name="model">pharmacy.promotion</field>
+        <field name="arch" type="xml">
+            <form string="Promoción">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nombre de la Promoción *"/>
+                        <h1>
+                            <field name="name" required="1" placeholder="Ej. Oferta de Verano, Descuento Fiestas Patrias" help="Nombre claro para referencia interna"/>
+                        </h1>
+                    </div>
+                    
+                    <group name="promotion_header" string="Detalles de la Promoción" class="mt-4">
+                        <group name="basic_info">
+                            <field name="code" placeholder="Ej. VERANO2026" help="Código promocional que el cliente o cajero ingresa (opcional)"/>
+                            <field name="promotion_type" required="1" widget="radio" options="{'horizontal': true}" help="Tipo de promoción"/>
+                            <field name="active" widget="boolean_toggle" help="Activar o desactivar esta promoción"/>
+                        </group>
+                        <group name="validity">
+                            <field name="start_date" required="1" help="Fecha de inicio de la promoción"/>
+                            <field name="end_date" required="1" help="Fecha de fin de la promoción"/>
+                            <field name="usage_count" readonly="1" decoration-info="usage_count > 0" help="Total de veces aplicada"/>
+                            <field name="last_used" readonly="1" help="Fecha del último uso"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Configuración de Descuento" 
+                               invisible="promotion_type != 'discount'">
+                            <group class="alert alert-info mt-2">
+                                <p style="font-size: 12px;">
+                                    Configure el descuento estándar: monto fijo o porcentaje. Defina montos mínimos y topes máximos de descuento.
+                                </p>
+                            </group>
+                            <group>
+                                <group name="discount_amount">
+                                    <field name="discount_type" required="1" widget="radio" options="{'horizontal': true}"/>
+                                    <field name="discount_percentage" widget="percentage" invisible="discount_type != 'percentage'" required="discount_type == 'percentage'" help="% de descuento sobre el total"/>
+                                    <field name="discount_amount" invisible="discount_type != 'fixed'" required="discount_type == 'fixed'" help="Monto fijo de descuento en soles"/>
+                                </group>
+                                <group name="discount_limits">
+                                    <field name="min_order_amount" help="Monto mínimo de compra para calificar"/>
+                                    <field name="max_discount_amount" help="Descuento máximo permitido"/>
+                                    <field name="usage_limit" help="Límite global de usos (0 = ilimitado)"/>
+                                    <field name="usage_limit_per_customer" help="Límite de usos por cliente (0 = ilimitado)"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Configuración 2x1 / BOGO" 
+                               invisible="promotion_type != 'bogo'">
+                            <group class="alert alert-info mt-2">
+                                <p style="font-size: 12px;">
+                                    Lleva X y paga Y (o gratis): compre una cantidad de una categoría o producto y obtenga unidades de regalo o descuento.
+                                </p>
+                            </group>
+                            <group>
+                                <group name="bogo_parameters">
+                                    <field name="buy_quantity" help="Cantidad que debe comprar el cliente"/>
+                                    <field name="get_quantity" help="Cantidad que recibe gratis o bonificada"/>
+                                    <field name="buy_category_id" placeholder="Categoría requerida para comprar" help="Categoría de producto requerida"/>
+                                    <field name="get_category_id" placeholder="Categoría del producto de regalo" help="Categoría del producto bonificado"/>
+                                </group>
+                                <group name="bogo_limits">
+                                    <field name="max_usage_per_order" help="Máximo de veces aplicable por compra"/>
+                                    <field name="usage_limit" help="Límite total de uso (0 = ilimitado)"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Configuración de Combo / Paquete" 
+                               invisible="promotion_type != 'bundle'">
+                            <group>
+                                <field name="bundle_product_ids" widget="many2many_tags"/>
+                                <field name="bundle_price"/>
+                                <field name="bundle_discount_percentage" widget="percentage"/>
+                            </group>
+                        </page>
+                        
+                        <page string="Alcance y Aplicabilidad">
+                            <group>
+                                <group>
+                                    <field name="product_ids" widget="many2many_tags"/>
+                                    <field name="category_ids" widget="many2many_tags"/>
+                                </group>
+                                <group>
+                                    <field name="customer_ids" widget="many2many_tags"/>
+                                    <field name="branch_ids" widget="many2many_tags"/>
+                                </group>
+                            </group>
+                            <group>
+                                <field name="auto_apply"/>
+                            </group>
+                        </page>
+                        
+                        <page string="Descripción y Condiciones">
+                            <field name="description" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Vista Búsqueda -->
+    <record id="view_pharmacy_promotion_search" model="ir.ui.view">
+        <field name="name">pharmacy.promotion.search</field>
+        <field name="model">pharmacy.promotion</field>
+        <field name="arch" type="xml">
+            <search string="Promociones">
+                <field name="name"/>
+                <field name="code"/>
+                <filter string="Activo" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Vigentes" name="current" 
+                        domain="[('active', '=', True), ('start_date', '&lt;=', context_today()), ('end_date', '&gt;=', context_today())]"/>
+                <filter string="Vencidas" name="expired" 
+                        domain="[('end_date', '&lt;', context_today())]"/>
+                <filter string="Próximas" name="upcoming" 
+                        domain="[('start_date', '&gt;', context_today())]"/>
+                <separator/>
+                <filter string="Descuento" name="discount" domain="[('promotion_type', '=', 'discount')]"/>
+                <filter string="2x1 / BOGO" name="bogo" domain="[('promotion_type', '=', 'bogo')]"/>
+                <filter string="Combos" name="bundle" domain="[('promotion_type', '=', 'bundle')]"/>
+                <separator/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Tipo de Promoción" name="group_type" context="{'group_by': 'promotion_type'}"/>
+                    <filter string="Fecha de Inicio" name="group_start_date" context="{'group_by': 'start_date'}"/>
+                    <filter string="Fecha de Fin" name="group_end_date" context="{'group_by': 'end_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Acción -->
+    <record id="action_pharmacy_promotion" model="ir.actions.act_window">
+        <field name="name">Promociones y Ofertas</field>
+        <field name="res_model">pharmacy.promotion</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear promociones y descuentos
+            </p>
+            <p>
+                Cree y gestione ofertas promocionales que incluyan descuentos por porcentaje o monto,
+                promociones 2x1 y paquetes combinados para boticas.
+            </p>
+        </field>
+    </record>
+              
+    <!-- Vista Lista de Tarifas de Botica -->
+    <record id="view_product_pricelist_pharmacy_tree" model="ir.ui.view">
+        <field name="name">product.pricelist.pharmacy.list</field>
+        <field name="model">product.pricelist</field>
+        <field name="arch" type="xml">
+            <list string="Tarifas de Botica">
+                <field name="name"/>
+                <field name="pricelist_type"/>
+                <field name="branch_id"/>
+                <field name="insurer_id"/>
+                <field name="plan_id"/>
+                <field name="active"/>
+                <field name="valid_from"/>
+                <field name="valid_to"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Vista Formulario de Tarifas de Botica -->
+    <record id="view_product_pricelist_pharmacy_form" model="ir.ui.view">
+        <field name="name">product.pricelist.pharmacy.form</field>
+        <field name="model">product.pricelist</field>
+        <field name="arch" type="xml">
+            <form string="Tarifa de Botica">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" required="1"/>
+                            <field name="pricelist_type" required="1"/>
+                            <field name="active"/>
+                            <field name="currency_id"/>
+                        </group>
+                        <group>
+                            <field name="branch_id" 
+                                   invisible="pricelist_type != 'branch_special'"/>
+                            <field name="insurer_id" 
+                                   invisible="pricelist_type != 'insurance'"/>
+                            <field name="plan_id" 
+                                   invisible="pricelist_type != 'insurance'"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Vigencia">
+                            <group>
+                                <group>
+                                    <field name="valid_from"/>
+                                    <field name="valid_to"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Restricciones">
+                            <group>
+                                <group>
+                                    <field name="customer_ids" widget="many2many_tags"/>
+                                    <field name="product_category_ids" widget="many2many_tags"/>
+                                </group>
+                                <group>
+                                    <field name="max_discount_percentage" widget="percentage"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Vista Búsqueda de Tarifas de Botica -->
+    <record id="view_product_pricelist_pharmacy_search" model="ir.ui.view">
+        <field name="name">product.pricelist.pharmacy.search</field>
+        <field name="model">product.pricelist</field>
+        <field name="arch" type="xml">
+            <search string="Tarifas de Botica">
+                <field name="name"/>
+                <field name="branch_id"/>
+                <field name="insurer_id"/>
+                <field name="plan_id"/>
+                <filter string="Activo" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Público General" name="walk_in" domain="[('pricelist_type', '=', 'walk_in')]"/>
+                <filter string="Corporativo" name="corporate" domain="[('pricelist_type', '=', 'corporate')]"/>
+                <filter string="Aseguradora" name="insurance" domain="[('pricelist_type', '=', 'insurance')]"/>
+                <filter string="Especial por Sucursal" name="branch_special" domain="[('pricelist_type', '=', 'branch_special')]"/>
+                <filter string="Personal / Empleados" name="staff" domain="[('pricelist_type', '=', 'staff')]"/>
+                <separator/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Tipo" name="group_type" context="{'group_by': 'pricelist_type'}"/>
+                    <filter string="Botica / Sucursal" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                    <filter string="Aseguradora" name="group_insurer" context="{'group_by': 'insurer_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Acción para Tarifas de Botica -->
+    <record id="action_product_pricelist_pharmacy" model="ir.actions.act_window">
+        <field name="name">Listas de Precios de Botica</field>
+        <field name="res_model">product.pricelist</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('pricelist_type', 'in', ['walk_in', 'corporate', 'insurance', 'branch_special', 'staff'])]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear listas de precios de botica
+            </p>
+            <p>
+                Configure tarifas diferenciadas para venta al público, clientes corporativos, convenios o colaboradores.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Extensiones de Categoría de Producto -->
+    <record id="view_product_category_pharmacy_form" model="ir.ui.view">
+        <field name="name">product.category.pharmacy.form</field>
+        <field name="model">product.category</field>
+        <field name="inherit_id" ref="product.product_category_form_view"/>
+        <field name="arch" type="xml">
+            <field name="parent_id" position="after">
+                <group string="Controles de Precios de Botica">
+                    <field name="min_margin_percentage" widget="percentage"/>
+                    <field name="max_discount_percentage" widget="percentage"/>
+                    <field name="require_margin_check"/>
+                    <field name="allow_negative_margin"/>
+                    <field name="price_change_approval"/>
+                    <field name="price_change_threshold" widget="percentage"/>
+                </group>
+            </field>
+        </field>
+    </record>
+    
+    <!-- Extensiones de Líneas de Lista de Precios -->
+    <record id="view_product_pricelist_item_pharmacy_form" model="ir.ui.view">
+        <field name="name">product.pricelist.item.pharmacy.form</field>
+        <field name="model">product.pricelist.item</field>
+        <field name="inherit_id" ref="product.product_pricelist_item_form_view"/>
+        <field name="arch" type="xml">
+            <field name="base" position="after">
+                <group string="Configuración Farmacéutica">
+                    <group>
+                        <field name="is_generic_substitution"/>
+                        <field name="require_prescription"/>
+                        <field name="require_preauth"/>
+                        <field name="preauth_threshold"/>
+                    </group>
+                    <group>
+                        <field name="coverage_percentage" widget="percentage"/>
+                        <field name="copay_percentage" widget="percentage"/>
+                        <field name="copay_amount"/>
+                    </group>
+                </group>
+                <group string="Límites de Cantidad">
+                    <group>
+                        <field name="max_quantity_per_visit"/>
+                        <field name="max_quantity_per_month"/>
+                    </group>
+                </group>
+            </field>
+        </field>
+    </record>
+    
+</odoo>

@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Demo Data for Pharmacy Management System -->
+
+        <!-- Demo Pharmacy Branches -->
+        <record id="demo_branch_main" model="pharmacy.branch">
+            <field name="name">Botica MediZano - Sede Central</field>
+            <field name="code">MED001</field>
+            <field name="street">Av. Arequipa 1450</field>
+            <field name="city">Lima</field>
+            <field name="country_id" ref="base.pe"/>
+            <field name="phone">+51-1-4210000</field>
+            <field name="email">central@medizano.pe</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="demo_branch_branch2" model="pharmacy.branch">
+            <field name="name">Botica MediZano - Miraflores</field>
+            <field name="code">MED002</field>
+            <field name="street">Av. Larco 820</field>
+            <field name="city">Lima</field>
+            <field name="country_id" ref="base.pe"/>
+            <field name="phone">+51-1-4210001</field>
+            <field name="email">miraflores@medizano.pe</field>
+            <field name="active">True</field>
+        </record>
+
+        <!-- Demo Discount Rules -->
+        <record id="demo_discount_pharmacist" model="pharmacy.discount.rule">
+            <field name="name">Pharmacist Discount</field>
+            <field name="max_discount_percent">15.0</field>
+            <field name="max_discount_amount">500.0</field>
+            <field name="require_approval">False</field>
+            <field name="approval_threshold">1000.0</field>
+            <field name="active">True</field>
+        </record>
+
+        <record id="demo_discount_technician" model="pharmacy.discount.rule">
+            <field name="name">Technician Discount</field>
+            <field name="max_discount_percent">10.0</field>
+            <field name="max_discount_amount">200.0</field>
+            <field name="require_approval">False</field>
+            <field name="approval_threshold">500.0</field>
+            <field name="active">True</field>
+        </record>
+
+        <!-- Demo Partners (optional: used for supplier and insurance contact examples) -->
+        <record id="demo_partner_supplier_1" model="res.partner">
+            <field name="name">Droguería y Distribuidora Médica del Perú S.A.C.</field>
+            <field name="is_company">True</field>
+            <field name="supplier_rank">1</field>
+            <field name="country_id" ref="base.pe"/>
+            <field name="phone">+51-1-5000000</field>
+            <field name="email">ventas@drogueriamedica.pe</field>
+        </record>
+
+        <!-- Demo Products (OTC / RX / Controlled) -->
+        <record id="demo_product_paracetamol" model="product.product">
+            <field name="name">Paracetamol 500mg Tablets</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="tracking">lot</field>
+            <field name="sale_ok">True</field>
+            <field name="purchase_ok">True</field>
+            <field name="available_in_pos">True</field>
+            <field name="categ_id" ref="Pharmacy.product_category_otc_meds"/>
+            <field name="uom_id" ref="uom.product_uom_unit"/>
+            <field name="uom_po_id" ref="uom.product_uom_unit"/>
+            <field name="list_price">50.0</field>
+            <field name="standard_price">20.0</field>
+            <field name="generic_name">Paracetamol</field>
+            <field name="strength">500mg</field>
+            <field name="dosage_form_id" ref="Pharmacy.dosage_form_tablet"/>
+            <field name="pack_size">10</field>
+            <field name="is_prescription_required">False</field>
+            <field name="is_controlled_substance">False</field>
+            <field name="min_expiry_days">30</field>
+            <field name="taxes_id" eval="[(6, 0, [ref('Pharmacy.tax_vat_16')])]"/>
+            <field name="seller_ids" eval="[(0, 0, {'partner_id': ref('demo_partner_supplier_1'), 'min_qty': 1.0, 'price': 15.0})]"/>
+        </record>
+
+        <record id="demo_product_amoxicillin" model="product.product">
+            <field name="name">Amoxicillin 500mg Capsules</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="tracking">lot</field>
+            <field name="sale_ok">True</field>
+            <field name="purchase_ok">True</field>
+            <field name="available_in_pos">True</field>
+            <field name="categ_id" ref="Pharmacy.product_category_prescription_meds"/>
+            <field name="uom_id" ref="uom.product_uom_unit"/>
+            <field name="uom_po_id" ref="uom.product_uom_unit"/>
+            <field name="list_price">300.0</field>
+            <field name="standard_price">150.0</field>
+            <field name="generic_name">Amoxicillin</field>
+            <field name="strength">500mg</field>
+            <field name="dosage_form_id" ref="Pharmacy.dosage_form_capsule"/>
+            <field name="pack_size">10</field>
+            <field name="is_prescription_required">True</field>
+            <field name="is_controlled_substance">False</field>
+            <field name="min_expiry_days">45</field>
+            <field name="taxes_id" eval="[(6, 0, [ref('Pharmacy.tax_vat_16')])]"/>
+        </record>
+
+        <record id="demo_product_diazepam" model="product.product">
+            <field name="name">Diazepam 5mg Tablets (Controlled)</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="tracking">lot</field>
+            <field name="sale_ok">True</field>
+            <field name="purchase_ok">True</field>
+            <field name="available_in_pos">True</field>
+            <field name="categ_id" ref="Pharmacy.product_category_controlled_substances"/>
+            <field name="uom_id" ref="uom.product_uom_unit"/>
+            <field name="uom_po_id" ref="uom.product_uom_unit"/>
+            <field name="list_price">200.0</field>
+            <field name="standard_price">80.0</field>
+            <field name="generic_name">Diazepam</field>
+            <field name="strength">5mg</field>
+            <field name="dosage_form_id" ref="Pharmacy.dosage_form_tablet"/>
+            <field name="pack_size">10</field>
+            <field name="is_prescription_required">True</field>
+            <field name="is_controlled_substance">True</field>
+            <field name="controlled_substance_schedule">4</field>
+            <field name="requires_pharmacist_approval">True</field>
+            <field name="requires_id_capture">True</field>
+            <field name="min_expiry_days">60</field>
+            <field name="taxes_id" eval="[(6, 0, [ref('Pharmacy.tax_vat_16')])]"/>
+        </record>
+
+        <!-- Medicamento Oncológico Exonerado de IGV (Ley 29459) -->
+        <record id="demo_product_trastuzumab" model="product.product">
+            <field name="name">Trastuzumab 440mg Inyectable (Oncológico Ley 29459)</field>
+            <field name="type">consu</field>
+            <field name="is_storable">True</field>
+            <field name="tracking">lot</field>
+            <field name="sale_ok">True</field>
+            <field name="purchase_ok">True</field>
+            <field name="available_in_pos">True</field>
+            <field name="categ_id" ref="Pharmacy.product_category_prescription_meds"/>
+            <field name="uom_id" ref="uom.product_uom_unit"/>
+            <field name="uom_po_id" ref="uom.product_uom_unit"/>
+            <field name="list_price">4500.0</field>
+            <field name="standard_price">3800.0</field>
+            <field name="generic_name">Trastuzumab</field>
+            <field name="strength">440mg</field>
+            <field name="dosage_form_id" ref="Pharmacy.dosage_form_injection"/>
+            <field name="pack_size">1</field>
+            <field name="is_prescription_required">True</field>
+            <field name="is_controlled_substance">False</field>
+            <field name="min_expiry_days">90</field>
+            <field name="taxes_id" eval="[(6, 0, [ref('Pharmacy.tax_vat_exempt')])]"/>
+        </record>
+
+        <!-- Demo Lots (expiry tracking) -->
+        <record id="demo_lot_para_2027" model="stock.lot">
+            <field name="name">PARA-LOT-2027</field>
+            <field name="product_id" ref="demo_product_paracetamol"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="expiry_date">2027-12-31</field>
+            <field name="batch_number">BATCH-PARA-01</field>
+            <field name="manufacturer">DemoPharma Ltd</field>
+        </record>
+
+        <record id="demo_lot_amox_2026" model="stock.lot">
+            <field name="name">AMOX-LOT-2026</field>
+            <field name="product_id" ref="demo_product_amoxicillin"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="expiry_date">2026-10-31</field>
+            <field name="batch_number">BATCH-AMOX-02</field>
+            <field name="manufacturer">DemoPharma Ltd</field>
+        </record>
+
+        <record id="demo_lot_diaz_2026" model="stock.lot">
+            <field name="name">DIAZ-LOT-2026</field>
+            <field name="product_id" ref="demo_product_diazepam"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="expiry_date">2026-12-31</field>
+            <field name="batch_number">BATCH-DIAZ-03</field>
+            <field name="manufacturer">ControlledMeds Inc</field>
+        </record>
+
+        <!-- Demo Patients -->
+        <record id="demo_patient_1" model="pharmacy.patient">
+            <field name="name">María Elena Quispe</field>
+            <field name="gender">female</field>
+            <field name="date_of_birth">1995-03-14</field>
+            <field name="phone">+51-991234567</field>
+            <field name="email">maria.quispe@paciente.pe</field>
+            <field name="national_id">45123456</field>
+            <field name="allergies">Penicilina</field>
+            <field name="chronic_conditions">Asma</field>
+            <field name="country_id" ref="base.pe"/>
+        </record>
+
+        <record id="demo_patient_2" model="pharmacy.patient">
+            <field name="name">Carlos Mendoza</field>
+            <field name="gender">male</field>
+            <field name="date_of_birth">1988-11-02</field>
+            <field name="phone">+51-998765432</field>
+            <field name="email">carlos.mendoza@paciente.pe</field>
+            <field name="national_id">09876543</field>
+            <field name="allergies">Ninguna</field>
+            <field name="chronic_conditions">Diabetes Tipo 2</field>
+            <field name="country_id" ref="base.pe"/>
+        </record>
+
+        <!-- Demo Patient Insurance Policies -->
+        <record id="demo_patient_1_insurance" model="pharmacy.patient.insurance">
+            <field name="patient_id" ref="demo_patient_1"/>
+            <field name="insurer_id" ref="Pharmacy.insurer_nhif"/>
+            <field name="plan_id" ref="Pharmacy.plan_nhif_supacover"/>
+            <field name="member_number">NHIF-00001</field>
+            <field name="valid_from">2026-01-01</field>
+            <field name="valid_to">2026-12-31</field>
+            <field name="relationship_to_member">self</field>
+            <field name="policy_number">NHIF-POL-00001</field>
+        </record>
+
+        <record id="demo_patient_2_insurance" model="pharmacy.patient.insurance">
+            <field name="patient_id" ref="demo_patient_2"/>
+            <field name="insurer_id" ref="Pharmacy.insurer_jubilee"/>
+            <field name="plan_id" ref="Pharmacy.plan_jubilee_comprehensive"/>
+            <field name="member_number">JUB-00002</field>
+            <field name="valid_from">2026-01-01</field>
+            <field name="valid_to">2026-12-31</field>
+            <field name="relationship_to_member">self</field>
+            <field name="policy_number">JUB-POL-00002</field>
+        </record>
+
+        <!-- Demo Prescriptions -->
+        <record id="demo_rx_1" model="pharmacy.prescription">
+            <field name="patient_id" ref="demo_patient_1"/>
+            <field name="prescriber_name">Dr. Mercy Njeri</field>
+            <field name="prescriber_license">KMPDC-12345</field>
+            <field name="prescription_date">2026-02-01</field>
+            <field name="validity_days">90</field>
+            <field name="diagnosis">Upper respiratory tract infection</field>
+            <field name="branch_id" ref="demo_branch_main"/>
+        </record>
+
+        <record id="demo_rx_1_line_1" model="pharmacy.prescription.line">
+            <field name="prescription_id" ref="demo_rx_1"/>
+            <field name="product_id" ref="demo_product_amoxicillin"/>
+            <field name="quantity_prescribed">20</field>
+            <field name="frequency">3 times daily</field>
+            <field name="duration_days">7</field>
+            <field name="dosage_instructions">Take 1 capsule three times a day after meals</field>
+        </record>
+
+        <record id="demo_rx_2" model="pharmacy.prescription">
+            <field name="patient_id" ref="demo_patient_2"/>
+            <field name="prescriber_name">Dr. Peter Mwangi</field>
+            <field name="prescriber_license">KMPDC-54321</field>
+            <field name="prescription_date">2026-02-05</field>
+            <field name="validity_days">90</field>
+            <field name="diagnosis">Anxiety</field>
+            <field name="branch_id" ref="demo_branch_branch2"/>
+        </record>
+
+        <record id="demo_rx_2_line_1" model="pharmacy.prescription.line">
+            <field name="prescription_id" ref="demo_rx_2"/>
+            <field name="product_id" ref="demo_product_diazepam"/>
+            <field name="quantity_prescribed">10</field>
+            <field name="frequency">Once daily</field>
+            <field name="duration_days">10</field>
+            <field name="dosage_instructions">Take 1 tablet at bedtime</field>
+        </record>
+
+        <!-- Demo Dispensing (shows dispensing records + links to prescription) -->
+        <record id="demo_dispense_1" model="pharmacy.dispensing">
+            <field name="patient_id" ref="demo_patient_1"/>
+            <field name="prescription_id" ref="demo_rx_1"/>
+            <field name="prescription_line_id" ref="demo_rx_1_line_1"/>
+            <field name="product_id" ref="demo_product_amoxicillin"/>
+            <field name="quantity">10</field>
+            <field name="branch_id" ref="demo_branch_main"/>
+            <field name="dosage_instructions">Take 1 capsule three times a day after meals</field>
+        </record>
+
+        <!-- Controlled substance register example (manual entry) -->
+        <record id="demo_controlled_register_1" model="pharmacy.controlled.substance.register">
+            <field name="date">2026-02-06</field>
+            <field name="time">10:15:00</field>
+            <field name="product_id" ref="demo_product_diazepam"/>
+            <field name="quantity">2</field>
+            <field name="patient_id" ref="demo_patient_2"/>
+            <field name="patient_name">Brian Otieno</field>
+            <field name="prescription_id" ref="demo_rx_2"/>
+            <field name="prescription_ref">Demo RX</field>
+            <field name="prescriber_name">Dr. Peter Mwangi</field>
+            <field name="prescriber_license">KMPDC-54321</field>
+            <field name="transaction_type">sale</field>
+            <field name="notes">Demo controlled substance entry</field>
+            <field name="branch_id" ref="demo_branch_branch2"/>
+            <field name="dispensed_by" ref="base.user_admin"/>
+        </record>
+
+    </data>
+</odoo>

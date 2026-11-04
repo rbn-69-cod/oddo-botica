@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Controlled Substance Register Action -->
+        <record id="action_pharmacy_controlled_substance_register" model="ir.actions.act_window">
+            <field name="name">Controlled Substances Register</field>
+            <field name="res_model">pharmacy.controlled.substance.register</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No controlled substance transactions yet
+                </p>
+                <p>
+                    This register tracks all transactions involving controlled substances
+                    as required by regulatory authorities.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Controlled Substance Summary Action -->
+        <record id="action_pharmacy_controlled_substance_summary" model="ir.actions.act_window">
+            <field name="name">Controlled Substances Summary</field>
+            <field name="res_model">pharmacy.controlled.substance.register</field>
+            <field name="view_mode">graph</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No controlled substance transactions yet
+                </p>
+                <p>
+                    View summary statistics for controlled substance transactions
+                    by transaction type and quantities.
+                </p>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

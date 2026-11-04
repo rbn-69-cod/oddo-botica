@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Vistas de Pacientes de Farmacia -->
+        
+        <!-- Vista Lista -->
+        <record id="view_pharmacy_patient_list" model="ir.ui.view">
+            <field name="name">pharmacy.patient.list</field>
+            <field name="model">pharmacy.patient</field>
+            <field name="arch" type="xml">
+                <list string="Pacientes">
+                    <field name="patient_code" string="Código"/>
+                    <field name="name" string="Nombre y Apellidos"/>
+                    <field name="national_id" string="DNI / Documento"/>
+                    <field name="phone" string="Teléfono"/>
+                    <field name="age" string="Edad"/>
+                    <field name="total_prescriptions" string="Recetas"/>
+                    <field name="last_visit_date" string="Última Visita"/>
+                    <field name="active" string="Activo"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Vista Formulario -->
+        <record id="view_pharmacy_patient_form" model="ir.ui.view">
+            <field name="name">pharmacy.patient.form</field>
+            <field name="model">pharmacy.patient</field>
+            <field name="arch" type="xml">
+                <form string="Perfil del Paciente">
+                    <header>
+                        <button name="action_view_prescriptions" type="object" string="Ver Recetas" class="btn-primary"/>
+                        <button name="action_view_dispensing" type="object" string="Ver Dispensaciones" class="btn-secondary"/>
+                        <button name="action_view_insurance" type="object" string="Ver Seguros" class="btn-info"/>
+                        <field name="active" widget="boolean_toggle"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Nombre Completo del Paciente *"/>
+                            <h1>
+                                <field name="name" placeholder="ej. María Elena Quispe" required="1"/>
+                            </h1>
+                            <label for="patient_code" string="Código del Paciente"/>
+                            <p>
+                                <field name="patient_code" readonly="1" class="oe_inline" required="0"/>
+                            </p>
+                        </div>
+                        
+                        <group name="patient_contact_info" string="Información Personal">
+                            <group name="basic_info">
+                                <field name="date_of_birth" string="Fecha de Nacimiento" required="1"/>
+                                <field name="age" string="Edad" readonly="1"/>
+                                <field name="gender" string="Género" required="1" widget="radio" options="{'horizontal': true}"/>
+                                <label for="national_id" string="DNI / Documento"/>
+                                <div class="o_row">
+                                    <field name="national_id" placeholder="DNI (8 dígitos) o RUC"/>
+                                    <button name="action_consultar_decolecta"
+                                            type="object"
+                                            string="Consultar Decolecta"
+                                            class="btn btn-sm btn-outline-primary"
+                                            icon="fa-search"
+                                            help="Consultar DNI o RUC en Decolecta API para autocompletar datos del paciente."/>
+                                </div>
+                            </group>
+                            <group name="contact_details">
+                                <field name="phone" string="Teléfono Móvil" widget="phone" placeholder="ej. +51 987 654 321"/>
+                                <field name="email" string="Correo Electrónico" widget="email" placeholder="ej. paciente@correo.pe"/>
+                            </group>
+                        </group>
+                        
+                        <group name="medical_information" string="Información Médica">
+                            <group name="medical_details">
+                                <field name="blood_group" string="Grupo Sanguíneo" placeholder="Seleccionar grupo sanguíneo"/>
+                                <field name="allergies" string="Alergias Conocidas" placeholder="Indique alergias (ej. Penicilina, Sulfas)"/>
+                            </group>
+                            <group name="health_status">
+                                <field name="chronic_conditions" string="Condiciones Crónicas" placeholder="Enfermedades crónicas (ej. Diabetes, Hipertensión)"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Dirección y Residencia" name="address">
+                                <group string="Domicilio">
+                                    <group>
+                                        <field name="street" string="Dirección" placeholder="Av. / Jr. / Calle"/>
+                                        <field name="street2" string="Edificio / Dpto." placeholder="Dpto, Oficina o Piso"/>
+                                        <field name="city" string="Distrito / Ciudad" placeholder="ej. Miraflores, Lima"/>
+                                        <field name="state_id" string="Departamento" placeholder="ej. Lima"/>
+                                    </group>
+                                    <group>
+                                        <field name="zip" string="Código Postal" placeholder="ej. 15074"/>
+                                        <field name="country_id" string="País" placeholder="Perú"/>
+                                    </group>
+                                </group>
+                            </page>
+                            
+                            <page string="Cobertura de Seguros y Convenios" name="insurance">
+                                <group class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        Gestión de pólizas, seguros privados (EPS) y convenios del paciente.
+                                    </p>
+                                </group>
+                                <group string="Asignación Automática" name="insurance_automation">
+                                    <group>
+                                        <field name="auto_create_insurance" string="Crear seguro por defecto automáticamente" widget="boolean_toggle"/>
+                                    </group>
+                                    <group invisible="not auto_create_insurance">
+                                        <field name="default_insurer_id" string="Aseguradora por Defecto" options="{'no_create': True}"/>
+                                        <field name="default_plan_id" string="Plan por Defecto" options="{'no_create': True}"/>
+                                    </group>
+                                </group>
+                                <field name="insurance_ids" nolabel="1">
+                                    <list string="Pólizas">
+                                        <field name="insurer_id" string="Aseguradora"/>
+                                        <field name="plan_id" string="Plan"/>
+                                        <field name="member_number" string="N° Afiliado"/>
+                                        <field name="status" string="Estado" decoration-success="status == 'active'" decoration-warning="status == 'suspended'" decoration-danger="status == 'expired'"/>
+                                        <field name="valid_from" string="Válido Desde" optional="hide"/>
+                                        <field name="valid_to" string="Válido Hasta" optional="hide"/>
+                                    </list>
+                                    <form string="Póliza de Seguro">
+                                        <sheet>
+                                            <group string="Detalles de la Póliza">
+                                                <group name="insurer_plan">
+                                                    <field name="insurer_id" string="Aseguradora" required="1" options="{'no_create': True}"/>
+                                                    <field name="plan_id" string="Plan de Cobertura" required="1" options="{'no_create': True}"/>
+                                                    <field name="member_number" string="N° de Afiliado" required="1" placeholder="Número de carnet o póliza"/>
+                                                </group>
+                                                <group name="dates">
+                                                    <field name="valid_from" string="Fecha Inicio" required="1"/>
+                                                    <field name="valid_to" string="Fecha Fin" required="1"/>
+                                                    <field name="status" string="Estado" readonly="1"/>
+                                                </group>
+                                            </group>
+                                            <group string="Detalles de Cobertura">
+                                                <group>
+                                                    <field name="coverage_percentage" string="% Cobertura Seguro" widget="percentage"/>
+                                                    <field name="copay_percentage" string="% Copago Paciente" widget="percentage"/>
+                                                </group>
+                                                <group>
+                                                    <field name="policy_number" string="N° de Póliza" placeholder="Referencia de póliza"/>
+                                                    <field name="card_number" string="N° de Tarjeta" placeholder="Número impreso en carnet"/>
+                                                    <field name="relationship_to_member" string="Parentesco con Titular" placeholder="ej. Titular, Cónyuge, Hijo"/>
+                                                </group>
+                                            </group>
+                                            <group string="Observaciones">
+                                                <field name="notes" nolabel="1" placeholder="Notas adicionales sobre esta póliza..."/>
+                                            </group>
+                                        </sheet>
+                                    </form>
+                                </field>
+                            </page>
+                            
+                            <page string="Historial de Recetas" name="prescriptions">
+                                <group class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        Historial completo de prescripciones médicas del paciente.
+                                    </p>
+                                </group>
+                                <field name="prescription_ids" readonly="1" nolabel="1">
+                                    <list string="Recetas">
+                                        <field name="name" string="Número de Receta"/>
+                                        <field name="prescription_date" string="Fecha de Prescripción"/>
+                                        <field name="prescriber_name" string="Médico Prescriptor"/>
+                                        <field name="status" string="Estado" decoration-info="status == 'draft'" decoration-success="status == 'active'" decoration-warning="status in ['partially_dispensed']" decoration-danger="status == 'expired'"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Resumen de Actividad" name="statistics">
+                                <group string="Estadísticas del Paciente">
+                                    <group>
+                                        <field name="total_prescriptions" string="Total de Recetas" readonly="1"/>
+                                        <field name="total_dispensing" string="Total Medicamentos Dispensados" readonly="1"/>
+                                        <field name="total_pos_orders" string="Transacciones en POS" readonly="1"/>
+                                    </group>
+                                    <group>
+                                        <field name="last_visit_date" string="Última Visita a Botica" readonly="1"/>
+                                        <field name="lifetime_value" string="Consumo Histórico (S/)" widget="monetary" readonly="1"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Vista Kanban -->
+        <record id="view_pharmacy_patient_kanban" model="ir.ui.view">
+            <field name="name">pharmacy.patient.kanban</field>
+            <field name="model">pharmacy.patient</field>
+            <field name="arch" type="xml">
+                <kanban string="Pacientes">
+                    <field name="id"/>
+                    <field name="name"/>
+                    <field name="patient_code"/>
+                    <field name="phone"/>
+                    <field name="age"/>
+                    <field name="gender"/>
+                    <field name="total_prescriptions"/>
+                    <field name="last_visit_date"/>
+                    <field name="active"/>
+                    <templates>
+                        <t t-name="card">
+                            <div class="oe_kanban_card oe_kanban_global_click">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                        <div class="o_kanban_record_subtitle">
+                                            <field name="patient_code"/> | Edad: <field name="age"/> años
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <div><field name="phone"/></div>
+                                        <div>Recetas: <field name="total_prescriptions"/></div>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="active" widget="boolean_toggle"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+        
+        <!-- Vista Búsqueda -->
+        <record id="view_pharmacy_patient_search" model="ir.ui.view">
+            <field name="name">pharmacy.patient.search</field>
+            <field name="model">pharmacy.patient</field>
+            <field name="arch" type="xml">
+                <search string="Buscar Pacientes">
+                    <field name="name" string="Nombre o Apellido"/>
+                    <field name="patient_code" string="Código Paciente"/>
+                    <field name="phone" string="Teléfono"/>
+                    <field name="email" string="Correo"/>
+                    <field name="national_id" string="DNI"/>
+                    <filter string="Activos" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactivos" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <filter string="Masculino" name="male" domain="[('gender', '=', 'male')]"/>
+                    <filter string="Femenino" name="female" domain="[('gender', '=', 'female')]"/>
+                    <separator/>
+                    <filter string="Con Recetas Registradas" name="has_prescriptions" domain="[('total_prescriptions', '>', 0)]"/>
+                    <filter string="Visitas Recientes (Últimos 30 días)" name="recent_visits" domain="[('last_visit_date', '>=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                    <separator/>
+                    <group expand="0" string="Agrupar por">
+                        <filter string="Género" name="group_gender" context="{'group_by': 'gender'}"/>
+                        <filter string="Rango de Edad" name="group_age" context="{'group_by': 'age'}"/>
+                        <filter string="Ciudad / Distrito" name="group_city" context="{'group_by': 'city'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Acción de Ventana -->
+        <record id="action_pharmacy_patient" model="ir.actions.act_window">
+            <field name="name">Pacientes</field>
+            <field name="res_model">pharmacy.patient</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Registrar el primer paciente de la botica
+                </p>
+                <p>
+                    Los pacientes son el centro de atención de la botica. Cada paciente cuenta con su historial de
+                    recetas médicas, dispensaciones y coberturas de seguro o convenios.
+                </p>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

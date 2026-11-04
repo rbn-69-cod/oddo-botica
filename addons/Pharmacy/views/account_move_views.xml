@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Extensión de formulario de factura para Facturación Electrónica SUNAT Perú -->
+    <record id="view_move_form_sunat_peru" model="ir.ui.view">
+        <field name="name">account.move.form.sunat.peru</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <!-- Botones en el Header -->
+            <xpath expr="//header" position="inside">
+                <button name="action_generate_sunat_xml"
+                        type="object"
+                        string="Generar XML / QR SUNAT"
+                        class="btn-primary"
+                        invisible="state != 'posted' or move_type not in ('out_invoice', 'out_refund') or sunat_status in ('sent', 'accepted')"/>
+                <button name="action_send_sunat_pse"
+                        type="object"
+                        string="Enviar a PSE / SUNAT"
+                        class="btn-secondary"
+                        invisible="state != 'posted' or move_type not in ('out_invoice', 'out_refund') or sunat_status not in ('to_send', 'rejected')"/>
+            </xpath>
+
+            <!-- Pestaña SUNAT en el Notebook -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Facturación Electrónica SUNAT"
+                      name="sunat_electronic_invoice_page"
+                      invisible="move_type not in ('out_invoice', 'out_refund')">
+                    <group>
+                        <group string="Estado y Comprobante Tributario">
+                            <field name="sunat_status" widget="badge"
+                                   decoration-info="sunat_status == 'to_send'"
+                                   decoration-warning="sunat_status == 'sent'"
+                                   decoration-success="sunat_status == 'accepted'"
+                                   decoration-danger="sunat_status == 'rejected'"/>
+                            <field name="sunat_document_type_code"/>
+                            <field name="sunat_electronic_number"/>
+                            <field name="sunat_credit_note_type" invisible="move_type != 'out_refund'"/>
+                            <field name="sunat_hash"/>
+                            <field name="sunat_submission_date" invisible="not sunat_submission_date"/>
+                            <field name="sunat_approval_date" invisible="not sunat_approval_date"/>
+                        </group>
+                        <group string="Representación Impresa (QR Oficial)">
+                            <field name="sunat_qr_code" widget="image" class="oe_avatar" style="width: 140px; height: 140px;" options="{'preview_image': 'sunat_qr_code'}"/>
+                        </group>
+                    </group>
+
+                    <group string="Archivos Tributarios (XML UBL y CDR)">
+                        <group>
+                            <label for="sunat_xml_file" string="Comprobante XML UBL 2.1"/>
+                            <div class="o_row">
+                                <field name="sunat_xml_filename" invisible="1"/>
+                                <field name="sunat_xml_file" filename="sunat_xml_filename" readonly="1"/>
+                                <button name="action_download_sunat_xml" type="object" string="Descargar XML" class="btn btn-sm btn-outline-primary" invisible="not sunat_xml_file" icon="fa-download"/>
+                            </div>
+                        </group>
+                        <group>
+                            <label for="sunat_cdr_file" string="Constancia de Recepción (CDR SUNAT)"/>
+                            <div class="o_row">
+                                <field name="sunat_cdr_filename" invisible="1"/>
+                                <field name="sunat_cdr_file" filename="sunat_cdr_filename" readonly="1"/>
+                                <button name="action_download_sunat_cdr" type="object" string="Descargar CDR" class="btn btn-sm btn-outline-success" invisible="not sunat_cdr_file" icon="fa-download"/>
+                            </div>
+                        </group>
+                    </group>
+
+                    <group string="Respuesta del Proveedor / SUNAT" invisible="not sunat_error_message and not sunat_response_code">
+                        <field name="sunat_response_code"/>
+                        <field name="sunat_error_message"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista de Lista de Facturas con Estado SUNAT -->
+    <record id="view_invoice_tree_sunat_peru" model="ir.ui.view">
+        <field name="name">account.move.tree.sunat.peru</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_invoice_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='status_in_payment']" position="after">
+                <field name="sunat_status" widget="badge"
+                       decoration-info="sunat_status == 'to_send'"
+                       decoration-warning="sunat_status == 'sent'"
+                       decoration-success="sunat_status == 'accepted'"
+                       decoration-danger="sunat_status == 'rejected'"
+                       optional="show"/>
+                <field name="sunat_document_type_code" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

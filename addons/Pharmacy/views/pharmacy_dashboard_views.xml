@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Pharmacy Dashboard Form View for Odoo Community -->
+        <record id="pharmacy_dashboard_view" model="ir.ui.view">
+            <field name="name">pharmacy.dashboard.view</field>
+            <field name="model">pharmacy.dashboard</field>
+            <field name="arch" type="xml">
+                <form string="Panel de Control Farmacéutico" create="false" edit="false">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>Panel de Control MediZano ERP</h1>
+                        </div>
+                        <notebook>
+                            <page string="Resumen General" name="overview">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border shadow-sm">
+                                            <h6 class="text-muted mb-1">Ventas Totales</h6>
+                                            <h3 class="text-primary mb-0"><field name="total_sales" widget="monetary"/></h3>
+                                            <small class="text-success"><field name="sales_growth"/>% crecimiento</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border shadow-sm">
+                                            <h6 class="text-muted mb-1">Total Pedidos</h6>
+                                            <h3 class="text-primary mb-0"><field name="total_orders"/></h3>
+                                            <small class="text-muted">Prom: <field name="avg_order_value" widget="monetary"/></small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border shadow-sm">
+                                            <h6 class="text-muted mb-1">Total Pacientes</h6>
+                                            <h3 class="text-info mb-0"><field name="total_patients"/></h3>
+                                            <small class="text-muted">Activos: <field name="active_patients"/></small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border shadow-sm">
+                                            <h6 class="text-muted mb-1">Aprobación Seguro</h6>
+                                            <h3 class="text-success mb-0"><field name="claim_approval_rate"/>%</h3>
+                                            <small class="text-muted">Total: <field name="total_claims"/></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </page>
+                            <page string="Ventas" name="sales">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Ventas Hoy</h6>
+                                            <h4><field name="sales_today" widget="monetary"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Ventas Esta Semana</h6>
+                                            <h4><field name="sales_week" widget="monetary"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Ventas Este Mes</h6>
+                                            <h4><field name="sales_month" widget="monetary"/></h4>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Pedidos Hoy</h6>
+                                            <h4><field name="orders_today"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Pedidos Esta Semana</h6>
+                                            <h4><field name="orders_week"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Pedidos Este Mes</h6>
+                                            <h4><field name="orders_month"/></h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </page>
+                            <page string="Pacientes" name="patients">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Nuevos Pacientes Hoy</h6>
+                                            <h4><field name="new_patients_today"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Nuevos Esta Semana</h6>
+                                            <h4><field name="new_patients_week"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Nuevos Este Mes</h6>
+                                            <h4><field name="new_patients_month"/></h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </page>
+                            <page string="Recetas" name="prescriptions">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Recetas Hoy</h6>
+                                            <h4><field name="prescriptions_today"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Recetas Esta Semana</h6>
+                                            <h4><field name="prescriptions_week"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Recetas Pendientes</h6>
+                                            <h4><field name="pending_prescriptions"/></h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </page>
+                            <page string="Aseguradoras" name="claims">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border">
+                                            <h6>Reclamos Enviados</h6>
+                                            <h4><field name="claims_submitted"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border">
+                                            <h6>Reclamos Aprobados</h6>
+                                            <h4><field name="claims_approved"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border">
+                                            <h6>Reclamos Pendientes</h6>
+                                            <h4><field name="claims_pending"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border">
+                                            <h6>Reclamos Rechazados</h6>
+                                            <h4><field name="claims_rejected"/></h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </page>
+                            <page string="Inventario y Lotes" name="stock">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border">
+                                            <h6>Medicamentos Catálogo</h6>
+                                            <h4><field name="total_products"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border">
+                                            <h6>Stock Bajo</h6>
+                                            <h4><field name="low_stock_products"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border text-warning">
+                                            <h6>Por Vencer (&lt;= 30 días)</h6>
+                                            <h4><field name="expiring_soon_products"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card p-3 border text-danger">
+                                            <h6>Caducados (Bloqueados)</h6>
+                                            <h4><field name="expired_products"/></h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </page>
+                            <page string="Dispensación" name="dispensing">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Dispensaciones Hoy</h6>
+                                            <h4><field name="dispensing_today"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Dispensaciones Semana</h6>
+                                            <h4><field name="dispensing_week"/></h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card p-3 border">
+                                            <h6>Dispensaciones Mes</h6>
+                                            <h4><field name="dispensing_month"/></h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Pharmacy Dashboard Action -->
+        <record id="pharmacy_dashboard_action" model="ir.actions.act_window">
+            <field name="name">Panel de Control</field>
+            <field name="res_model">pharmacy.dashboard</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="pharmacy_dashboard_view"/>
+            <field name="target">current</field>
+        </record>
+        
+        <!-- Menu Item -->
+        <menuitem id="pharmacy_dashboard_menu" 
+                  name="Panel de Control" 
+                  parent="menu_pharmacy_root" 
+                  action="pharmacy_dashboard_action"
+                  sequence="1"/>
+        
+    </data>
+</odoo>

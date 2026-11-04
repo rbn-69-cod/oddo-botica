@@ -1,0 +1,68 @@
+/* Pharmacy Form Layout Fixes */
+.o_form_view {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: visible !important;
+}
+
+.o_form_sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: visible !important;
+}
+
+.o_form_sheet_bg {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.o_notebook {
+    width: 100% !important;
+    overflow-x: visible !important;
+}
+
+.o_notebook .tab-content {
+    width: 100% !important;
+    overflow-x: visible !important;
+}
+
+.o_group {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.o_field_widget {
+    max-width: 100% !important;
+}
+
+/* Ensure proper scrolling */
+.o_form_view .o_content {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+}
+
+/* Fix for modal dialogs */
+.modal-dialog {
+    max-width: 95% !important;
+    width: 95% !important;
+}
+
+.modal-body {
+    overflow-x: auto !important;
+}
+
+/* Fix for responsive layout */
+@media (max-width: 768px) {
+    .o_form_sheet {
+        padding: 16px !important;
+    }
+    
+    .o_group {
+        display: block !important;
+    }
+    
+    .o_group > .o_group_col_6 {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}

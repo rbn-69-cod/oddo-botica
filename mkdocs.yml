@@ -1,11 +1,12 @@
-﻿site_name: MediZano POS - Microservicios
+﻿site_name: Oddo Botica - ERP Odoo 18
 site_url: http://localhost:8000/medizano/
-repo_url: https://github.com/rbn-69-cod/MediZano_microservicios
-repo_name: rbn-69-cod/MediZano_microservicios
+repo_url: https://github.com/rbn-69-cod/oddo-botica
+repo_name: rbn-69-cod/oddo-botica
 docs_dir: docs
 
 nav:
   - Inicio: index.md
+  - ERP Odoo 18: odoo.md
   - Proyecto Sello:
       - Guía del Proyecto: proyecto-sello/index.md
       - Arquitectura y Relaciones: proyecto-sello/arquitectura-relaciones.md

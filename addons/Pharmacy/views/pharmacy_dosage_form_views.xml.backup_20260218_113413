@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Dosage Form Views -->
+    
+    <!-- Tree View -->
+    <record id="view_pharmacy_dosage_form_tree" model="ir.ui.view">
+        <field name="name">pharmacy.dosage.form.list</field>
+        <field name="model">pharmacy.dosage.form</field>
+        <field name="arch" type="xml">
+            <list string="Dosage Forms">
+                <field name="name"/>
+                <field name="display_name"/>
+                <field name="is_solid"/>
+                <field name="is_liquid"/>
+                <field name="oral"/>
+                <field name="topical"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_pharmacy_dosage_form_form" model="ir.ui.view">
+        <field name="name">pharmacy.dosage.form.form</field>
+        <field name="model">pharmacy.dosage.form</field>
+        <field name="arch" type="xml">
+            <form string="Dosage Form">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Common Name *"/>
+                        <h1>
+                            <field name="name" required="1" placeholder="e.g. Tablet, Syrup, Injection" help="Simple name users will recognize"/>
+                        </h1>
+                        <label for="display_name" string="Professional/Medical Name *"/>
+                        <p>
+                            <field name="display_name" required="1" placeholder="e.g. Oral Suspension, Intravenous Infusion" help="Formal designation"/>
+                        </p>
+                    </div>
+                    
+                    <group name="dosage_classification" string="Dosage Form Classification" class="mt-4">
+                        <group name="physical_type">
+                            <span class="o_form_label">Physical State *</span>
+                            <field name="is_solid" widget="boolean" help="Solid form (tablets, capsules, powders)"/>
+                            <field name="is_liquid" widget="boolean" help="Liquid form (syrups, injections, drops)"/>
+                            <field name="requires_water" help="Requires water for preparation or use"/>
+                        </group>
+                        <group name="availability">
+                            <field name="active" widget="boolean_toggle" help="Make this form available for use"/>
+                        </group>
+                    </group>
+                    
+                    <group name="preparation" string="Preparation Instructions" class="mt-4">
+                        <field name="description" nolabel="1" placeholder="e.g. Mix one tablet with 250ml water. Stir well. Take after meals. Storage: Cool, dry place"/>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Administration Routes">
+                            <group>
+                                <group string="Common Routes">
+                                    <field name="oral"/>
+                                    <field name="topical"/>
+                                    <field name="parenteral"/>
+                                    <field name="inhalation"/>
+                                </group>
+                                <group string="Specialized Routes">
+                                    <field name="rectal"/>
+                                    <field name="ophthalmic"/>
+                                    <field name="otic"/>
+                                    <field name="nasal"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Form Types">
+                            <group>
+                                <group string="Solid Forms">
+                                    <field name="is_tablet" readonly="1"/>
+                                    <field name="is_capsule" readonly="1"/>
+                                    <field name="is_powder" readonly="1"/>
+                                    <field name="is_granules" readonly="1"/>
+                                </group>
+                                <group string="Liquid/Semi-solid Forms">
+                                    <field name="is_syrup" readonly="1"/>
+                                    <field name="is_cream" readonly="1"/>
+                                    <field name="is_ointment" readonly="1"/>
+                                    <field name="is_drops" readonly="1"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Other Forms">
+                                    <field name="is_injection" readonly="1"/>
+                                    <field name="is_inhaler" readonly="1"/>
+                                    <field name="is_suppository" readonly="1"/>
+                                    <field name="is_patch" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Description">
+                            <field name="description" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_pharmacy_dosage_form_search" model="ir.ui.view">
+        <field name="name">pharmacy.dosage.form.search</field>
+        <field name="model">pharmacy.dosage.form</field>
+        <field name="arch" type="xml">
+            <search string="Dosage Forms">
+                <field name="name"/>
+                <field name="display_name"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Solid Forms" name="solid" domain="[('is_solid', '=', True)]"/>
+                <filter string="Liquid Forms" name="liquid" domain="[('is_liquid', '=', True)]"/>
+                <filter string="Oral" name="oral" domain="[('oral', '=', True)]"/>
+                <filter string="Topical" name="topical" domain="[('topical', '=', True)]"/>
+                <filter string="Parenteral" name="parenteral" domain="[('parenteral', '=', True)]"/>
+                <separator/>
+                <filter string="Tablets" name="tablets" domain="[('is_tablet', '=', True)]"/>
+                <filter string="Capsules" name="capsules" domain="[('is_capsule', '=', True)]"/>
+                <filter string="Syrups" name="syrups" domain="[('is_syrup', '=', True)]"/>
+                <filter string="Injections" name="injections" domain="[('is_injection', '=', True)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Form Type" name="group_form_type" context="{'group_by': 'name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_pharmacy_dosage_form" model="ir.actions.act_window">
+        <field name="name">Dosage Forms</field>
+        <field name="res_model">pharmacy.dosage.form</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create dosage forms
+            </p>
+            <p>
+                Dosage forms define how medications are administered.
+                Each form has specific properties and administration routes.
+            </p>
+        </field>
+    </record>
+              
+</odoo>

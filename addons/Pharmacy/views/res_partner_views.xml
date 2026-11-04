@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_decolecta" model="ir.ui.view">
+        <field name="name">res.partner.form.decolecta</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority">25</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='vat']" position="after">
+                <button name="action_consultar_decolecta"
+                        type="object"
+                        string="Consultar DNI / RUC"
+                        class="btn btn-sm btn-outline-primary oe_inline ms-1"
+                        icon="fa-search"
+                        help="Consultar DNI o RUC en Decolecta API para autocompletar nombres, razón social y dirección fiscal."/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="SUNAT (Perú)" name="sunat_peru_info">
+                    <group>
+                        <group string="Estado del Contribuyente">
+                            <field name="sunat_estado"/>
+                            <field name="sunat_condicion"/>
+                            <field name="sunat_ubigeo"/>
+                        </group>
+                        <group string="Acciones de Consulta">
+                            <button name="action_consultar_decolecta"
+                                    type="object"
+                                    string="Actualizar Datos vía Decolecta"
+                                    class="btn btn-outline-primary"
+                                    icon="fa-refresh"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

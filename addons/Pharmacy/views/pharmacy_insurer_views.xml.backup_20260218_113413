@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Pharmacy Insurer Views -->
+        
+        <!-- List View -->
+        <record id="view_pharmacy_insurer_list" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.list</field>
+            <field name="model">pharmacy.insurer</field>
+            <field name="arch" type="xml">
+                <list string="Insurance Companies">
+                    <field name="code"/>
+                    <field name="name"/>
+                    <field name="contact_person"/>
+                    <field name="phone"/>
+                    <field name="email"/>
+                    <field name="billing_frequency"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record id="view_pharmacy_insurer_form" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.form</field>
+            <field name="model">pharmacy.insurer</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Company Profile">
+                    <header>
+                        <field name="active" widget="boolean_toggle"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Insurance Company Name *"/>
+                            <h1>
+                                <field name="name" placeholder="e.g. Aetna Insurance" required="1"/>
+                            </h1>
+                            <label for="code" string="Company Code"/>
+                            <p>
+                                <field name="code" placeholder="e.g. INS-001" readonly="1" class="oe_inline"/>
+                            </p>
+                        </div>
+                        
+                        <group name="contact_details" string="Contact Information">
+                            <group name="primary_contact">
+                                <field name="contact_person" placeholder="Primary contact name"/>
+                                <field name="phone" widget="phone" placeholder="e.g. +254712345678"/>
+                                <field name="email" widget="email" placeholder="e.g. contact@insurer.com"/>
+                            </group>
+                            <group name="digital">
+                                <field name="website" widget="url" placeholder="https://insurer.com"/>
+                                <field name="partner_id" options="{'no_create': True}"/>
+                            </group>
+                        </group>
+                        
+                        <group name="financial_terms" string="Payment &amp; Billing Terms">
+                            <group>
+                                <field name="billing_frequency" required="1" help="How often claims are paid"/>
+                                <field name="payment_term_id" help="Payment terms for invoicing"/>
+                            </group>
+                            <group>
+                                <field name="consolidate_branches" help="Consolidate claims across all branches"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Registered Address">
+                                <group string="Physical Address">
+                                    <field name="street" placeholder="Street address"/>
+                                </group>
+                                <group>
+                                    <group>
+                                        <field name="street2" placeholder="Building/Suite"/>
+                                        <field name="city" placeholder="City"/>
+                                        <field name="state_id" placeholder="State"/>
+                                    </group>
+                                    <group>
+                                        <field name="zip" placeholder="Postal code"/>
+                                        <field name="country_id" placeholder="Country"/>
+                                    </group>
+                                </group>
+                            </page>
+                            
+                            <page string="Insurance Plans">
+                                <group class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        Define different insurance plans offered by this company.
+                                    </p>
+                                </group>
+                                <field name="plan_ids" nolabel="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="plan_type"/>
+                                        <field name="coverage_percentage"/>
+                                        <field name="copay_percentage"/>
+                                        <field name="active" decoration-success="active == True" decoration-muted="active == False"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Claims History">
+                                <group class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        View-only list of all claims submitted to this insurance company.
+                                    </p>
+                                </group>
+                                <field name="claim_ids" readonly="1" nolabel="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="claim_date"/>
+                                        <field name="total_amount" sum="Total Claims"/>
+                                        <field name="approved_amount" sum="Approved Amount"/>
+                                        <field name="status" decoration-success="status == 'paid'" decoration-info="status == 'approved'" decoration-warning="status == 'submitted'"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Additional Notes">
+                                <field name="notes" nolabel="1" placeholder="Any special terms, conditions or notes about working with this insurance company..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Search View -->
+        <record id="view_pharmacy_insurer_search" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.search</field>
+            <field name="model">pharmacy.insurer</field>
+            <field name="arch" type="xml">
+                <search string="Search Insurance Companies">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="contact_person"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Billing Frequency" name="group_billing" context="{'group_by': 'billing_frequency'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Action -->
+        <record id="action_pharmacy_insurer" model="ir.actions.act_window">
+            <field name="name">Insurance Companies</field>
+            <field name="res_model">pharmacy.insurer</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first insurance company
+                </p>
+                <p>
+                    Insurance companies are organizations that provide health insurance coverage.
+                    Configure their details, billing frequency, and payment terms here.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Pharmacy Insurer Plan Views -->
+        
+        <!-- List View -->
+        <record id="view_pharmacy_insurer_plan_list" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.plan.list</field>
+            <field name="model">pharmacy.insurer.plan</field>
+            <field name="arch" type="xml">
+                <list string="Insurance Plans">
+                    <field name="name"/>
+                    <field name="insurer_id"/>
+                    <field name="plan_type"/>
+                    <field name="coverage_percentage"/>
+                    <field name="copay_percentage"/>
+                    <field name="max_amount_per_visit"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record id="view_pharmacy_insurer_plan_form" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.plan.form</field>
+            <field name="model">pharmacy.insurer.plan</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Plan">
+                    <header>
+                        <field name="active" widget="boolean_toggle"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Plan Name"/>
+                            <h1>
+                                <field name="name" placeholder="e.g. Gold Standard Plan"/>
+                            </h1>
+                        </div>
+                        
+                        <group>
+                            <group>
+                                <field name="insurer_id"/>
+                                <field name="plan_type"/>
+                                <field name="coverage_percentage"/>
+                                <field name="copay_percentage"/>
+                            </group>
+                            <group>
+                                <field name="max_amount_per_visit"/>
+                                <field name="max_amount_per_month"/>
+                                <field name="max_amount_per_year"/>
+                                <field name="require_preauth"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Applicable Branches">
+                                <field name="branch_ids">
+                                    <list>
+                                        <field name="code"/>
+                                        <field name="name"/>
+                                        <field name="city"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Coverage Rules">
+                                <field name="coverage_rule_ids">
+                                    <list>
+                                        <field name="product_category_id"/>
+                                        <field name="coverage_percentage"/>
+                                        <field name="copay_percentage"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Notes">
+                                <field name="notes" placeholder="Additional notes about this plan..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Search View -->
+        <record id="view_pharmacy_insurer_plan_search" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.plan.search</field>
+            <field name="model">pharmacy.insurer.plan</field>
+            <field name="arch" type="xml">
+                <search string="Search Insurance Plans">
+                    <field name="name"/>
+                    <field name="insurer_id"/>
+                    <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactive" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Insurer" name="group_insurer" context="{'group_by': 'insurer_id'}"/>
+                        <filter string="Plan Type" name="group_type" context="{'group_by': 'plan_type'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Action -->
+        <record id="action_pharmacy_insurer_plan" model="ir.actions.act_window">
+            <field name="name">Insurance Plans</field>
+            <field name="res_model">pharmacy.insurer.plan</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create your first insurance plan
+                </p>
+                <p>
+                    Insurance plans define coverage percentages, co-pay amounts, and limits
+                    for different insurance products.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Menu Items -->
+        <menuitem id="menu_pharmacy_insurer_list" 
+                  name="Insurance Companies" 
+                  parent="menu_pharmacy_insurers" 
+                  action="action_pharmacy_insurer" 
+                  sequence="10"/>
+        
+        <menuitem id="menu_pharmacy_insurer_plan_list" 
+                  name="Insurance Plans" 
+                  parent="menu_pharmacy_insurers" 
+                  action="action_pharmacy_insurer_plan" 
+                  sequence="20"/>
+        
+    </data>
+</odoo>

@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+*.log
+.env
+*.swp
+*.swo
+*~
+odoo.conf

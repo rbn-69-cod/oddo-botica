@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vistas de Formas Farmacéuticas -->
+    
+    <!-- Vista Lista -->
+    <record id="view_pharmacy_dosage_form_tree" model="ir.ui.view">
+        <field name="name">pharmacy.dosage.form.list</field>
+        <field name="model">pharmacy.dosage.form</field>
+        <field name="arch" type="xml">
+            <list string="Formas Farmacéuticas">
+                <field name="name" string="Nombre Común"/>
+                <field name="display_name" string="Denominación Técnica"/>
+                <field name="is_solid" string="Sólido"/>
+                <field name="is_liquid" string="Líquido"/>
+                <field name="oral" string="Vía Oral"/>
+                <field name="topical" string="Vía Tópica"/>
+                <field name="active" string="Activa"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Vista Formulario -->
+    <record id="view_pharmacy_dosage_form_form" model="ir.ui.view">
+        <field name="name">pharmacy.dosage.form.form</field>
+        <field name="model">pharmacy.dosage.form</field>
+        <field name="arch" type="xml">
+            <form string="Forma Farmacéutica">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nombre Común *"/>
+                        <h1>
+                            <field name="name" required="1" placeholder="ej. Tableta, Jarabe, Inyectable" help="Nombre comercial y común"/>
+                        </h1>
+                        <label for="display_name" string="Denominación Farmacológica / Médica *"/>
+                        <p>
+                            <field name="display_name" required="1" placeholder="ej. Suspensión Oral, Solución Inyectable" help="Denominación oficial"/>
+                        </p>
+                    </div>
+                    
+                    <group name="dosage_classification" string="Clasificación de la Forma Farmacéutica" class="mt-4">
+                        <group name="physical_type">
+                            <span class="o_form_label">Estado Físico</span>
+                            <field name="is_solid" string="Forma Sólida" widget="boolean" help="Tabletas, cápsulas, polvos"/>
+                            <field name="is_liquid" string="Forma Líquida" widget="boolean" help="Jarabes, gotas, suspensiones"/>
+                            <field name="requires_water" string="Requiere Reconstitución / Agua"/>
+                        </group>
+                        <group name="availability">
+                            <field name="active" string="Activa para Dispensación" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    
+                    <group name="preparation" string="Instrucciones de Preparación / Administración" class="mt-4">
+                        <field name="description" nolabel="1" placeholder="ej. Agitar antes de usar. Administrar después de los alimentos. Conservar en lugar fresco y seco."/>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Vías de Administración" name="routes">
+                            <group>
+                                <group string="Vías Habituales">
+                                    <field name="oral" string="Oral"/>
+                                    <field name="topical" string="Tópica / Cutánea"/>
+                                    <field name="parenteral" string="Parenteral / Inyectable"/>
+                                    <field name="inhalation" string="Inhalatoria"/>
+                                </group>
+                                <group string="Vías Específicas">
+                                    <field name="rectal" string="Rectal"/>
+                                    <field name="ophthalmic" string="Oftálmica"/>
+                                    <field name="otic" string="Ótica"/>
+                                    <field name="nasal" string="Nasal"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Tipos y Presentaciones" name="types">
+                            <group>
+                                <group string="Presentaciones Sólidas">
+                                    <field name="is_tablet" string="Tableta / Comprimido" readonly="1"/>
+                                    <field name="is_capsule" string="Cápsula" readonly="1"/>
+                                    <field name="is_powder" string="Polvo" readonly="1"/>
+                                    <field name="is_granules" string="Gránulos" readonly="1"/>
+                                </group>
+                                <group string="Presentaciones Líquidas / Semisólidas">
+                                    <field name="is_syrup" string="Jarabe" readonly="1"/>
+                                    <field name="is_cream" string="Crema" readonly="1"/>
+                                    <field name="is_ointment" string="Pomada / Ungüento" readonly="1"/>
+                                    <field name="is_drops" string="Gotas" readonly="1"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Otras Presentaciones">
+                                    <field name="is_injection" string="Inyectable / Ampolla" readonly="1"/>
+                                    <field name="is_inhaler" string="Inhalador" readonly="1"/>
+                                    <field name="is_suppository" string="Supositorio" readonly="1"/>
+                                    <field name="is_patch" string="Parche Transdérmico" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Vista Búsqueda -->
+    <record id="view_pharmacy_dosage_form_search" model="ir.ui.view">
+        <field name="name">pharmacy.dosage.form.search</field>
+        <field name="model">pharmacy.dosage.form</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Formas Farmacéuticas">
+                <field name="name" string="Nombre"/>
+                <field name="display_name" string="Denominación"/>
+                <filter string="Activas" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Sólidas" name="solid" domain="[('is_solid', '=', True)]"/>
+                <filter string="Líquidas" name="liquid" domain="[('is_liquid', '=', True)]"/>
+                <filter string="Vía Oral" name="oral" domain="[('oral', '=', True)]"/>
+                <filter string="Vía Tópica" name="topical" domain="[('topical', '=', True)]"/>
+                <filter string="Parenteral" name="parenteral" domain="[('parenteral', '=', True)]"/>
+                <separator/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Tipo de Forma" name="group_form_type" context="{'group_by': 'name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Acción -->
+    <record id="action_pharmacy_dosage_form" model="ir.actions.act_window">
+        <field name="name">Formas Farmacéuticas</field>
+        <field name="res_model">pharmacy.dosage.form</field>
+        <field name="view_mode">list,form</field>
+    </record>
+              
+</odoo>

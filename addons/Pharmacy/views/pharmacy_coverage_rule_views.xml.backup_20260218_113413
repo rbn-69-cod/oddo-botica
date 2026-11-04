@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Coverage Rule Views -->
+    
+    <!-- List View -->
+    <record id="view_pharmacy_coverage_rule_list" model="ir.ui.view">
+        <field name="name">pharmacy.coverage.rule.list</field>
+        <field name="model">pharmacy.coverage.rule</field>
+        <field name="arch" type="xml">
+            <list string="Coverage Rules">
+                <field name="plan_id"/>
+                <field name="product_id"/>
+                <field name="category_id"/>
+                <field name="coverage_percentage" widget="percentage"/>
+                <field name="copay_percentage" widget="percentage"/>
+                <field name="is_exclusion"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_pharmacy_coverage_rule_form" model="ir.ui.view">
+        <field name="name">pharmacy.coverage.rule.form</field>
+        <field name="model">pharmacy.coverage.rule</field>
+        <field name="arch" type="xml">
+            <form string="Coverage Rule">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="plan_id" string="Insurance Plan *"/>
+                        <h1>
+                            <field name="plan_id" required="1" options="{'no_create': True}" help="Insurance plan this rule applies to"/>
+                        </h1>
+                    </div>
+                    
+                    <group name="rule_applicability" string="What Does This Rule Cover?" class="mt-4">
+                        <group name="scope">
+                            <field name="product_id" placeholder="e.g. Aspirin 100mg" options="{'no_create': True}" help="Leave empty to apply to all products in category"/>
+                            <field name="category_id" placeholder="e.g. Pain Relief" options="{'no_create': True}" help="Product category this rule applies to"/>
+                            <field name="is_exclusion" widget="boolean_toggle" help="Check if this is an exclusion (NOT covered)"/>
+                        </group>
+                        <group name="activation">
+                            <field name="priority" help="Higher priority rules apply first"/>
+                            <field name="active" widget="boolean_toggle" help="Activate/deactivate this rule"/>
+                        </group>
+                    </group>
+                    
+                    <group name="coverage_details" string="Coverage &amp; Cost Sharing" class="mt-4">
+                        <group name="insurance_share">
+                            <field name="coverage_percentage" required="1" widget="percentage" help="% insurance will cover (e.g. 80 means insurance pays 80%)"/>
+                            <field name="copay_percentage" widget="percentage" help="% patient pay as percentage of drug cost"/>
+                            <field name="copay_amount" help="Fixed amount patient must pay"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Limits">
+                            <group>
+                                <group>
+                                    <field name="max_quantity_per_visit"/>
+                                    <field name="max_quantity_per_month"/>
+                                </group>
+                                <group>
+                                    <field name="require_generic_substitution"/>
+                                    <field name="require_prescription"/>
+                                    <field name="require_preauth"/>
+                                    <field name="preauth_threshold"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Exclusion">
+                            <group modifiers="{'invisible': [['is_exclusion', '=', False]]}">
+                                <field name="exclusion_reason" nolabel="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_pharmacy_coverage_rule_search" model="ir.ui.view">
+        <field name="name">pharmacy.coverage.rule.search</field>
+        <field name="model">pharmacy.coverage.rule</field>
+        <field name="arch" type="xml">
+            <search string="Coverage Rules">
+                <field name="plan_id"/>
+                <field name="product_id"/>
+                <field name="category_id"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Exclusions" name="exclusions" domain="[('is_exclusion', '=', True)]"/>
+                <separator/>
+                <filter string="Product Rules" name="product_rules" domain="[('product_id', '!=', False)]"/>
+                <filter string="Category Rules" name="category_rules" domain="[('category_id', '!=', False)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Plan" name="group_plan" context="{'group_by': 'plan_id'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_pharmacy_coverage_rule" model="ir.actions.act_window">
+        <field name="name">Coverage Rules</field>
+        <field name="res_model">pharmacy.coverage.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create coverage rules for insurance plans
+            </p>
+            <p>
+                Coverage rules define how insurance plans cover specific products or categories.
+                You can set coverage percentages, co-pay amounts, and quantity limits.
+            </p>
+        </field>
+    </record>
+              
+</odoo>

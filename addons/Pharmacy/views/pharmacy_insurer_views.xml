@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Vistas de Compañías de Seguros -->
+        
+        <!-- Vista Lista -->
+        <record id="view_pharmacy_insurer_list" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.list</field>
+            <field name="model">pharmacy.insurer</field>
+            <field name="arch" type="xml">
+                <list string="Compañías de Seguros">
+                    <field name="code"/>
+                    <field name="name"/>
+                    <field name="contact_person"/>
+                    <field name="phone"/>
+                    <field name="email"/>
+                    <field name="billing_frequency"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Vista Formulario -->
+        <record id="view_pharmacy_insurer_form" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.form</field>
+            <field name="model">pharmacy.insurer</field>
+            <field name="arch" type="xml">
+                <form string="Perfil de Aseguradora">
+                    <header>
+                        <field name="active" widget="boolean_toggle"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Nombre de la Aseguradora *"/>
+                            <h1>
+                                <field name="name" placeholder="Ej. Rímac Seguros, Pacífico Seguros" required="1"/>
+                            </h1>
+                            <label for="code" string="Código de Aseguradora"/>
+                            <p>
+                                <field name="code" placeholder="Ej. ASEG-001" readonly="1" class="oe_inline"/>
+                            </p>
+                        </div>
+                        
+                        <group name="contact_details" string="Información de Contacto">
+                            <group name="primary_contact">
+                                <field name="contact_person" placeholder="Nombre del contacto principal"/>
+                                <field name="phone" widget="phone" placeholder="Ej. +51 987 654 321"/>
+                                <field name="email" widget="email" placeholder="Ej. contacto@aseguradora.pe"/>
+                            </group>
+                            <group name="digital">
+                                <field name="website" widget="url" placeholder="https://aseguradora.pe"/>
+                                <field name="partner_id" options="{'no_create': True}"/>
+                            </group>
+                        </group>
+                        
+                        <group name="financial_terms" string="Condiciones de Facturación y Pago">
+                            <group>
+                                <field name="billing_frequency" required="1" help="Frecuencia de liquidación de reclamos"/>
+                                <field name="payment_term_id" help="Plazo de pago para facturación"/>
+                            </group>
+                            <group>
+                                <field name="consolidate_branches" help="Consolidar reclamos de todas las boticas / sucursales"/>
+                                <field name="auto_create_payment" widget="boolean_toggle" help="Crear registro de pago automáticamente al aprobar reclamo"/>
+                                <field name="company_id" groups="base.group_multi_company"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Dirección Fiscal">
+                                <group string="Dirección Física">
+                                    <field name="street" placeholder="Calle, Av. o Jr. y número"/>
+                                </group>
+                                <group>
+                                    <group>
+                                        <field name="street2" placeholder="Oficina, piso o referencia"/>
+                                        <field name="city" placeholder="Distrito / Ciudad"/>
+                                        <field name="state_id" placeholder="Departamento / Provincia"/>
+                                    </group>
+                                    <group>
+                                        <field name="zip" placeholder="Código postal"/>
+                                        <field name="country_id" placeholder="País"/>
+                                    </group>
+                                </group>
+                            </page>
+                            
+                            <page string="Planes de Seguro">
+                                <group class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        Defina los diferentes planes de cobertura ofrecidos por esta aseguradora.
+                                    </p>
+                                </group>
+                                <field name="plan_ids" nolabel="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="plan_type"/>
+                                        <field name="coverage_percentage"/>
+                                        <field name="copay_percentage"/>
+                                        <field name="active" decoration-success="active == True" decoration-muted="active == False"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Historial de Reclamos">
+                                <group class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        Lista de solo lectura de todas las liquidaciones o reclamos presentados a esta aseguradora.
+                                    </p>
+                                </group>
+                                <field name="claim_ids" readonly="1" nolabel="1">
+                                    <list>
+                                        <field name="name"/>
+                                        <field name="claim_date"/>
+                                        <field name="total_amount" sum="Total Reclamos"/>
+                                        <field name="approved_amount" sum="Monto Aprobado"/>
+                                        <field name="status" decoration-success="status == 'paid'" decoration-info="status == 'approved'" decoration-warning="status == 'submitted'"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Notas Adicionales">
+                                <field name="notes" nolabel="1" placeholder="Condiciones especiales, convenios o notas sobre esta aseguradora..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Vista Búsqueda -->
+        <record id="view_pharmacy_insurer_search" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.search</field>
+            <field name="model">pharmacy.insurer</field>
+            <field name="arch" type="xml">
+                <search string="Buscar Aseguradoras">
+                    <field name="name"/>
+                    <field name="code"/>
+                    <field name="contact_person"/>
+                    <filter string="Activo" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactivo" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <group expand="0" string="Agrupar por">
+                        <filter string="Frecuencia de Facturación" name="group_billing" context="{'group_by': 'billing_frequency'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Acción -->
+        <record id="action_pharmacy_insurer" model="ir.actions.act_window">
+            <field name="name">Compañías de Seguros</field>
+            <field name="res_model">pharmacy.insurer</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crear la primera aseguradora
+                </p>
+                <p>
+                    Las compañías de seguro o EPS brindan convenios de cobertura de salud.
+                    Configure sus datos, periodicidad de cobro y condiciones comerciales aquí.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Vistas de Planes de Seguro -->
+        
+        <!-- Vista Lista -->
+        <record id="view_pharmacy_insurer_plan_list" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.plan.list</field>
+            <field name="model">pharmacy.insurer.plan</field>
+            <field name="arch" type="xml">
+                <list string="Planes de Seguro">
+                    <field name="name"/>
+                    <field name="insurer_id"/>
+                    <field name="plan_type"/>
+                    <field name="coverage_percentage"/>
+                    <field name="copay_percentage"/>
+                    <field name="max_amount_per_visit"/>
+                    <field name="active"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Vista Formulario -->
+        <record id="view_pharmacy_insurer_plan_form" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.plan.form</field>
+            <field name="model">pharmacy.insurer.plan</field>
+            <field name="arch" type="xml">
+                <form string="Plan de Seguro">
+                    <header>
+                        <field name="active" widget="boolean_toggle"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Nombre del Plan"/>
+                            <h1>
+                                <field name="name" placeholder="Ej. Plan Integral Oro, Cobertura Ambulatoria"/>
+                            </h1>
+                        </div>
+                        
+                        <group>
+                            <group>
+                                <field name="insurer_id"/>
+                                <field name="plan_type"/>
+                                <field name="coverage_percentage"/>
+                                <field name="copay_percentage"/>
+                            </group>
+                            <group>
+                                <field name="max_amount_per_visit"/>
+                                <field name="max_amount_per_month"/>
+                                <field name="max_amount_per_year"/>
+                                <field name="require_preauth"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Boticas / Sucursales Aplicables">
+                                <field name="branch_ids">
+                                    <list>
+                                        <field name="code"/>
+                                        <field name="name"/>
+                                        <field name="city"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Reglas de Cobertura">
+                                <field name="coverage_rule_ids">
+                                    <list>
+                                        <field name="product_category_id"/>
+                                        <field name="coverage_percentage"/>
+                                        <field name="copay_percentage"/>
+                                    </list>
+                                </field>
+                            </page>
+                            
+                            <page string="Notas">
+                                <field name="notes" placeholder="Notas adicionales sobre este plan..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Vista Búsqueda -->
+        <record id="view_pharmacy_insurer_plan_search" model="ir.ui.view">
+            <field name="name">pharmacy.insurer.plan.search</field>
+            <field name="model">pharmacy.insurer.plan</field>
+            <field name="arch" type="xml">
+                <search string="Buscar Planes de Seguro">
+                    <field name="name"/>
+                    <field name="insurer_id"/>
+                    <filter string="Activo" name="active" domain="[('active', '=', True)]"/>
+                    <filter string="Inactivo" name="inactive" domain="[('active', '=', False)]"/>
+                    <separator/>
+                    <group expand="0" string="Agrupar por">
+                        <filter string="Aseguradora" name="group_insurer" context="{'group_by': 'insurer_id'}"/>
+                        <filter string="Tipo de Plan" name="group_type" context="{'group_by': 'plan_type'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Acción -->
+        <record id="action_pharmacy_insurer_plan" model="ir.actions.act_window">
+            <field name="name">Planes de Seguro</field>
+            <field name="res_model">pharmacy.insurer.plan</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crear el primer plan de seguro
+                </p>
+                <p>
+                    Los planes de seguro definen porcentajes de cobertura, montos de copago y topes
+                    para los distintos convenios de salud.
+                </p>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

@@ -1,0 +1,6 @@
+babel
+num2words
+phonenumbers
+psycopg2-binary
+gunicorn
+Werkzeug

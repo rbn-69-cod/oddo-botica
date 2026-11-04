@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Pharmacy Claim Views -->
+        
+        <!-- List View -->
+        <record id="view_pharmacy_claim_list" model="ir.ui.view">
+            <field name="name">pharmacy.claim.list</field>
+            <field name="model">pharmacy.claim</field>
+            <field name="arch" type="xml">
+                <list string="Insurance Claims">
+                    <field name="name"/>
+                    <field name="patient_id"/>
+                    <field name="insurer_id"/>
+                    <field name="plan_id"/>
+                    <field name="claim_date"/>
+                    <field name="total_amount" sum="Total"/>
+                    <field name="approved_amount" sum="Approved"/>
+                    <field name="status" decoration-success="status == 'paid'" decoration-info="status == 'approved'" decoration-warning="status == 'submitted'" decoration-danger="status == 'rejected'"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Form View -->
+        <record id="view_pharmacy_claim_form" model="ir.ui.view">
+            <field name="name">pharmacy.claim.form</field>
+            <field name="model">pharmacy.claim</field>
+            <field name="arch" type="xml">
+                <form string="Insurance Claim">
+                    <header>
+                        <button name="action_submit" string="Submit Claim" type="object" invisible="status != 'draft'" class="btn-primary"/>
+                        <button name="action_approve" string="Approve" type="object" invisible="status != 'submitted'" class="btn-success" groups="Pharmacy.group_pharmacy_manager"/>
+                        <button name="action_reject" string="Reject" type="object" invisible="status != 'submitted'" class="btn-danger" groups="Pharmacy.group_pharmacy_manager"/>
+                        <button name="action_mark_paid" string="Mark as Paid" type="object" invisible="status not in ['approved', 'partially_approved']" class="btn-info" groups="Pharmacy.group_pharmacy_accounts"/>
+                        <field name="status" widget="statusbar" statusbar_visible="draft,submitted,approved,paid,rejected"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="Claim Reference Number"/>
+                            <h1>
+                                <field name="name" readonly="1" class="oe_inline"/>
+                            </h1>
+                        </div>
+                        
+                        <group name="claim_basics" string="Claim Information">
+                            <group name="patient_info">
+                                <field name="patient_id" options="{'no_open': False}" required="1" help="Select the patient for this claim"/>
+                                <field name="member_number" readonly="1" help="Insurer's member number"/>
+                            </group>
+                            <group name="insurance_info">
+                                <field name="insurer_id" options="{'no_create': True}" required="1" help="Which insurance company"/>
+                                <field name="plan_id" options="{'no_create': True}" required="1" help="Which insurance plan"/>
+                            </group>
+                        </group>
+                        
+                        <group name="claim_meta" string="Submission Details">
+                            <group>
+                                <field name="branch_id" required="1" help="Branch where service was provided"/>
+                                <field name="claim_date" required="1" help="Date service was provided"/>
+                            </group>
+                            <group>
+                                <field name="pos_order_id" help="Associated sales order (if any)"/>
+                                <field name="submission_date" readonly="1" help="Date claim was submitted"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Claim Line Items">
+                                <group class="mt-2">
+                                    <p class="text-muted" style="font-size: 12px;">
+                                        List each product/service billed in this claim. System will calculate coverage automatically.
+                                    </p>
+                                </group>
+                                <field name="line_ids" nolabel="1">
+                                    <list editable="bottom">
+                                        <field name="product_id" required="1" help="Product or service rendered"/>
+                                        <field name="quantity" required="1" help="Number of units"/>
+                                        <field name="unit_price" help="Price per unit"/>
+                                        <field name="subtotal" readonly="1" help="Total before negotiations"/>
+                                        <field name="coverage_percentage" readonly="1" help="Insurer covers this %"/>
+                                        <field name="copay_percentage" readonly="1" help="Patient pays this %"/>
+                                        <field name="claimed_amount" readonly="1" help="Claim amount sent to insurer"/>
+                                        <field name="approved_amount" help="Amount insurer approved"/>
+                                    </list>
+                                </field>
+                                <group class="oe_subtotal_footer oe_right">
+                                    <div class="oe_subtotal_footer_separator"/>
+                                    <field name="total_amount" widget="monetary" class="oe_subtotal_footer_separator"/>
+                                    <field name="copay_amount" widget="monetary"/>
+                                    <field name="claimed_amount" widget="monetary" class="oe_subtotal_footer_separator"/>
+                                    <field name="approved_amount" widget="monetary" class="oe_subtotal_footer_separator"/>
+                                </group>
+                            </page>
+                            
+                            <page string="Claim Processing">
+                                <group string="Clinical Information">
+                                    <group>
+                                        <field name="diagnosis" placeholder="Primary diagnosis"/>
+                                        <field name="prescription_ref" placeholder="Prescription reference (if any)"/>
+                                    </group>
+                                </group>
+                                <group string="Approval Details">
+                                    <group>
+                                        <field name="approved_by" readonly="1" help="Who approved this claim"/>
+                                        <field name="approval_date" readonly="1" help="When was it approved"/>
+                                    </group>
+                                    <group>
+                                        <field name="payment_date" readonly="1" help="When payment was received"/>
+                                    </group>
+                                </group>
+                                <group string="Additional Information">
+                                    <field name="notes" nolabel="1" placeholder="Notes about this claim..."/>
+                                    <field name="rejection_reason" nolabel="1" invisible="status != 'rejected'" placeholder="Why was this claim rejected?"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Search View -->
+        <record id="view_pharmacy_claim_search" model="ir.ui.view">
+            <field name="name">pharmacy.claim.search</field>
+            <field name="model">pharmacy.claim</field>
+            <field name="arch" type="xml">
+                <search string="Search Claims">
+                    <field name="name"/>
+                    <field name="patient_id"/>
+                    <field name="insurer_id"/>
+                    <field name="member_number"/>
+                    <filter string="Draft" name="draft" domain="[('status', '=', 'draft')]"/>
+                    <filter string="Submitted" name="submitted" domain="[('status', '=', 'submitted')]"/>
+                    <filter string="Approved" name="approved" domain="[('status', '=', 'approved')]"/>
+                    <filter string="Paid" name="paid" domain="[('status', '=', 'paid')]"/>
+                    <filter string="Rejected" name="rejected" domain="[('status', '=', 'rejected')]"/>
+                    <separator/>
+                    <filter string="This Month" name="this_month" domain="[('claim_date', '&gt;=', (context_today() - relativedelta(months=1)).strftime('%Y-%m-01'))]"/>
+                    <separator/>
+                    <group expand="0" string="Group By">
+                        <filter string="Insurer" name="group_insurer" context="{'group_by': 'insurer_id'}"/>
+                        <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                        <filter string="Branch" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                        <filter string="Claim Date" name="group_date" context="{'group_by': 'claim_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Kanban View -->
+        <record id="view_pharmacy_claim_kanban" model="ir.ui.view">
+            <field name="name">pharmacy.claim.kanban</field>
+            <field name="model">pharmacy.claim</field>
+            <field name="arch" type="xml">
+                <kanban string="Claims" default_group_by="status">
+                    <field name="name"/>
+                    <field name="patient_id"/>
+                    <field name="insurer_id"/>
+                    <field name="total_amount"/>
+                    <field name="approved_amount"/>
+                    <field name="status"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="oe_kanban_card oe_kanban_global_click">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                        <div class="o_kanban_record_subtitle">
+                                            <field name="patient_id"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <field name="insurer_id"/>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <field name="total_amount" widget="monetary"/>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="status" widget="label_selection"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+        
+        <!-- Action -->
+        <record id="action_pharmacy_claim" model="ir.actions.act_window">
+            <field name="name">Insurance Claims</field>
+            <field name="res_model">pharmacy.claim</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No insurance claims yet
+                </p>
+                <p>
+                    Insurance claims are automatically created when you process insurance sales in POS.
+                    You can also create manual claims here.
+                </p>
+            </field>
+        </record>
+        
+        <!-- Menu Item -->
+        <menuitem id="menu_pharmacy_claim_list" 
+                  name="Claims" 
+                  parent="menu_pharmacy_claims" 
+                  action="action_pharmacy_claim" 
+                  sequence="10"/>
+        
+    </data>
+</odoo>

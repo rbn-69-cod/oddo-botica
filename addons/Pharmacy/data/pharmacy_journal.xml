@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Pharmacy-specific Cash Journal -->
+        <record id="pharmacy_cash_journal" model="account.journal">
+            <field name="name">Pharmacy Cash</field>
+            <field name="code">PHC</field>
+            <field name="type">cash</field>
+        </record>
+
+        <!-- Pharmacy-specific Bank Journal for Yape / Plin -->
+        <record id="pharmacy_mpesa_journal" model="account.journal">
+            <field name="name">Billetera Digital (Yape / Plin)</field>
+            <field name="code">YAP</field>
+            <field name="type">bank</field>
+        </record>
+
+        <!-- Pharmacy-specific Card Journal -->
+        <record id="pharmacy_card_journal" model="account.journal">
+            <field name="name">Pharmacy Card</field>
+            <field name="code">PCD</field>
+            <field name="type">bank</field>
+        </record>
+    </data>
+</odoo>

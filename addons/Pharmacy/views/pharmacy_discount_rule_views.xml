@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vistas de Reglas de Descuento Farmacéutico -->
+    
+    <!-- Vista Lista -->
+    <record id="view_pharmacy_discount_rule_tree" model="ir.ui.view">
+        <field name="name">pharmacy.discount.rule.list</field>
+        <field name="model">pharmacy.discount.rule</field>
+        <field name="arch" type="xml">
+            <list string="Reglas de Descuento">
+                <field name="name" string="Nombre de la Regla"/>
+                <field name="max_discount_percent" string="Descuento Máx. (%)" widget="percentage"/>
+                <field name="max_discount_amount" string="Monto Máx. Descuento"/>
+                <field name="require_approval" string="Requiere Autorización"/>
+                <field name="approval_threshold" string="Umbral de Aprobación"/>
+                <field name="usage_count" string="Veces Aplicado"/>
+                <field name="active" string="Activa"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Vista Formulario -->
+    <record id="view_pharmacy_discount_rule_form" model="ir.ui.view">
+        <field name="name">pharmacy.discount.rule.form</field>
+        <field name="model">pharmacy.discount.rule</field>
+        <field name="arch" type="xml">
+            <form string="Regla de Descuento">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Nombre de la Regla de Descuento *"/>
+                        <h1>
+                            <field name="name" required="1" placeholder="ej. Descuento Adulto Mayor, Campaña de Salud" help="Descripción de la promoción o descuento"/>
+                        </h1>
+                    </div>
+                    
+                    <group name="rule_basic" string="Configuración del Descuento" class="mt-4">
+                        <group name="discount_limits">
+                            <field name="discount_type" string="Tipo de Descuento" required="1" widget="radio" options="{'horizontal': true}"/>
+                            <field name="max_discount_percent" string="% Descuento Máximo" required="1" widget="percentage" modifiers="{'required': [['discount_type', '=', 'percentage']]}"/>
+                            <field name="max_discount_amount" string="Monto Máximo de Descuento (S/)" modifiers="{'required': [['discount_type', '=', 'fixed']]}"/>
+                        </group>
+                        <group name="status">
+                            <field name="active" string="Activa" widget="boolean_toggle"/>
+                            <field name="usage_count" string="Cantidad de Usos" readonly="1" decoration-info="usage_count > 0"/>
+                            <field name="last_used" string="Último Uso" readonly="1" decoration-info="last_used"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Roles Autorizados" name="roles">
+                            <field name="role_ids" widget="many2many_tags" required="1" help="Grupos o puestos de trabajo que pueden aplicar este descuento"/>
+                        </page>
+                        
+                        <page string="Configuración de Aprobación" name="approval">
+                            <group>
+                                <group>
+                                    <field name="require_approval" string="Requiere Aprobación de Supervisor"/>
+                                    <field name="approval_threshold" string="Monto de Venta a partir del cual requiere Aprobación" modifiers="{'required': [['require_approval', '=', True]]}"/>
+                                </group>
+                                <group>
+                                    <field name="approval_role_ids" string="Roles con Permiso de Aprobación" widget="many2many_tags" modifiers="{'required': [['require_approval', '=', True]]}"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Vigencia Temporal" name="time">
+                            <group>
+                                <group>
+                                    <field name="active_from" string="Fecha Desde"/>
+                                    <field name="active_to" string="Fecha Hasta"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Restricciones por Medicamentos y Sucursal" name="products">
+                            <group>
+                                <group>
+                                    <field name="product_ids" string="Medicamentos Específicos" widget="many2many_tags"/>
+                                    <field name="category_ids" string="Categorías de Fármacos" widget="many2many_tags"/>
+                                </group>
+                                <group>
+                                    <field name="branch_ids" string="Boticas / Sucursales Aplicables" widget="many2many_tags"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Condiciones del Pedido" name="conditions">
+                            <group>
+                                <group>
+                                    <field name="min_order_amount" string="Monto Mínimo de Compra (S/)"/>
+                                    <field name="max_order_amount" string="Monto Máximo de Compra (S/)"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Acción -->
+    <record id="action_pharmacy_discount_rule" model="ir.actions.act_window">
+        <field name="name">Reglas de Descuento</field>
+        <field name="res_model">pharmacy.discount.rule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+              
+</odoo>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Vista Formulario de Pedido POS - Extensión de Farmacia -->
+        <record id="view_pos_order_form_pharmacy" model="ir.ui.view">
+            <field name="name">pos.order.form.pharmacy</field>
+            <field name="model">pos.order</field>
+            <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+            <field name="arch" type="xml">
+
+                <!-- Agregar pestaña de Farmacia -->
+                <xpath expr="//notebook" position="inside">
+                    <page string="Farmacia" name="pharmacy">
+                        <group>
+                            <group string="Información del Paciente">
+                                <field name="patient_id"
+                                       options="{'no_create': True, 'no_open': True}"
+                                       context="{'default_auto_sync_customer': True}"/>
+                                <field name="patient_name"/>
+                                <field name="branch_id" options="{'no_create': True}"/>
+                                <field name="prescription_id"
+                                       options="{'no_create': True}"
+                                       domain="[('patient_id', '=', patient_id)]"
+                                       invisible="patient_id == False"/>
+                                <field name="dispensed_by" options="{'no_create': True}"/>
+                            </group>
+
+                            <group string="Convenio / Aseguradora">
+                                <field name="is_insurance_sale"/>
+                                <field name="insurer_id"
+                                       options="{'no_create': True}"
+                                       invisible="is_insurance_sale == False"
+                                       required="is_insurance_sale == True"/>
+                                <field name="plan_id"
+                                       options="{'no_create': True}"
+                                       domain="[('insurer_id', '=', insurer_id)]"
+                                       invisible="is_insurance_sale == False"
+                                       required="is_insurance_sale == True"/>
+                                <field name="member_number"
+                                       invisible="is_insurance_sale == False"/>
+                                <field name="preauth_code"
+                                       invisible="is_insurance_sale == False"/>
+                                <field name="insurance_amount"
+                                       invisible="is_insurance_sale == False"/>
+                                <field name="copay_amount"
+                                       invisible="is_insurance_sale == False"/>
+                                <field name="claim_id"
+                                       readonly="1"
+                                       invisible="claim_id == False"/>
+                            </group>
+                        </group>
+
+                        <!-- Botones de Acción -->
+                        <group>
+                            <button name="action_view_claim"
+                                    type="object"
+                                    string="Ver Reclamo de Seguro"
+                                    class="oe_highlight"
+                                    invisible="claim_id == False"
+                                    icon="fa-file-text-o"/>
+                            <button name="action_view_dispensing"
+                                    type="object"
+                                    string="Ver Registro de Dispensación"
+                                    class="oe_stat_button"
+                                    icon="fa-medkit"/>
+                            <button name="action_submit_claim"
+                                    type="object"
+                                    string="Enviar Reclamo a Aseguradora"
+                                    class="oe_highlight"
+                                    invisible="is_insurance_sale == False or claim_id != False"
+                                    icon="fa-paper-plane"/>
+                        </group>
+
+                        <!-- Mensajes Informativos -->
+                        <div class="alert alert-info" role="alert"
+                             invisible="is_insurance_sale == False">
+                            <p><strong>Venta por Seguro / Convenio:</strong></p>
+                            <p>Monto cubierto por aseguradora: <field name="insurance_amount" readonly="1"/> (a facturar)</p>
+                            <p>Monto de copago a cargo del paciente: <field name="copay_amount" readonly="1"/> (cobrado en caja)</p>
+                        </div>
+
+                    </page>
+                </xpath>
+
+                <!-- Paciente vinculado -->
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="patient_id"
+                           options="{'no_create': True, 'no_open': True}"
+                           invisible="patient_id == False"
+                           placeholder="Paciente Vinculado"/>
+                </xpath>
+
+            </field>
+        </record>
+
+        <!-- Vista Lista de Pedidos POS -->
+        <record id="view_pos_order_tree_pharmacy" model="ir.ui.view">
+            <field name="name">pos.order.tree.pharmacy</field>
+            <field name="model">pos.order</field>
+            <field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="patient_id" optional="hide"/>
+                    <field name="branch_id" optional="show"/>
+                    <field name="is_insurance_sale" optional="hide"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Vista Búsqueda de Pedidos POS -->
+        <record id="view_pos_order_search_pharmacy" model="ir.ui.view">
+            <field name="name">pos.order.search.pharmacy</field>
+            <field name="model">pos.order</field>
+            <field name="inherit_id" ref="point_of_sale.view_pos_order_search"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='name']" position="after">
+                    <field name="patient_id"/>
+                    <field name="branch_id"/>
+                    <field name="member_number"/>
+                </xpath>
+
+                <xpath expr="//search" position="inside">
+                    <separator/>
+                    <filter string="Ventas por Seguro"
+                        name="insurance_sales"
+                        domain="[('is_insurance_sale', '=', True)]"/>
+                    <filter string="Con Paciente"
+                        name="has_patient"
+                        domain="[('patient_id', '!=', False)]"/>
+                    <filter string="Con Receta Médica"
+                        name="with_prescription"
+                        domain="[('prescription_id', '!=', False)]"/>
+                    <filter string="Con Reclamo de Seguro"
+                        name="has_claim"
+                        domain="[('claim_id', '!=', False)]"/>
+                </xpath>
+
+                <xpath expr="//search" position="inside">
+                    <group name="group_by">
+                    <filter string="Botica / Sucursal"
+                        name="branch"
+                        context="{'group_by': 'branch_id'}"/>
+                    <filter string="Paciente"
+                        name="patient"
+                        context="{'group_by': 'patient_id'}"/>
+                    <filter string="Aseguradora"
+                        name="insurer"
+                        context="{'group_by': 'insurer_id'}"/>
+                    </group>
+                </xpath>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>

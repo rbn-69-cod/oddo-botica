@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Company Configuration for Pharmacy -->
+        <record id="res_company_pharmacy" model="res.company">
+            <field name="name">Pharmacy Management System</field>
+            <field name="currency_id" ref="base.KES"/>
+            <field name="country_id" ref="base.ke"/>
+            <field name="phone">+254 700 000 000</field>
+            <field name="email">info@pharmacy.com</field>
+            <field name="website">www.pharmacy.com</field>
+        </record>
+        
+        <!-- Chart of Accounts for Pharmacy -->
+        <record id="account_chart_template_pharmacy" model="account.chart.template">
+            <field name="name">Pharmacy Chart of Accounts</field>
+            <field name="code_digits">6</field>
+            <field name="currency_id" ref="base.KES"/>
+        </record>
+        
+        <!-- Pharmacy Account Templates -->
+        <record id="account_template_cash_main" model="account.account.template">
+            <field name="name">Cash on Hand - Main</field>
+            <field name="code">100001</field>
+            <field name="user_type_id" ref="account.data_account_type_current_assets"/>
+            <field name="chart_template_id" ref="account_chart_template_pharmacy"/>
+        </record>
+        
+        <record id="account_template_bank_main" model="account.account.template">
+            <field name="name">Bank Account - Main</field>
+            <field name="code">100002</field>
+            <field name="user_type_id" ref="account.data_account_type_current_assets"/>
+            <field name="chart_template_id" ref="account_chart_template_pharmacy"/>
+        </record>
+        
+        <record id="account_template_mpesa_main" model="account.account.template">
+            <field name="name">M-Pesa - Main</field>
+            <field name="code">100003</field>
+            <field name="user_type_id" ref="account.data_account_type_current_assets"/>
+            <field name="chart_template_id" ref="account_chart_template_pharmacy"/>
+        </record>
+        
+        <record id="account_template_insurance_receivable" model="account.account.template">
+            <field name="name">Insurance Receivables</field>
+            <field name="code">110001</field>
+            <field name="user_type_id" ref="account.data_account_type_current_assets"/>
+            <field name="chart_template_id" ref="account_chart_template_pharmacy"/>
+        </record>
+        
+        <record id="account_template_inventory_main" model="account.account.template">
+            <field name="name">Pharmacy Stock - Main</field>
+            <field name="code">120001</field>
+            <field name="user_type_id" ref="account.data_account_type_current_assets"/>
+            <field name="chart_template_id" ref="account_chart_template_pharmacy"/>
+        </record>
+        
+        <record id="account_template_sales_cash" model="account.account.template">
+            <field name="name">Cash Sales Revenue</field>
+            <field name="code">400001</field>
+            <field name="user_type_id" ref="account.data_account_type_revenue"/>
+            <field name="chart_template_id" ref="account_chart_template_pharmacy"/>
+        </record>
+        
+        <record id="account_template_sales_insurance" model="account.account.template">
+            <field name="name">Insurance Sales Revenue</field>
+            <field name="code">400002</field>
+            <field name="user_type_id" ref="account.data_account_type_revenue"/>
+            <field name="chart_template_id" ref="account_chart_template_pharmacy"/>
+        </record>
+        
+        <record id="account_template_cogs" model="account.account.template">
+            <field name="name">Cost of Goods Sold</field>
+            <field name="code">500001</field>
+            <field name="user_type_id" ref="account.data_account_type_direct_costs"/>
+            <field name="chart_template_id" ref="account_chart_template_pharmacy"/>
+        </record>
+        
+        <record id="account_template_variance_expense" model="account.account.template">
+            <field name="name">Cash Variance Expense</field>
+            <field name="code">600001</field>
+            <field name="user_type_id" ref="account.data_account_type_expenses"/>
+            <field name="chart_template_id" ref="account_chart_template_pharmacy"/>
+        </record>
+        
+        <record id="account_template_variance_income" model="account.account.template">
+            <field name="name">Cash Variance Income</field>
+            <field name="code">700001</field>
+            <field name="user_type_id" ref="account.data_account_type_revenue"/>
+            <field name="chart_template_id" ref="account_chart_template_pharmacy"/>
+        </record>
+        
+        <!-- Journal Templates -->
+        <record id="journal_template_cash" model="account.journal">
+            <field name="name">Cash Journal</field>
+            <field name="code">CASH</field>
+            <field name="type">cash</field>
+            <field name="company_id" ref="res_company_pharmacy"/>
+            <field name="default_account_id" ref="account_template_cash_main"/>
+        </record>
+        
+        <record id="journal_template_bank" model="account.journal">
+            <field name="name">Bank Journal</field>
+            <field name="code">BANK</field>
+            <field name="type">bank</field>
+            <field name="company_id" ref="res_company_pharmacy"/>
+            <field name="default_account_id" ref="account_template_bank_main"/>
+        </record>
+        
+        <record id="journal_template_mpesa" model="account.journal">
+            <field name="name">M-Pesa Journal</field>
+            <field name="code">MPESA</field>
+            <field name="type">bank</field>
+            <field name="company_id" ref="res_company_pharmacy"/>
+            <field name="default_account_id" ref="account_template_mpesa_main"/>
+        </record>
+        
+        <record id="journal_template_insurance" model="account.journal">
+            <field name="name">Insurance Journal</field>
+            <field name="code">INS</field>
+            <field name="type">sale</field>
+            <field name="company_id" ref="res_company_pharmacy"/>
+        </record>
+        
+        <!-- System Parameters -->
+        <record id="param_cashup_variance_threshold" model="ir.config_parameter">
+            <field name="key">pharmacy.cashup_variance_threshold</field>
+            <field name="value">1000</field>
+        </record>
+        
+        <record id="param_min_expiry_days" model="ir.config_parameter">
+            <field name="key">pharmacy.min_expiry_days</field>
+            <field name="value">30</field>
+        </record>
+        
+        <record id="param_fefo_enforced" model="ir.config_parameter">
+            <field name="key">pharmacy.fefo_enforced</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="param_prescription_validity_days" model="ir.config_parameter">
+            <field name="key">pharmacy.prescription_validity_days</field>
+            <field name="value">90</field>
+        </record>
+        
+        <!-- Email Templates -->
+        <record id="email_template_expiry_alert" model="mail.template">
+            <field name="name">Stock Expiry Alert</field>
+            <field name="model_id" ref="stock.model_stock_lot"/>
+            <field name="subject">Stock Expiry Alert - ${object.name}</field>
+            <field name="email_from">${object.company_id.email}</field>
+            <field name="partner_to">${object.company_id.partner_id.id}</field>
+            <field name="auto_delete" eval="True"/>
+            <field name="lang">${object.partner_id.lang}</field>
+            <field name="body_html" type="html">
+                <div>
+                    <p>Hello,</p>
+                    <p>This is an automated alert that the following stock is expiring soon:</p>
+                    <ul>
+                        <li><strong>Product:</strong> ${object.product_id.name}</li>
+                        <li><strong>Lot Number:</strong> ${object.name}</li>
+                        <li><strong>Expiry Date:</strong> ${object.expiry_date}</li>
+                        <li><strong>Days to Expiry:</strong> ${object.days_to_expiry}</li>
+                    </ul>
+                    <p>Please take appropriate action to manage this expiring stock.</p>
+                    <p>Thank you,<br/>Pharmacy Management System</p>
+                </div>
+            </field>
+        </record>
+        
+        <record id="email_template_claim_submission" model="mail.template">
+            <field name="name">Insurance Claim Submission</field>
+            <field name="model_id" ref="Pharmacy.model_pharmacy_claim"/>
+            <field name="subject">Insurance Claim Submitted - ${object.name}</field>
+            <field name="email_from">${object.company_id.email}</field>
+            <field name="partner_to">${object.insurer_id.partner_id.id if object.insurer_id.partner_id else object.company_id.partner_id.id}</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="lang">${object.partner_id.lang}</field>
+            <field name="body_html" type="html">
+                <div>
+                    <p>Hello,</p>
+                    <p>A new insurance claim has been submitted:</p>
+                    <ul>
+                        <li><strong>Claim Reference:</strong> ${object.name}</li>
+                        <li><strong>Branch:</strong> ${object.branch_id.name}</li>
+                        <li><strong>Insurer:</strong> ${object.insurer_id.name}</li>
+                        <li><strong>Patient:</strong> ${object.patient_name}</li>
+                        <li><strong>Member Number:</strong> ${object.member_number}</li>
+                        <li><strong>Total Amount:</strong> ${object.total_amount} KES</li>
+                        <li><strong>Submission Date:</strong> ${object.submission_date}</li>
+                    </ul>
+                    <p>Please review and process this claim accordingly.</p>
+                    <p>Thank you,<br/>${object.company_id.name}</p>
+                </div>
+            </field>
+        </record>
+        
+        <!-- Scheduled Actions -->
+        <record id="ir_cron_update_expiry_alerts" model="ir.cron">
+            <field name="name">Update Expiry Alerts</field>
+            <field name="model_id" ref="Pharmacy.model_stock_lot"/>
+            <field name="state">code</field>
+            <field name="code">model.update_expiry_alerts()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True"/>
+        </record>
+        
+        <record id="ir_cron_update_expired_prescriptions" model="ir.cron">
+            <field name="name">Update Expired Prescriptions</field>
+            <field name="model_id" ref="Pharmacy.model_pharmacy_prescription"/>
+            <field name="state">code</field>
+            <field name="code">model.update_expired_prescriptions()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True"/>
+        </record>
+        
+    </data>
+</odoo>

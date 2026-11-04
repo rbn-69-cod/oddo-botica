@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Controlled Substance Register Views -->
+    
+    <!-- List View -->
+    <record id="view_pharmacy_controlled_substance_register_list" model="ir.ui.view">
+        <field name="name">pharmacy.controlled.substance.register.list</field>
+        <field name="model">pharmacy.controlled.substance.register</field>
+        <field name="arch" type="xml">
+            <list string="Controlled Substances Register">
+                <field name="date"/>
+                <field name="time"/>
+                <field name="product_id"/>
+                <field name="lot_id"/>
+                <field name="quantity"/>
+                <field name="patient_name"/>
+                <field name="transaction_type"/>
+                <field name="dispensed_by"/>
+                <field name="branch_id"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_pharmacy_controlled_substance_register_form" model="ir.ui.view">
+        <field name="name">pharmacy.controlled.substance.register.form</field>
+        <field name="model">pharmacy.controlled.substance.register</field>
+        <field name="arch" type="xml">
+            <form string="Controlled Substance Register">
+                <header>
+                    <button name="verify_record" string="Verify" type="object" 
+                            modifiers="{'invisible': [['verified_by', '!=', False]]}"/>
+                    <button name="print_register_report" string="Print" type="object"/>
+                    <field name="verified_by" readonly="1"/>
+                    <field name="verification_date" readonly="1"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="product_id" string="Controlled Substance"/>
+                        <h1>
+                            <field name="product_id" options="{'no_create': True}"/>
+                        </h1>
+                        <group>
+                            <field name="lot_id" domain="[('product_id', '=', product_id)]" style="width: 50%%"/>
+                        </group>
+                    </div>
+                    
+                    <group name="registry_details">
+                        <group name="transaction_info">
+                            <field name="date"/>
+                            <field name="time"/>
+                            <field name="quantity"/>
+                            <field name="transaction_type"/>
+                        </group>
+                        <group name="patient_meta">
+                            <field name="patient_name"/>
+                            <field name="dispensed_by"/>
+                            <field name="schedule" readonly="1"/>
+                            <field name="expiry_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Notes">
+                            <group>
+                                <field name="reason" modifiers="{'invisible': [['transaction_type', '=', 'sale']]}"/>
+                                <field name="notes" nolabel="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_pharmacy_controlled_substance_register_search" model="ir.ui.view">
+        <field name="name">pharmacy.controlled.substance.register.search</field>
+        <field name="model">pharmacy.controlled.substance.register</field>
+        <field name="arch" type="xml">
+            <search string="Controlled Substances Register">
+                <field name="date"/>
+                <field name="product_id"/>
+                <field name="transaction_type"/>
+                <field name="branch_id"/>
+                <filter string="My Register" name="my_register" domain="[('dispensed_by', '=', uid)]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter string="Date" name="group_date" context="{'group_by': 'date'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Transaction Type" name="group_transaction_type" context="{'group_by': 'transaction_type'}"/>
+                    <filter string="Branch" name="group_branch" context="{'group_by': 'branch_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_pharmacy_controlled_substance_register" model="ir.actions.act_window">
+        <field name="name">Controlled Substances Register</field>
+        <field name="res_model">pharmacy.controlled.substance.register</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No controlled substance transactions yet
+            </p>
+            <p>
+                This register tracks all transactions involving controlled substances
+                as required by regulatory authorities.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Summary Action -->
+    <record id="action_pharmacy_controlled_substance_summary" model="ir.actions.act_window">
+        <field name="name">Controlled Substances Summary</field>
+        <field name="res_model">pharmacy.controlled.substance.register</field>
+        <field name="view_mode">graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No controlled substance transactions yet
+            </p>
+            <p>
+                View summary statistics for controlled substance transactions
+                by transaction type and quantities.
+            </p>
+        </field>
+    </record>
+              
+</odoo>

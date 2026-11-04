@@ -1,0 +1,15 @@
+[Unit]
+Description=Odoo (Pharmacy) Service
+After=postgresql.service
+
+[Service]
+Type=simple
+User=odoo
+Group=odoo
+WorkingDirectory=/home/nick/odoo
+ExecStart=/home/nick/odoo18-env/bin/python /home/nick/odoo/odoo-bin -c /etc/odoo/odoo.conf
+Restart=on-failure
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target

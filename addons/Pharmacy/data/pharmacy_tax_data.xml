@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+    <!-- Tax Groups -->
+    <record id="tax_group_vat" model="account.tax.group">
+        <field name="name">IGV</field>
+        <field name="sequence">10</field>
+        <field name="country_id" ref="base.pe"/>
+    </record>
+
+    <record id="tax_group_exempt" model="account.tax.group">
+        <field name="name">Exonerado</field>
+        <field name="sequence">20</field>
+        <field name="country_id" ref="base.pe"/>
+    </record>
+        
+        <!-- Peruvian Pharmacy Tax Configuration -->
+        
+        <!-- IGV 18% - Standard Peruvian Tax -->
+        <record id="tax_vat_16" model="account.tax">
+            <field name="name">IGV 18% (Ventas Farmacia)</field>
+            <field name="description">IGV 18% Perú</field>
+            <field name="amount">18</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">sale</field>
+            <field name="tax_group_id" ref="tax_group_vat"/>
+            <field name="price_include">True</field>
+            <field name="include_base_amount">False</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="country_id" ref="base.pe"/>
+        </record>
+        
+        <!-- IGV 18% - Compras Farmacia -->
+        <record id="tax_vat_purchase_18" model="account.tax">
+            <field name="name">IGV 18% (Compras Farmacia)</field>
+            <field name="description">IGV 18% Compras Perú</field>
+            <field name="amount">18</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">purchase</field>
+            <field name="tax_group_id" ref="tax_group_vat"/>
+            <field name="price_include">False</field>
+            <field name="include_base_amount">False</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="country_id" ref="base.pe"/>
+        </record>
+        
+        <!-- IGV 0% Exonerado - Para Medicamentos según Ley 29459 -->
+        <record id="tax_vat_exempt" model="account.tax">
+            <field name="name">IGV 0% (Exonerado - Medicamentos Ley 29459)</field>
+            <field name="description">Exonerado de IGV - Medicamentos Esenciales y Oncológicos</field>
+            <field name="amount">0</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">sale</field>
+            <field name="tax_group_id" ref="tax_group_exempt"/>
+            <field name="price_include">True</field>
+            <field name="include_base_amount">False</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="country_id" ref="base.pe"/>
+        </record>
+        
+        <!-- Detracción / Percepción / Retención -->
+        <record id="tax_withholding_5" model="account.tax">
+            <field name="name">Retención IGV 3%</field>
+            <field name="description">Régimen de Retenciones del IGV Perú</field>
+            <field name="amount">3</field>
+            <field name="amount_type">percent</field>
+            <field name="type_tax_use">sale</field>
+            <field name="tax_group_id" ref="tax_group_vat"/>
+            <field name="price_include">False</field>
+            <field name="include_base_amount">False</field>
+            <field name="active">False</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="country_id" ref="base.pe"/>
+        </record>
+        
+        <!-- Posiciones Fiscales para Farmacias en Perú -->
+        <record id="fiscal_position_standard_vat" model="account.fiscal.position">
+            <field name="name">Régimen General / MYPE Tributario (Perú)</field>
+            <field name="country_id" ref="base.pe"/>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+        
+        <record id="fiscal_position_vat_exempt" model="account.fiscal.position">
+            <field name="name">Operaciones Exoneradas de IGV (Medicamentos Ley 29459)</field>
+            <field name="country_id" ref="base.pe"/>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+        </record>
+        
+        <!-- Payment Terms -->
+        
+        <!-- Immediate Payment -->
+        <record id="payment_term_immediate" model="account.payment.term">
+            <field name="name">Immediate Payment</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="line_ids">
+                <record id="payment_term_immediate_line" model="account.payment.term.line">
+                    <field name="value">percent</field>
+                    <field name="value_amount">100.0</field>
+                    <field name="nb_days">0</field>
+                </record>
+            </field>
+        </record>
+        
+        <!-- 30 Days Payment -->
+        <record id="payment_term_30_days" model="account.payment.term">
+            <field name="name">30 Days</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="line_ids">
+                <record id="payment_term_30_days_line" model="account.payment.term.line">
+                    <field name="value">percent</field>
+                    <field name="value_amount">100.0</field>
+                    <field name="nb_days">30</field>
+                </record>
+            </field>
+        </record>
+        
+        <!-- Insurance Payment Terms -->
+        <record id="payment_term_insurance" model="account.payment.term">
+            <field name="name">Insurance Claims (45 days)</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="line_ids">
+                <record id="payment_term_insurance_line" model="account.payment.term.line">
+                    <field name="value">percent</field>
+                    <field name="value_amount">100.0</field>
+                    <field name="nb_days">45</field>
+                </record>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

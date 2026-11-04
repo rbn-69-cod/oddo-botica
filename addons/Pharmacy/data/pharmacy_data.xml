@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Pharmacy Product Categories -->
+        <record id="product_category_medicines" model="product.category">
+            <field name="name">Medicines</field>
+            <field name="parent_id" ref="product.product_category_all"/>
+        </record>
+        
+        <record id="product_category_prescription_meds" model="product.category">
+            <field name="name">Prescription Medicines</field>
+            <field name="parent_id" ref="product_category_medicines"/>
+        </record>
+        
+        <record id="product_category_otc_meds" model="product.category">
+            <field name="name">Over-the-Counter Medicines</field>
+            <field name="parent_id" ref="product_category_medicines"/>
+        </record>
+        
+        <record id="product_category_controlled_substances" model="product.category">
+            <field name="name">Controlled Substances</field>
+            <field name="parent_id" ref="product_category_medicines"/>
+        </record>
+        
+        <record id="product_category_medical_supplies" model="product.category">
+            <field name="name">Medical Supplies</field>
+            <field name="parent_id" ref="product.product_category_all"/>
+        </record>
+        
+        <record id="product_category_vitamins" model="product.category">
+            <field name="name">Vitamins &amp; Supplements</field>
+            <field name="parent_id" ref="product.product_category_all"/>
+        </record>
+        
+        <!-- Default Dosage Forms -->
+        <record id="dosage_form_tablet" model="pharmacy.dosage.form">
+            <field name="name">Tablet</field>
+            <field name="code">TAB</field>
+        </record>
+        
+        <record id="dosage_form_capsule" model="pharmacy.dosage.form">
+            <field name="name">Capsule</field>
+            <field name="code">CAP</field>
+        </record>
+        
+        <record id="dosage_form_syrup" model="pharmacy.dosage.form">
+            <field name="name">Syrup</field>
+            <field name="code">SYR</field>
+        </record>
+        
+        <record id="dosage_form_injection" model="pharmacy.dosage.form">
+            <field name="name">Injection</field>
+            <field name="code">INJ</field>
+        </record>
+        
+        <record id="dosage_form_cream" model="pharmacy.dosage.form">
+            <field name="name">Cream</field>
+            <field name="code">CRM</field>
+        </record>
+        
+        <record id="dosage_form_drops" model="pharmacy.dosage.form">
+            <field name="name">Drops</field>
+            <field name="code">DRP</field>
+        </record>
+        
+        <!-- Sample Insurance Companies (Kenyan Market) -->
+        <record id="insurer_nhif" model="pharmacy.insurer">
+            <field name="name">National Hospital Insurance Fund</field>
+            <field name="code">NHIF</field>
+            <field name="contact_person">Support Desk</field>
+            <field name="phone">0800 720 601</field>
+            <field name="email">support@nhif.or.ke</field>
+            <field name="billing_frequency">monthly</field>
+            <field name="consolidate_branches">True</field>
+        </record>
+        
+        <record id="insurer_jubilee" model="pharmacy.insurer">
+            <field name="name">Jubilee Health Insurance</field>
+            <field name="code">JUBILEE</field>
+            <field name="contact_person">Claims Department</field>
+            <field name="phone">020 3286000</field>
+            <field name="email">claims@jubileeinsurance.com</field>
+            <field name="billing_frequency">monthly</field>
+            <field name="consolidate_branches">False</field>
+        </record>
+        
+        <record id="insurer_aar" model="pharmacy.insurer">
+            <field name="name">AAR Insurance Kenya</field>
+            <field name="code">AAR</field>
+            <field name="contact_person">Pharmacy Claims</field>
+            <field name="phone">020 2713000</field>
+            <field name="email">pharmacy@aarinsurance.co.ke</field>
+            <field name="billing_frequency">weekly</field>
+            <field name="consolidate_branches">False</field>
+        </record>
+        
+        <record id="insurer_uap" model="pharmacy.insurer">
+            <field name="name">UAP Old Mutual</field>
+            <field name="code">UAP</field>
+            <field name="contact_person">Health Claims</field>
+            <field name="phone">020 3276000</field>
+            <field name="email">claims@uap.co.ke</field>
+            <field name="billing_frequency">monthly</field>
+            <field name="consolidate_branches">True</field>
+        </record>
+        
+        <!-- Sample Insurance Plans -->
+        <record id="plan_nhif_supacover" model="pharmacy.insurer.plan">
+            <field name="company_id" ref="base.main_company"/>
+            <field name="insurer_id" ref="insurer_nhif"/>
+            <field name="name">Supa Cover</field>
+            <field name="code">NHIF-SC</field>
+            <field name="coverage_percentage">90.0</field>
+            <field name="copay_percentage">10.0</field>
+            <field name="require_prescription">True</field>
+            <field name="require_preauth">False</field>
+            <field name="monthly_limit">50000</field>
+            <field name="per_visit_limit">10000</field>
+        </record>
+        
+        <record id="plan_jubilee_comprehensive" model="pharmacy.insurer.plan">
+            <field name="company_id" ref="base.main_company"/>
+            <field name="insurer_id" ref="insurer_jubilee"/>
+            <field name="name">Comprehensive Health</field>
+            <field name="code">JUB-CH</field>
+            <field name="coverage_percentage">100.0</field>
+            <field name="copay_percentage">0.0</field>
+            <field name="require_prescription">True</field>
+            <field name="require_preauth">True</field>
+            <field name="monthly_limit">100000</field>
+            <field name="per_visit_limit">25000</field>
+        </record>
+        
+        <!-- Sample Coverage Rules -->
+        <record id="coverage_rule_insulin" model="pharmacy.coverage.rule">
+            <field name="plan_id" ref="plan_nhif_supacover"/>
+            <field name="product_id" ref="product.product_product_1"/>
+            <field name="coverage_percentage">100.0</field>
+            <field name="copay_percentage">0.0</field>
+            <field name="max_quantity_per_month">30</field>
+            <field name="notes">Full coverage for insulin products</field>
+        </record>
+        
+        <!-- Excluded Categories for NHIF -->
+        <record id="nhif_exclusions" model="pharmacy.insurer.plan">
+            <field name="company_id" ref="base.main_company"/>
+            <field name="insurer_id" ref="insurer_nhif"/>
+            <field name="name">NHIF Exclusions</field>
+            <field name="exclusion_ids" eval="[(6, 0, [ref('product_category_vitamins'), ref('product_category_medical_supplies')])]"/>
+        </record>
+        
+    </data>
+</odoo>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Kenyan Pharmacy Tax Configuration -->
+        
+        <!-- VAT 16% - Standard Kenyan VAT -->
+        <record id="tax_vat_16" model="account.tax">
+            <field name="name">VAT 16%</field>
+            <field name="description">VAT 16% Kenya</field>
+            <field name="amount">16</field>
+            <field name="amount_type">percent</field>
+            <field name="type">sale</field>
+            <field name="price_include">True</field>
+            <field name="include_base_amount">False</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="country_id" ref="base.ke"/>
+        </record>
+        
+        <!-- VAT Exempt - For Prescription Medicines -->
+        <record id="tax_vat_exempt" model="account.tax">
+            <field name="name">VAT Exempt</field>
+            <field name="description">VAT Exempt - Prescription Medicines</field>
+            <field name="amount">0</field>
+            <field name="amount_type">percent</field>
+            <field name="type">sale</field>
+            <field name="price_include">True</field>
+            <field name="include_base_amount">False</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="country_id" ref="base.ke"/>
+        </record>
+        
+        <!-- Withholding Tax 5% - For Professional Services -->
+        <record id="tax_withholding_5" model="account.tax">
+            <field name="name">Withholding Tax 5%</field>
+            <field name="description">Withholding Tax 5% Kenya</field>
+            <field name="amount">5</field>
+            <field name="amount_type">percent</field>
+            <field name="type">sale</field>
+            <field name="price_include">False</field>
+            <field name="include_base_amount">False</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="country_id" ref="base.ke"/>
+        </record>
+        
+        <!-- Fiscal Positions for Kenyan Pharmacy Operations -->
+        
+        <!-- Standard VAT Position -->
+        <record id="fiscal_position_standard_vat" model="account.fiscal.position">
+            <field name="name">Standard VAT Kenya</field>
+            <field name="country_id" ref="base.ke"/>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="tax_ids" eval="[(6, 0, [ref('tax_vat_16')])]"/>
+        </record>
+        
+        <!-- VAT Exempt Position -->
+        <record id="fiscal_position_vat_exempt" model="account.fiscal.position">
+            <field name="name">VAT Exempt Kenya</field>
+            <field name="country_id" ref="base.ke"/>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="tax_ids" eval="[(6, 0, [ref('tax_vat_exempt')])]"/>
+        </record>
+        
+        <!-- Payment Terms -->
+        
+        <!-- Immediate Payment -->
+        <record id="payment_term_immediate" model="account.payment.term">
+            <field name="name">Immediate Payment</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="line_ids">
+                <record id="payment_term_immediate_line" model="account.payment.term.line">
+                    <field name="value">balance</field>
+                    <field name="days">0</field>
+                    <field name="option">day_following_month</field>
+                </record>
+            </field>
+        </record>
+        
+        <!-- 30 Days Payment -->
+        <record id="payment_term_30_days" model="account.payment.term">
+            <field name="name">30 Days</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="line_ids">
+                <record id="payment_term_30_days_line" model="account.payment.term.line">
+                    <field name="value">balance</field>
+                    <field name="days">30</field>
+                    <field name="option">day_following_month</field>
+                </record>
+            </field>
+        </record>
+        
+        <!-- Insurance Payment Terms -->
+        <record id="payment_term_insurance" model="account.payment.term">
+            <field name="name">Insurance Claims (45 days)</field>
+            <field name="active">True</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="line_ids">
+                <record id="payment_term_insurance_line" model="account.payment.term.line">
+                    <field name="value">balance</field>
+                    <field name="days">45</field>
+                    <field name="option">day_following_month</field>
+                </record>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

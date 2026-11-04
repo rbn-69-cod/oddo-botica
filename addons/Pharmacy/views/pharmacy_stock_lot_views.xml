@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Vista Lista de Lotes Farmacéuticos -->
+        <record id="view_pharmacy_lot_list" model="ir.ui.view">
+            <field name="name">stock.lot.pharmacy.list</field>
+            <field name="model">stock.lot</field>
+            <field name="arch" type="xml">
+                <list string="Lotes y Fechas de Vencimiento">
+                    <field name="name" string="Número de Lote" decoration-danger="expiry_date &lt; current_date" decoration-warning="expiry_date &lt;= (context_today() + relativedelta(months=3)).strftime('%Y-%m-%d')"/>
+                    <field name="product_id" string="Medicamento / Producto"/>
+                    <field name="company_id" string="Compañía"/>
+                    <field name="ref" string="Referencia / N° Registro" help="Referencia del lote o registro sanitario"/>
+                    <field name="expiry_date" string="Fecha de Vencimiento" decoration-danger="expiry_date &lt; current_date" decoration-warning="expiry_date &lt;= (context_today() + relativedelta(months=3)).strftime('%Y-%m-%d')"/>
+                    <field name="product_qty" string="Stock Disponible" decoration-warning="product_qty &lt; 10"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Vista Búsqueda de Lotes -->
+        <record id="view_pharmacy_lot_search" model="ir.ui.view">
+            <field name="name">stock.lot.pharmacy.search</field>
+            <field name="model">stock.lot</field>
+            <field name="arch" type="xml">
+                <search string="Buscar Lotes">
+                    <field name="name" string="Lote"/>
+                    <field name="product_id" string="Medicamento"/>
+                    <field name="ref" string="Referencia"/>
+                    <field name="expiry_date" string="Fecha de Vencimiento"/>
+                    <filter string="Vencidos (Caducados)" name="expired" domain="[('expiry_date', '&lt;', current_date)]"/>
+                    <filter string="Por Vencer (Próximos 3 meses)" name="expiring_soon" domain="[('expiry_date', '&lt;=', (context_today() + relativedelta(months=3)).strftime('%Y-%m-%d')), ('expiry_date', '&gt;=', current_date)]"/>
+                    <separator/>
+                    <group expand="0" string="Agrupar por">
+                        <filter string="Medicamento" name="group_product" context="{'group_by': 'product_id'}"/>
+                        <filter string="Compañía" name="group_company" context="{'group_by': 'company_id'}"/>
+                        <filter string="Fecha de Vencimiento" name="group_expiry" context="{'group_by': 'expiry_date'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Acción de Lotes -->
+        <record id="action_pharmacy_lot" model="ir.actions.act_window">
+            <field name="name">Lotes y Vencimientos (FEFO)</field>
+            <field name="res_model">stock.lot</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No se encontraron lotes registrados
+                </p>
+                <p>
+                    El control de lotes y fechas de vencimiento permite la trazabilidad completa y la venta
+                    estricta bajo el método FEFO (vender primero los medicamentos que vencen antes).
+                </p>
+            </field>
+        </record>
+        
+    </data>
+</odoo>

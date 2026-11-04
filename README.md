@@ -1,282 +1,84 @@
-# MediZano POS
+# Oddo Botica — ERP farmacéutico con Odoo 18
 
-Sistema distribuido para la gestión de una botica: ventas, facturación, inventario, compras, clientes, proveedores y control de usuarios.
+Sistema ERP para una botica peruana construido sobre Odoo 18. El módulo
+personalizado `Pharmacy` integra ventas POS, productos farmacéuticos, lotes,
+vencimientos FEFO, pacientes, recetas, compras, inventario, contabilidad,
+auditoría y reportes en una sola plataforma ERP.
 
-Proyecto académico de **Desarrollo de Aplicaciones Distribuidas** — UPeU 2026-2.
+> El nombre del repositorio se conserva como `oddo-botica` para respetar el
+> proyecto solicitado. La plataforma y el módulo son Odoo 18.
 
-## Vista general
+## Funcionalidades
 
-MediZano utiliza una arquitectura de microservicios con Spring Boot, Angular, PostgreSQL, Eureka, API Gateway y Docker Compose.
-
-```mermaid
-flowchart LR
-    U[Usuario] --> F[Frontend Angular]
-    F --> G[API Gateway]
-    G --> S1[Servicios de negocio]
-    S1 --> DB[(PostgreSQL)]
-    S1 --> K[Kafka]
-    S1 --> M[SpaceMail / SMTP autenticado]
-    G --> E[Eureka Discovery]
-    S1 --> O[Observabilidad]
-```
-
-## Equipo y distribución
-
-Para la sustentación cada integrante presenta **exactamente 2 microservicios distintos: uno transaccional y uno no transaccional**.
-
-| Integrante | Transaccional | No transaccional |
-|---|---|---|
-| **Aldo Calla** | `orden-ms` — ventas y órdenes | `cliente-ms` — clientes y documentos |
-| **Kenyi Calsin** | `inventario-ms` — stock y lotes | `usuario-ms` — login, roles y auditoría |
-| **Igarlos Ruben** | `proveedor-ms` — compras y recepción | `facturacion-ms` — comprobantes y notificaciones |
-| **Diego Chambilla** | `pago-ms` — pagos e idempotencia | `reportes-ms` — dashboard y reportes |
-
-La asignación utiliza los 8 microservicios técnicos del repositorio una sola vez: 4 integrantes × 2 microservicios. En la exposición, `inventario-ms` se limita a datos maestros y consultas de productos, mientras `inventario-ms` se concentra en stock, lotes, vencimientos y FEFO.
-
-### Diferencia entre ambos tipos
-
-- **Transaccional:** registra operaciones que cambian el estado del negocio, como una venta, un pago, una recepción o un movimiento de stock.
-- **No transaccional:** presta soporte de identidad, consulta, documentación, reportes o integración. No mueve dinero ni descuenta lotes directamente.
-
-### Correspondencia con la implementación
-
-La distribución anterior es la asignación de responsabilidades para la exposición. `cliente-ms` consulta y mantiene el padrón de clientes; `usuario-ms` concentra autenticación, roles y auditoría; `inventario-ms` ofrece datos maestros de medicamentos; y `facturacion-ms` se presenta desde comprobantes, reportes y notificaciones posteriores a la confirmación de la orden y el pago.
-
-## Documentación
-
-La documentación técnica, las guías de sustentación y las sesiones del curso se publican en el sitio **MkDocs Material**. El README solo enlaza al portal; la navegación completa está definida en [`mkdocs.yml`](mkdocs.yml) y el contenido fuente vive en [`docs/`](docs/index.md).
-
-- [Abrir portal de documentación](docs/index.md)
-- [Configuración de MkDocs](mkdocs.yml)
-
-## Microservicios
-
-| Servicio | Puerto interno | Responsabilidad |
-|---|---:|---|
-| `inventario-ms` | 8085 | Productos, medicamentos, categorías, stock, lotes y kardex FEFO |
-| `orden-ms` | 8082 | Órdenes de venta y flujo POS |
-| `pago-ms` | 8083 | Pagos y estados de cobro |
-| `cliente-ms` | 8084 | Clientes, pacientes y documentos |
-| `facturacion-ms` | 8086 | Boletas, facturas, IGV y reembolsos |
-| `usuario-ms` | 8087 | Login, JWT, usuarios, roles y auditoría |
-| `proveedor-ms` | 8088 | Proveedores, laboratorios y abastecimiento |
-| `reportes-ms` | 8089 | Dashboard y reportes administrativos de solo lectura |
-
-### Clasificación final
-
-**Transaccionales:** `orden-ms`, `inventario-ms`, `proveedor-ms`, `pago-ms`.
-
-**No transaccionales/de soporte:** `cliente-ms`, `usuario-ms`, `facturacion-ms`, `reportes-ms`.
-
-El catálogo no es un microservicio separado: productos, medicamentos, precios y categorías
-son parte del dominio de `inventario-ms`, junto con stock, lotes y FEFO.
-
-Cada microservicio mantiene su propia responsabilidad y accede a su base de datos correspondiente. Las comunicaciones entre servicios se realizan mediante APIs y eventos, no mediante acceso directo a tablas ajenas.
-
-## Roles del sistema
-
-| Usuario | Función principal |
-|---|---|
-| `admin` | Administración completa, usuarios, auditoría e historial de accesos |
-| `cajero` | Ventas, pagos y comprobantes en el POS |
-| `inventario` | Stock, lotes, vencimientos y kardex |
-| `almacen` | Compras, recepción y escaneo de productos |
-| `soporte` | Atención al cliente y devoluciones |
-| `analista` | Reportes y consultas de solo lectura |
-| `gerente` | Supervisión, compras, inventario, reportes y aprobaciones |
-
-La aplicación utiliza `AuthGuard` y `RoleGuard` en el frontend. El administrador conserva los accesos de usuarios y auditoría; los demás perfiles solo visualizan los módulos necesarios para su trabajo.
-
-## Estructura del repositorio
-
-```text
-MediZano_microservicios/
-├── .github/workflows/            # Automatización de documentación y CI/CD
-├── clients/
-│   └── medizano-frontend/       # Angular 17 + Nginx
-├── deploy/                       # Scripts de producción, backups y hardening
-├── docs/                         # Documentación técnica para MkDocs
-├── infra/
-│   ├── medizano-config/          # Configuración centralizada
-│   ├── medizano-eureka/          # Service Discovery
-│   └── medizano-gateway/         # API Gateway
-├── kafka/                        # Configuración de Kafka para desarrollo
-├── keycloak/                     # Configuración de identidad para desarrollo
-├── obs/                          # Prometheus, Loki, Alloy y Grafana
-├── overrides/                    # Plantillas visuales de MkDocs
-├── services/
-│   ├── medizano-cliente-ms/
-│   ├── medizano-facturacion-ms/
-│   ├── medizano-inventario-ms/
-│   ├── medizano-orden-ms/
-│   ├── medizano-pago-ms/
-│   ├── medizano-proveedor-ms/
-│   ├── medizano-reportes-ms/
-│   └── medizano-usuario-ms/
-├── docker-compose.yml
-├── docker-compose.prod.yml
-├── init-microservices-db.sql
-├── seed_proveedores_peruanos.sql
-├── pom.xml                       # POM maestro de servicios Java
-├── mkdocs.yml                    # Navegación del portal documental
-├── run_e2e_audit.js              # Auditoría E2E
-└── run_e2e_audit.ps1
-```
-
-Los archivos sensibles como `.env` y las claves privadas no forman parte del repositorio. Para comenzar se utiliza `.env.example`.
-
-## Tecnologías
-
-- Java 17 y Spring Boot 3.
-- Spring Cloud Gateway y Eureka Discovery.
-- Angular 17 y Nginx.
-- PostgreSQL 16, una base por microservicio.
-- Apache Kafka para eventos asíncronos.
-- Docker Compose para ejecución local.
-- JWT y BCrypt para autenticación.
-- Prometheus, Loki y Grafana para observabilidad.
-- SpaceMail como relay SMTP autenticado para comprobantes y alertas.
+- **Ventas y POS:** venta de medicamentos, recetas y medios de pago.
+- **Productos e inventario:** lotes, fechas de vencimiento, control de stock y FEFO.
+- **Compras:** proveedores, órdenes de compra y recepción de mercadería.
+- **Facturación y contabilidad:** facturas, impuestos IGV y diarios contables.
+- **Pacientes y contactos:** historial, seguros y datos del comprador.
+- **Farmacia:** dispensación, prescripciones, sustancias controladas y devoluciones.
+- **Reportes y auditoría:** dashboard, reportes financieros y trazabilidad de acciones.
+- **Perú:** dependencias `l10n_pe` y `l10n_pe_pos`, con estructura preparada para SUNAT.
 
 ## Requisitos
 
-- Docker Desktop y Docker Compose.
-- JDK 17 o superior.
-- Maven 3.9 o superior.
-- Node.js 18 o superior para desarrollo del frontend.
-- Git.
+- Docker y Docker Compose.
+- Al menos 4 GB de RAM disponibles para Odoo y PostgreSQL.
 
-## Configuración
-
-Crear el archivo `.env` a partir de la plantilla disponible:
+## Inicio rápido
 
 ```bash
 cp .env.example .env
+# Cambie ODOO_DB_PASSWORD por una contraseña segura
+docker compose up -d
 ```
 
-Completar las variables obligatorias, especialmente la contraseña de PostgreSQL y la clave JWT. No subir `.env`, contraseñas, certificados privados ni claves SSH al repositorio.
+Abra <http://localhost:8069>, cree o seleccione una base de datos e instale
+**MediZano - ERP de Farmacia y Botica (Perú)** desde Apps.
 
-## Ejecución con Docker
+Para revisar los logs:
 
 ```bash
-docker compose up -d --build
-docker compose ps
+docker compose logs -f odoo
 ```
 
-Para detener la plataforma:
+Para detener el entorno:
 
 ```bash
 docker compose down
 ```
 
-Para consultar logs:
+Los datos se guardan en los volúmenes `odoo-db-data` y `odoo-data`. No elimine
+esos volúmenes si necesita conservar la base de datos.
 
-```bash
-docker compose logs -f frontend
-docker compose logs -f api-gateway
-```
-
-## Accesos locales
-
-| Componente | URL |
-|---|---|
-| Aplicación web | `http://localhost:4200` |
-| API Gateway / Swagger | `http://localhost:8090/swagger-ui.html` |
-| Eureka | `http://localhost:8761` |
-| Correo transaccional | SpaceMail SMTP (`mail.spacemail.com:587`) |
-| Kafka UI | `http://localhost:18085` |
-| Prometheus | `http://localhost:9090` |
-| Grafana | `http://localhost:3000` |
-| Documentación MkDocs | `http://localhost:8000/medizano/` |
-
-Los microservicios de negocio se exponen internamente en la red Docker y se consumen a través del API Gateway.
-
-## Acceso desplegado en AWS EC2
-
-La aplicación también se ejecuta en una instancia EC2. La IP pública no debe escribirse de forma fija en la documentación porque puede cambiar cuando la instancia se detiene y vuelve a iniciarse.
-
-Usa siempre el valor actual de `<IP_PUBLICA_EC2>`:
-
-| Componente | URL en AWS |
-|---|---|
-| Aplicación web | `http://<IP_PUBLICA_EC2>/` |
-| Aplicación web por puerto alternativo | `http://<IP_PUBLICA_EC2>:4200/` |
-| API Gateway / Swagger | `http://<IP_PUBLICA_EC2>:8090/swagger-ui.html` |
-| Eureka | `http://<IP_PUBLICA_EC2>:8761/` |
-| Correo transaccional | SpaceMail SMTP (`mail.spacemail.com:587`, sin portal web) |
-| Kafka UI | `http://<IP_PUBLICA_EC2>:18085/` |
-| Prometheus | `http://<IP_PUBLICA_EC2>:9090/` |
-| Grafana | `http://<IP_PUBLICA_EC2>:3000/` |
-
-Para consultar la IP pública actual desde la instancia EC2:
-
-```bash
-curl -s http://169.254.169.254/latest/meta-data/public-ipv4
-```
-
-Para un acceso estable se recomienda asociar una **Elastic IP** o utilizar un dominio con Route 53. Así los usuarios no necesitan cambiar la URL cada vez que AWS asigne una nueva IP.
-
-### Documentación técnica en AWS
-
-La documentación fuente se encuentra en [`docs/`](docs/index.md) dentro del repositorio. Para visualizarla como sitio MkDocs:
-
-```bash
-mkdocs serve --dev-addr 0.0.0.0:8000
-```
-
-Luego se accede mediante:
+## Estructura
 
 ```text
-http://<IP_PUBLICA_EC2>:8000/medizano/
+addons/Pharmacy/                 # Módulo Odoo personalizado
+config/odoo.conf                 # Configuración sin secretos
+docker-compose.yml               # Entorno Odoo 18 + PostgreSQL
+.env.example                     # Variables requeridas
+docker-compose.microservices.yml # Arquitectura Java anterior, archivada
 ```
 
-El puerto `8000` debe estar permitido temporalmente en el Security Group de AWS. Para producción, es preferible publicar MkDocs detrás de Nginx usando el dominio de la aplicación, en vez de exponer directamente el puerto de desarrollo.
+## Desarrollo del módulo
 
-## Flujos principales
+Después de editar el módulo, actualice la instalación con:
 
-### Venta en POS
+```bash
+docker compose exec odoo odoo \
+  --db_host=db \
+  --db_user="$ODOO_DB_USER" \
+  --db_password="$ODOO_DB_PASSWORD" \
+  -d NOMBRE_DE_LA_BASE \
+  -u Pharmacy \
+  --stop-after-init
+```
 
-1. El cajero busca o escanea un medicamento.
-2. `orden-ms` registra la orden y consulta disponibilidad.
-3. `inventario-ms` reserva o descuenta el lote FEFO correspondiente.
-4. `pago-ms` procesa el método de pago.
-5. `facturacion-ms` emite el comprobante.
-6. `usuario-ms` registra la actividad del usuario.
+El nombre técnico del módulo es `Pharmacy`, tal como aparece en su manifest.
+Para una instalación productiva, use HTTPS mediante un proxy inverso y
+mantenga las credenciales únicamente en `.env` o en un gestor de secretos.
 
-### Compra y recepción
+## Pruebas y validación
 
-1. Almacén registra la orden al proveedor.
-2. Se realiza el seguimiento del pedido.
-3. Se escanean los productos recibidos.
-4. `inventario-ms` crea los lotes y actualiza el stock.
-
-### Reembolso
-
-Los reembolsos se registran con su propia fecha de procesamiento. Por eso, un reembolso realizado al día siguiente aparece en la caja del día siguiente y no modifica retroactivamente el cierre original.
-
-## Reportes y auditoría
-
-- **Caja diaria:** ventas cobradas, reembolsos del periodo y neto de caja.
-- **Reporte de ventas:** comprobantes, importes, IGV y métodos de pago.
-- **Reporte de stock:** existencias, lotes, vencimientos y valorización.
-- **Actividad de usuarios:** ventas, reembolsos, compras, cambios de inventario y otras operaciones.
-- **Historial de accesos:** únicamente inicio y cierre de sesión.
-
-## Reglas de arquitectura
-
-- Cada microservicio es dueño de sus datos.
-- No se comparten entidades ni tablas entre bases de datos.
-- Las integraciones se realizan mediante REST, Feign o eventos Kafka.
-- El frontend no reemplaza la autorización del backend.
-- Las credenciales reales se manejan mediante variables de entorno.
-- Los cambios operativos importantes deben quedar registrados en auditoría.
-
-## Documentación adicional
-
-- [`docs/`](docs/)
-- [`docker-compose.yml`](docker-compose.yml)
-- [`clients/medizano-frontend/`](clients/medizano-frontend/)
-- [`services/`](services/)
-
-## Repositorio
-
-[github.com/rbn-69-cod/MediZano_microservicios](https://github.com/rbn-69-cod/MediZano_microservicios)
+El módulo incluye pruebas Odoo en `addons/Pharmacy/tests`. Las pruebas de
+integración requieren una base Odoo inicializada y PostgreSQL disponible.

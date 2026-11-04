@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vistas de Reglas de Cobertura -->
+    
+    <!-- Vista Lista -->
+    <record id="view_pharmacy_coverage_rule_list" model="ir.ui.view">
+        <field name="name">pharmacy.coverage.rule.list</field>
+        <field name="model">pharmacy.coverage.rule</field>
+        <field name="arch" type="xml">
+            <list string="Reglas de Cobertura">
+                <field name="plan_id"/>
+                <field name="product_id"/>
+                <field name="category_id"/>
+                <field name="coverage_percentage" widget="percentage"/>
+                <field name="copay_percentage" widget="percentage"/>
+                <field name="is_exclusion"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Vista Formulario -->
+    <record id="view_pharmacy_coverage_rule_form" model="ir.ui.view">
+        <field name="name">pharmacy.coverage.rule.form</field>
+        <field name="model">pharmacy.coverage.rule</field>
+        <field name="arch" type="xml">
+            <form string="Regla de Cobertura de Seguro">
+                <header>
+                    <field name="active" widget="boolean_toggle"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="plan_id" string="Plan de Seguro *"/>
+                        <h1>
+                            <field name="plan_id" required="1" options="{'no_create': True}" help="Plan de seguro al que aplica esta regla"/>
+                        </h1>
+                        <label for="name" string="Descripción de la Regla"/>
+                        <p>
+                            <field name="name" placeholder="Ej. Cobertura de Genéricos, Lista de Exclusión" class="oe_inline"/>
+                        </p>
+                    </div>
+                    
+                    <group name="rule_scope" string="Alcance y Aplicabilidad de la Regla">
+                        <group name="product_scope">
+                            <field name="product_id" placeholder="Ej. Aspirina 100mg" options="{'no_create': True}" help="Producto específico al que aplica (dejar en blanco para aplicar a toda la categoría)"/>
+                            <field name="category_id" placeholder="Ej. Analgésicos, Antibióticos" options="{'no_create': True}" help="Categoría de producto a la que aplica"/>
+                            <field name="is_exclusion" widget="boolean_toggle" help="Marcar si esta regla excluye productos de la cobertura"/>
+                        </group>
+                        <group name="rule_settings">
+                            <field name="priority" placeholder="1 = Máxima prioridad" help="Las reglas con mayor prioridad se evalúan primero (1 = máxima)"/>
+                            <field name="branch_ids" widget="many2many_tags" help="Dejar en blanco para aplicar a todas las boticas / sucursales"/>
+                        </group>
+                    </group>
+                    
+                    <group name="coverage_financial" string="Cobertura y Copago">
+                        <group name="insurance_coverage">
+                            <field name="coverage_percentage" required="1" widget="percentage" help="Porcentaje cubierto por el seguro (ej. 80 = 80% de cobertura)"/>
+                            <field name="copay_percentage" widget="percentage" help="Copago a cargo del paciente como porcentaje del costo"/>
+                            <field name="copay_amount" help="Monto fijo de copago (anula el porcentaje si se establece)"/>
+                        </group>
+                        <group name="coverage_limits">
+                            <field name="max_quantity_per_visit" help="Cantidad máxima por visita del paciente"/>
+                            <field name="max_quantity_per_month" help="Cantidad máxima por paciente al mes"/>
+                            <field name="max_amount_per_claim" help="Monto máximo por reclamo presentado"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Requisitos Clínicos" name="clinical">
+                            <group string="Requisitos de Receta Médica">
+                                <group>
+                                    <field name="require_prescription" widget="boolean_toggle" help="Requiere receta médica para la cobertura"/>
+                                    <field name="require_generic_substitution" widget="boolean_toggle" help="Exige sustitución genérica cuando esté disponible"/>
+                                    <field name="require_preauth" widget="boolean_toggle" help="Requiere pre-autorización"/>
+                                </group>
+                                <group>
+                                    <field name="preauth_threshold" help="Pre-autorización requerida a partir de este monto"/>
+                                    <field name="valid_prescriber_types" placeholder="Ej. CMP, COP" help="Credenciales o tipo de médico permitidos"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="Detalles de Exclusión" name="exclusion" invisible="is_exclusion == False">
+                            <group string="Motivo de Exclusión">
+                                <field name="exclusion_reason" nolabel="1" placeholder="Explique por qué este producto está excluido de la cobertura (ej. cosmético, venta libre, experimental)"/>
+                            </group>
+                        </page>
+                        
+                        <page string="Condiciones de la Regla" name="conditions">
+                            <group string="Condiciones Avanzadas">
+                                <group>
+                                    <field name="age_min" help="Edad mínima del paciente para esta regla"/>
+                                    <field name="age_max" help="Edad máxima del paciente para esta regla"/>
+                                    <field name="gender" help="Aplicar regla solo a un género específico"/>
+                                </group>
+                                <group>
+                                    <field name="diagnosis_codes" placeholder="Códigos CIE-10" help="Códigos de diagnóstico requeridos para la cobertura"/>
+                                    <field name="notes" nolabel="1" placeholder="Condiciones adicionales o notas especiales para esta regla..."/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Vista Búsqueda -->
+    <record id="view_pharmacy_coverage_rule_search" model="ir.ui.view">
+        <field name="name">pharmacy.coverage.rule.search</field>
+        <field name="model">pharmacy.coverage.rule</field>
+        <field name="arch" type="xml">
+            <search string="Reglas de Cobertura">
+                <field name="plan_id"/>
+                <field name="product_id"/>
+                <field name="category_id"/>
+                <filter string="Activo" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Exclusiones" name="exclusions" domain="[('is_exclusion', '=', True)]"/>
+                <separator/>
+                <filter string="Reglas por Producto" name="product_rules" domain="[('product_id', '!=', False)]"/>
+                <filter string="Reglas por Categoría" name="category_rules" domain="[('category_id', '!=', False)]"/>
+                <separator/>
+                <group expand="0" string="Agrupar por">
+                    <filter string="Plan" name="group_plan" context="{'group_by': 'plan_id'}"/>
+                    <filter string="Producto" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Categoría" name="group_category" context="{'group_by': 'category_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Acción -->
+    <record id="action_pharmacy_coverage_rule" model="ir.actions.act_window">
+        <field name="name">Reglas de Cobertura</field>
+        <field name="res_model">pharmacy.coverage.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crear reglas de cobertura para planes de seguro
+            </p>
+            <p>
+                Las reglas de cobertura definen cómo cubren los seguros a productos o categorías específicas.
+                Puede configurar porcentajes de cobertura, montos de copago y límites de cantidad.
+            </p>
+        </field>
+    </record>
+              
+</odoo>

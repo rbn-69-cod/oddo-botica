@@ -1,0 +1,217 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* Pharmacy
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-19 23:00+0000\n"
+"PO-Revision-Date: 2026-10-19 23:00+0000\n"
+"Last-Translator: MediZano <admin@medizano.pe>\n"
+"Language-Team: Spanish (Peru) <es_PE@li.org>\n"
+"Language: es_PE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_branch
+msgid "Pharmacy Branch"
+msgstr "Botica / Sucursal"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_patient
+msgid "Pharmacy Patient"
+msgstr "Paciente de Botica"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_prescription
+msgid "Pharmacy Prescription"
+msgstr "Receta Médica"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_dispensing
+msgid "Pharmacy Dispensing"
+msgstr "Dispensación Farmacéutica"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_insurer
+msgid "Pharmacy Insurer"
+msgstr "Aseguradora / EPS"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_insurer_plan
+msgid "Pharmacy Insurer Plan"
+msgstr "Plan de Seguro"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_claim
+msgid "Pharmacy Insurance Claim"
+msgstr "Reclamo de Seguro"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_cashup
+msgid "Pharmacy Cash-up"
+msgstr "Arqueo de Caja"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_promotion
+msgid "Pharmacy Promotion"
+msgstr "Promoción de Botica"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_coverage_rule
+msgid "Pharmacy Coverage Rule"
+msgstr "Regla de Cobertura"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_dosage_form
+msgid "Pharmacy Dosage Form"
+msgstr "Forma Farmacéutica"
+
+#. module: Pharmacy
+#: model:ir.model,name:Pharmacy.model_pharmacy_controlled_substance_register
+msgid "Controlled Substance Register"
+msgstr "Libro de Control de Estupefacientes"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_insurer.py:0
+msgid "Insurer code must be unique!"
+msgstr "¡El código de aseguradora debe ser único!"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_insurer.py:0
+msgid "Coverage percentage must be between 0 and 100"
+msgstr "El porcentaje de cobertura debe estar entre 0 y 100"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_insurer.py:0
+msgid "Co-pay percentage must be between 0 and 100"
+msgstr "El porcentaje de copago debe estar entre 0 y 100"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_insurer.py:0
+msgid "Coverage percentage and co-pay percentage cannot exceed 100%"
+msgstr "La suma del porcentaje de cobertura y copago no puede superar el 100%"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_claim.py:0
+msgid "Only draft claims can be submitted"
+msgstr "Solo se pueden enviar reclamos en estado borrador"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_claim.py:0
+msgid "Cannot submit claim without any claim lines"
+msgstr "No se puede enviar un reclamo sin líneas de detalle"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_claim.py:0
+msgid "Only submitted claims can be approved"
+msgstr "Solo se pueden aprobar reclamos presentados"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_claim.py:0
+msgid "Only submitted claims can be rejected"
+msgstr "Solo se pueden rechazar reclamos presentados"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_claim.py:0
+msgid "Only approved claims can be marked as paid"
+msgstr "Solo se pueden marcar como pagados los reclamos aprobados"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_claim.py:0
+msgid "Only rejected claims can be resubmitted"
+msgstr "Solo se pueden reenviar los reclamos rechazados"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_prescription.py:0
+msgid "Cannot activate prescription without any prescription lines"
+msgstr "No se puede activar una receta sin renglones de medicamentos"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_prescription.py:0
+msgid "Cannot cancel prescription that has been partially or fully dispensed"
+msgstr "No se puede cancelar una receta que ya ha sido dispensada parcial o totalmente"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_prescription.py:0
+msgid "Quantity prescribed must be greater than 0"
+msgstr "La cantidad recetada debe ser mayor que 0"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_branch.py:0
+msgid "Branch code must be unique!"
+msgstr "¡El código de botica / sucursal debe ser único!"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_branch.py:0
+msgid "Branch manager must be an active user!"
+msgstr "¡El responsable de botica debe ser un usuario activo!"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_pricing.py:0
+msgid "Start date must be before end date"
+msgstr "La fecha de inicio debe ser anterior a la fecha de fin"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_pricing.py:0
+msgid "Discount amount must be positive"
+msgstr "El monto de descuento debe ser positivo"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_coverage_rule.py:0
+msgid "Either Product or Category must be specified"
+msgstr "Debe especificar un producto o una categoría"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_coverage_rule.py:0
+msgid "Cannot specify both Product and Category in the same rule"
+msgstr "No puede especificar producto y categoría al mismo tiempo en la misma regla"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_dispensing.py:0
+msgid "Quantity must be greater than 0"
+msgstr "La cantidad debe ser mayor que 0"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/models/pharmacy_dispensing.py:0
+msgid "Dispensing already verified"
+msgstr "La dispensación ya ha sido verificada"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/wizards/inter_branch_transfer_wizard.py:0
+msgid "Source and destination branches must be different"
+msgstr "La botica de origen y de destino deben ser distintas"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/wizards/inter_branch_transfer_wizard.py:0
+msgid "Please add at least one product to transfer"
+msgstr "Por favor agregue al menos un producto a transferir"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/wizards/insurance_reconciliation_wizard.py:0
+msgid "Please select at least one claim to reconcile"
+msgstr "Por favor seleccione al menos un reclamo para conciliar"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/wizards/stock_picking_variance_wizard.py:0
+msgid "Please add at least one variance line"
+msgstr "Por favor registre al menos una discrepancia"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/wizards/stock_adjustment_wizard.py:0
+msgid "Please add at least one product to adjust"
+msgstr "Por favor agregue al menos un producto a ajustar"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/wizards/patient_insurance_wizard.py:0
+msgid "Valid From date must be before Valid To date"
+msgstr "La fecha desde debe ser anterior a la fecha hasta"
+
+#. module: Pharmacy
+#: code:addons/Pharmacy/wizards/patient_insurance_wizard.py:0
+msgid "Patient already enrolled in this insurance plan with this member number"
+msgstr "El paciente ya se encuentra afiliado a este plan de seguro con dicho número de asegurado"

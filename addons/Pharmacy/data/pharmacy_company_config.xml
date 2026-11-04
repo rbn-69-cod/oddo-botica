@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Peruvian Pharmacy Company Configuration -->
+
+        <record id="base.main_company" model="res.company">
+            <!-- country_id and currency_id set in post_init_hook to avoid conflict with existing journal items -->
+            <field name="phone">+51-1-7001234</field>
+            <field name="email">contacto@medizano.pe</field>
+            <field name="website">https://www.medizano.pe</field>
+            <field name="vat">20601234567</field>
+
+            <!-- Accounting Configuration -->
+            <!-- <field name="income_currency_exchange_gain_account_id" ref="account.income_currency_exchange"/> -->
+            <!-- <field name="expense_currency_exchange_loss_account_id" ref="account.expense_currency_exchange"/> -->
+            <field name="account_default_pos_receivable_account_id" ref="pharmacy_cash_receivable"/>
+            <!-- <field name="account_default_cash_journals" eval="[(6, 0, [ref('pharmacy_cash_journal')])]"/> -->
+            <!-- <field name="account_default_bank_journals" eval="[(6, 0, [ref('pharmacy_mpesa_journal'), ref('pharmacy_card_journal')])]"/> -->
+
+            <!-- Tax Configuration -->
+            <field name="tax_calculation_rounding_method">round_globally</field>
+            <field name="account_sale_tax_id" ref="tax_vat_16"/>
+            <field name="account_purchase_tax_id" ref="tax_vat_purchase_18"/>
+
+            <!-- Fiscal Position Defaults -->
+            <!-- <field name="fiscal_position_last_id" ref="fiscal_position_standard_vat"/> -->
+        </record>
+
+
+        <!-- System Parameters for Peruvian Pharmacy -->
+        <record id="param_default_currency" model="ir.config_parameter">
+            <field name="key">pharmacy.default_currency_id</field>
+            <field name="value" eval="str(ref('base.PEN'))"/>
+        </record>
+
+        <record id="param_default_country" model="ir.config_parameter">
+            <field name="key">pharmacy.default_country_id</field>
+            <field name="value" eval="str(ref('base.pe'))"/>
+        </record>
+
+        <record id="param_auto_insurance_claim" model="ir.config_parameter">
+            <field name="key">pharmacy.auto_create_insurance_claims</field>
+            <field name="value">True</field>
+        </record>
+
+        <record id="param_enforce_fefo" model="ir.config_parameter">
+            <field name="key">pharmacy.enforce_fefo</field>
+            <field name="value">True</field>
+        </record>
+
+        <record id="param_expiry_alert_days" model="ir.config_parameter">
+            <field name="key">pharmacy.expiry_alert_days</field>
+            <field name="value">90</field>
+        </record>
+
+        <record id="param_controlled_substance_approval" model="ir.config_parameter">
+            <field name="key">pharmacy.controlled_substance_approval</field>
+            <field name="value">True</field>
+        </record>
+
+    </data>
+</odoo>

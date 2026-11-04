@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Stock Picking Variance Tree View -->
+        <record id="view_stock_picking_variance_tree" model="ir.ui.view">
+            <field name="name">stock.picking.variance.tree</field>
+            <field name="model">stock.picking.variance</field>
+            <field name="arch" type="xml">
+                <list string="Variances">
+                    <field name="picking_id"/>
+                    <field name="product_id"/>
+                    <field name="lot_id"/>
+                    <field name="expected_quantity"/>
+                    <field name="received_quantity"/>
+                    <field name="variance_quantity"/>
+                    <field name="variance_type"/>
+                    <field name="resolved" widget="boolean_toggle"/>
+                </list>
+            </field>
+        </record>
+        
+        <!-- Stock Picking Variance Form View -->
+        <record id="view_stock_picking_variance_form" model="ir.ui.view">
+            <field name="name">stock.picking.variance.form</field>
+            <field name="model">stock.picking.variance</field>
+            <field name="arch" type="xml">
+                <form string="Variance">
+                    <header>
+                        <button name="action_resolve" type="object" string="Mark Resolved" 
+                                class="oe_highlight" invisible="resolved"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="picking_id"/>
+                                <field name="product_id"/>
+                                <field name="lot_id"/>
+                            </group>
+                            <group>
+                                <field name="expected_quantity"/>
+                                <field name="received_quantity"/>
+                                <field name="variance_quantity" readonly="1"/>
+                                <field name="variance_percentage" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <group>
+                            <group>
+                                <field name="variance_type"/>
+                                <field name="resolved" widget="boolean_toggle"/>
+                            </group>
+                            <group>
+                                <field name="resolved_by" readonly="1"/>
+                                <field name="resolved_date" readonly="1"/>
+                            </group>
+                        </group>
+                        
+                        <group>
+                            <field name="variance_reason" placeholder="Reason for variance..."/>
+                            <field name="action_taken" placeholder="Action taken..."/>
+                        </group>
+                    </sheet>
+                    <chatter/>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Stock Picking Variance Search View -->
+        <record id="view_stock_picking_variance_search" model="ir.ui.view">
+            <field name="name">stock.picking.variance.search</field>
+            <field name="model">stock.picking.variance</field>
+            <field name="arch" type="xml">
+                <search string="Variances">
+                    <field name="picking_id"/>
+                    <field name="product_id"/>
+                    <field name="variance_type"/>
+                    <filter string="Unresolved" name="unresolved" domain="[('resolved', '=', False)]"/>
+                    <filter string="Resolved" name="resolved" domain="[('resolved', '=', True)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Transfer" name="group_by_picking" context="{'group_by': 'picking_id'}"/>
+                        <filter string="Product" name="group_by_product" context="{'group_by': 'product_id'}"/>
+                        <filter string="Variance Type" name="group_by_type" context="{'group_by': 'variance_type'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Stock Picking Variance Action -->
+        <record id="action_stock_picking_variance" model="ir.actions.act_window">
+            <field name="name">Transfer Variances</field>
+            <field name="res_model">stock.picking.variance</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="view_stock_picking_variance_search"/>
+            <field name="context">{'search_default_unresolved': 1}</field>
+        </record>
+        
+        <!-- Add Variance Button to Stock Picking Form -->
+        <record id="view_stock_picking_form_inherit_variance" model="ir.ui.view">
+            <field name="name">stock.picking.form.inherit.variance</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button name="action_record_variance" type="object" string="Record Variance" 
+                            class="oe_highlight" invisible="not has_variance or state != 'done'"/>
+                </xpath>
+<!--                 <xpath expr="//field[@name='move_ids']" position="after"> -->
+<!--                     <notebook> -->
+<!--                         <page string="Variances" invisible="not variance_lines"> -->
+<!--                             <field name="variance_lines" nolabel="1"> -->
+<!--                                 <list> -->
+<!--                                     <field name="product_id"/> -->
+<!--                                     <field name="lot_id"/> -->
+<!--                                     <field name="expected_quantity"/> -->
+<!--                                     <field name="received_quantity"/> -->
+<!--                                     <field name="variance_quantity"/> -->
+<!--                                     <field name="variance_type"/> -->
+<!--                                     <field name="resolved" widget="boolean_toggle"/> -->
+<!--                                 </list> -->
+<!--                             </field> -->
+<!--                         </page> -->
+<!--                     </notebook> -->
+<!--                     <field name="variance_notes" invisible="not variance_notes" placeholder="Variance notes..."/> -->
+<!--                 </xpath> -->
+            </field>
+        </record>
+        
+    </data>
+</odoo>

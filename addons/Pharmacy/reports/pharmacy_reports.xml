@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+        
+        <!-- Prescription Report -->
+        <report
+            id="action_report_prescription"
+            model="pharmacy.prescription"
+            string="Prescription"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_prescription"
+            file="Pharmacy.report_prescription"
+            print_report_name="'Prescription - %s' % (object.name)"
+            binding_model="pharmacy.prescription"
+            binding_type="report"/>
+        
+        <!-- Dispensing Label Report -->
+        <report
+            id="action_report_dispensing_label"
+            model="pharmacy.dispensing"
+            string="Dispensing Label"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_dispensing_label"
+            file="Pharmacy.report_dispensing_label"
+            print_report_name="'Dispensing Label - %s' % (object.name)"
+            binding_model="pharmacy.dispensing"
+            binding_type="report"/>
+        
+        <!-- Insurance Claim Report -->
+        <report
+            id="action_report_claim"
+            model="pharmacy.claim"
+            string="Insurance Claim"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_claim"
+            file="Pharmacy.report_claim"
+            print_report_name="'Insurance Claim - %s' % (object.name)"
+            binding_model="pharmacy.claim"
+            binding_type="report"/>
+        
+        <!-- Product Label Report -->
+        <report
+            id="action_report_product_label"
+            model="product.product"
+            string="Product Label"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_product_label"
+            file="Pharmacy.report_product_label"
+            print_report_name="'Product Label - %s' % (object.name)"
+            binding_model="product.product"
+            binding_type="report"/>
+        
+        <!-- Lot Expiry Label Report -->
+        <report
+            id="action_report_lot_expiry_label"
+            model="stock.lot"
+            string="Lot Expiry Label"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_lot_expiry_label"
+            file="Pharmacy.report_lot_expiry_label"
+            print_report_name="'Lot Expiry Label - %s' % (object.name)"
+            binding_model="stock.lot"
+            binding_type="report"/>
+        
+        <!-- Cash-up Report -->
+        <report
+            id="action_report_cashup"
+            model="pharmacy.cashup"
+            string="Cash-up Report"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_cashup"
+            file="Pharmacy.report_cashup"
+            print_report_name="'Cash-up Report - %s' % (object.name)"
+            binding_model="pharmacy.cashup"
+            binding_type="report"/>
+        
+        <!-- Controlled Substances Register Report -->
+        <report
+            id="action_report_controlled_substances_register"
+            model="pharmacy.controlled.substance.register"
+            string="Controlled Substances Register"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_controlled_substances_register"
+            file="Pharmacy.report_controlled_substances_register"
+            print_report_name="'Controlled Substances Register'"
+            binding_model="pharmacy.controlled.substance.register"
+            binding_type="report"/>
+        
+        <!-- Sales by Branch Report -->
+        <report
+            id="action_report_sales_by_branch"
+            model="report.pharmacy.sales.branch"
+            string="Sales by Branch"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_sales_by_branch"
+            file="Pharmacy.report_sales_by_branch"
+            print_report_name="'Sales by Branch Report'"/>
+        
+        <!-- Expiry Report -->
+        <report
+            id="action_report_expiry"
+            model="report.pharmacy.expiry"
+            string="Expiry Report"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_expiry"
+            file="Pharmacy.report_expiry"
+            print_report_name="'Stock Expiry Report'"/>
+        
+        <!-- Stock Movement Report -->
+        <report
+            id="action_report_stock_movement"
+            model="report.pharmacy.stock.movement"
+            string="Stock Movement Analysis"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_stock_movement"
+            file="Pharmacy.report_stock_movement"
+            print_report_name="'Stock Movement Analysis'"/>
+        
+        <!-- Claims Summary Report -->
+        <report
+            id="action_report_claims_summary"
+            model="report.pharmacy.claims.summary"
+            string="Claims Summary"
+            report_type="qweb-pdf"
+            name="Pharmacy.report_claims_summary"
+            file="Pharmacy.report_claims_summary"
+            print_report_name="'Insurance Claims Summary'"/>
+        
+</odoo>

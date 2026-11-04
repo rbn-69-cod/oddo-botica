@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Scheduled Action for Expiry Alerts -->
+        <record id="ir_cron_send_expiry_alerts" model="ir.cron">
+            <field name="name">Send Expiry Alerts for Batches</field>
+            <field name="model_id" ref="stock.model_stock_lot"/>
+            <field name="state">code</field>
+            <field name="code">model.action_send_expiry_alerts()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+            <field name="user_id" ref="base.user_root"/>
+        </record>
+        
+    </data>
+</odoo>

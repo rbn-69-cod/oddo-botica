@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Set company currency to PEN before creating journals/payment methods -->
+        <record id="base.main_company" model="res.company">
+            <field name="country_id" ref="base.pe"/>
+            <field name="currency_id" ref="base.PEN"/>
+        </record>
+    </data>
+</odoo>
