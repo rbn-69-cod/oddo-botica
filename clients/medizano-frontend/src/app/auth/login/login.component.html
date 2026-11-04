@@ -1,0 +1,109 @@
+<main class="access-page">
+  <section class="brand-panel" aria-label="Presentación de MediZano">
+    <div class="brand-panel__pattern" aria-hidden="true"></div>
+
+    <div class="brand">
+      <div class="brand__mark" aria-hidden="true">
+        <span class="brand__mark-v"></span>
+        <span class="brand__mark-h"></span>
+      </div>
+      <span class="brand__name">MediZano Botica</span>
+    </div>
+
+    <div class="brand-copy">
+      <p class="brand-copy__eyebrow">Botica simple y segura</p>
+      <h1>Tu botica en orden.<br><span>Tu atención, primero.</span></h1>
+      <p>Administra ventas, medicamentos, stock y atención desde un solo lugar.</p>
+    </div>
+
+    <div class="feature-list" aria-label="Beneficios">
+      <div class="feature">
+        <span class="feature__check">✓</span>
+        <span>Control de inventario en tiempo real</span>
+      </div>
+      <div class="feature">
+        <span class="feature__check">✓</span>
+        <span>Ventas rápidas y organizadas</span>
+      </div>
+      <div class="feature">
+        <span class="feature__check">✓</span>
+        <span>Información protegida y confiable</span>
+      </div>
+    </div>
+
+    <p class="brand-panel__footer">MediZano Botica · Ventas e inventario conectados</p>
+  </section>
+
+  <section class="access-panel">
+    <div class="mobile-brand" aria-label="MediZano">
+      <div class="mobile-brand__mark" aria-hidden="true">+</div>
+      <span>MediZano Botica</span>
+    </div>
+
+    <div class="access-card">
+      <header class="access-header">
+        <p class="access-header__eyebrow">Bienvenido</p>
+        <h2>Inicia sesión</h2>
+        <p>Ingresa tus datos para acceder a tu botica.</p>
+      </header>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" novalidate>
+        <div class="form-field">
+          <label for="username">Usuario</label>
+          <div class="input-control" [class.input-control--invalid]="username?.invalid && username?.touched">
+            <span class="input-control__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </span>
+            <input
+              id="username"
+              type="text"
+              formControlName="username"
+              placeholder="Escribe tu usuario"
+              autocomplete="username"
+              autofocus
+            />
+          </div>
+          <p class="form-error" *ngIf="username?.invalid && username?.touched">Ingresa tu nombre de usuario.</p>
+        </div>
+
+        <div class="form-field">
+          <label for="password">Contraseña</label>
+          <div class="input-control" [class.input-control--invalid]="password?.invalid && password?.touched">
+            <span class="input-control__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M6 10V8a6 6 0 0 1 12 0v2M5 10h14v11H5V10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            </span>
+            <input
+              id="password"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Escribe tu contraseña"
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <svg-icon [name]="showPassword ? 'eye-off' : 'eye'" [size]="20"></svg-icon>
+            </button>
+          </div>
+          <p class="form-error" *ngIf="password?.invalid && password?.touched">Ingresa tu contraseña.</p>
+        </div>
+
+        <div class="error-alert" *ngIf="errorMessage" role="alert">
+          <svg-icon name="error" [size]="18"></svg-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <button type="submit" class="submit-button" [disabled]="loginForm.invalid || isLoading">
+          <span *ngIf="isLoading" class="button-spinner" aria-hidden="true"></span>
+          <span>{{ isLoading ? 'Validando acceso...' : 'Ingresar a MediZano' }}</span>
+          <span *ngIf="!isLoading" class="submit-button__arrow" aria-hidden="true">→</span>
+        </button>
+      </form>
+
+      <p class="access-help">Si tienes problemas para ingresar, comunícate con el administrador.</p>
+    </div>
+  </section>
+</main>

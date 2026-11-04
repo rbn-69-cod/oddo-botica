@@ -1,0 +1,176 @@
+<div class="suppliers-container">
+  <div class="header-section">
+    <div>
+      <h1 class="page-title">Gestión de Proveedores</h1>
+      <p class="page-subtitle">Registro oficial de laboratorios y distribuidores farmacéuticos DIGEMID</p>
+    </div>
+    <button class="btn btn-primary" (click)="abrirCrear()">
+      <span class="icon">+</span> Nuevo Proveedor
+    </button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Barra de Filtros -->
+  <div class="filter-card">
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="filtro"
+        (keyup.enter)="buscar()"
+        placeholder="Buscar por RUC, Razón Social o Nombre Comercial..."
+        class="form-control"
+      />
+      <button class="btn btn-secondary" (click)="buscar()">Buscar</button>
+      <button class="btn btn-outline" (click)="limpiar()">Limpiar</button>
+    </div>
+    <div class="counter">
+      Total registrados: <strong>{{ totalElements }}</strong>
+    </div>
+  </div>
+
+  <!-- Tabla de Proveedores -->
+  <div class="table-card">
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando proveedores...</p>
+    </div>
+
+    <table *ngIf="!loading && proveedores.length > 0" class="data-table">
+      <thead>
+        <tr>
+          <th>RUC</th>
+          <th>Razón Social</th>
+          <th>Contacto</th>
+          <th>Teléfono</th>
+          <th>Email</th>
+          <th>Dirección</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of proveedores">
+          <td class="font-bold">{{ p.ruc }}</td>
+          <td>
+            <div class="main-text">{{ p.razonSocial }}</div>
+            <small *ngIf="p.nombreComercial" class="sub-text">{{ p.nombreComercial }}</small>
+          </td>
+          <td>{{ p.contactoResponsable || '-' }}</td>
+          <td>{{ p.telefono || p.telefonoContacto || '-' }}</td>
+          <td>
+            <a *ngIf="p.email || p.emailContacto" [href]="'mailto:' + (p.email || p.emailContacto)">
+              {{ p.email || p.emailContacto }}
+            </a>
+            <span *ngIf="!p.email && !p.emailContacto">-</span>
+          </td>
+          <td>{{ p.direccion || p.direccionFiscal || '-' }}</td>
+          <td>
+            <span class="badge" [ngClass]="p.activo ? 'badge-success' : 'badge-danger'">
+              {{ p.activo ? 'ACTIVO' : 'INACTIVO' }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <button class="btn-icon" (click)="abrirEditar(p)" title="Editar">✏️</button>
+            <button *ngIf="p.activo" class="btn-icon btn-danger" (click)="desactivar(p)" title="Desactivar">🚫</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!loading && proveedores.length === 0" class="empty-state">
+      <p>No se encontraron proveedores registrados con los criterios indicados.</p>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination-footer" *ngIf="totalPages > 1">
+      <span>Página {{ page + 1 }} de {{ totalPages }}</span>
+      <div class="pagination-buttons">
+        <button class="btn btn-sm" [disabled]="page === 0" (click)="cambiarPagina(-1)">Anterior</button>
+        <button class="btn btn-sm" [disabled]="page >= totalPages - 1" (click)="cambiarPagina(1)">Siguiente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Registro / Edición -->
+  <div class="modal-backdrop" *ngIf="showModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>{{ isEditing ? 'Editar Proveedor' : 'Registrar Nuevo Proveedor' }}</h3>
+        <button class="close-btn" (click)="cerrarModal()">&times;</button>
+      </div>
+      <form [formGroup]="proveedorForm" (ngSubmit)="guardar()">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>RUC (11 dígitos Perú)*</label>
+            <input type="text" formControlName="ruc" maxlength="11" class="form-control" placeholder="Ej: 20100123456" />
+            <small class="error-text" *ngIf="proveedorForm.get('ruc')?.touched && proveedorForm.get('ruc')?.invalid">
+              El RUC debe tener 11 dígitos y empezar con 10, 15, 17 o 20.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Razón Social (Oficial SUNAT)*</label>
+            <input type="text" formControlName="razonSocial" class="form-control" placeholder="Ej: LABORATORIOS BAGÓ DEL PERÚ S.A." />
+            <small class="error-text" *ngIf="proveedorForm.get('razonSocial')?.touched && proveedorForm.get('razonSocial')?.invalid">
+              La razón social es obligatoria (mínimo 3 caracteres).
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Nombre Comercial (Opcional)</label>
+            <input type="text" formControlName="nombreComercial" class="form-control" placeholder="Ej: Bagó Perú" />
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Contacto Responsable</label>
+              <input type="text" formControlName="contactoResponsable" class="form-control" placeholder="Ej: Q.F. Carlos Ramírez" />
+            </div>
+            <div class="form-group">
+              <label>Teléfono*</label>
+              <input type="text" formControlName="telefono" class="form-control" placeholder="Ej: 01-5134000" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Correo Electrónico*</label>
+              <input type="email" formControlName="email" class="form-control" placeholder="Ej: pedidos@bago.com.pe" />
+            </div>
+            <div class="form-group">
+              <label>Estado</label>
+              <select formControlName="activo" class="form-control">
+                <option [ngValue]="true">Activo</option>
+                <option [ngValue]="false">Inactivo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Dirección Fiscal*</label>
+            <input type="text" formControlName="direccion" class="form-control" placeholder="Ej: Av. República de Panamá 2577, La Victoria, Lima" />
+          </div>
+
+          <div class="form-group">
+            <label>Observaciones / DIGEMID</label>
+            <textarea formControlName="observaciones" rows="2" class="form-control" placeholder="Registro sanitario, condiciones de frío, etc."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading">
+            {{ loading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Registrar') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,23 @@
+<div class="startup-screen" *ngIf="isStarting" role="status" aria-live="polite">
+  <div class="startup-glow startup-glow--one"></div>
+  <div class="startup-glow startup-glow--two"></div>
+  <div class="startup-content">
+    <div class="startup-logo" aria-hidden="true">
+      <span class="startup-logo__vertical"></span>
+      <span class="startup-logo__horizontal"></span>
+    </div>
+    <p class="startup-eyebrow">Botica MediZano</p>
+    <h1>Preparando tu <span>botica</span></h1>
+    <p class="startup-message">Conectando ventas, inventario y atención</p>
+    <div class="startup-loader" aria-label="Cargando">
+      <span></span><span></span><span></span>
+    </div>
+    <p class="startup-loading">Cargando MediZano...</p>
+  </div>
+</div>
+
+<ng-container *ngIf="!isStarting">
+  <app-shell *ngIf="isAuthenticated"></app-shell>
+  <router-outlet *ngIf="!isAuthenticated"></router-outlet>
+  <app-dialog></app-dialog>
+</ng-container>

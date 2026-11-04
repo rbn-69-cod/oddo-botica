@@ -1,0 +1,608 @@
+<div class="inventory-screen fade-in">
+  
+  <!-- Header Principal -->
+  <div class="inventory-header mb-4">
+    <div class="header-content d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="header-titles">
+        <div class="badge-tag">MediZano Botica · Control Farmacéutico Integral</div>
+        <h1 class="screen-title m-0 font-bold d-flex align-items-center gap-2">
+          <span>📦</span> Inventario General & Control FEFO
+        </h1>
+        <p class="screen-subtitle m-0 text-muted">
+          Existencias en estantería, control de lotes y vencimientos (DIGEMID), validación de recetas médicas y registro manual
+        </p>
+      </div>
+
+      <div class="header-actions d-flex gap-2">
+        <button type="button" class="btn btn-outline font-bold" (click)="refreshAll()" [disabled]="isLoading" title="Actualizar datos">
+          <span *ngIf="!isLoading">🔄 Actualizar</span>
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm"></span>
+        </button>
+
+        <button type="button" class="btn btn-outline-info font-bold" (click)="openKardexModal()" title="Consultar bitácora de movimientos (Kardex)"><span>📜</span> Kardex</button>
+        <button type="button" class="btn btn-primary font-bold" (click)="openAddMedicineModal()">
+          <span>➕</span> Agregar Medicamento
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métricas KPI Rápidas (100% Unificadas y Coherentes con Dashboard) -->
+  <div class="inventory-kpi-grid mb-4">
+    <div class="kpi-card" (click)="setFiltro('TODOS')">
+      <div class="kpi-icon-wrap bg-blue-light">📦</div>
+      <div class="kpi-content">
+        <div class="kpi-title">Medicamentos en Catálogo</div>
+        <div class="kpi-value text-primary font-mono">{{ getMedicamentosTotalCount() }}</div>
+        <div class="kpi-sub">{{ getMedicamentosConStockCount() }} con stock · {{ getMedicamentosSinStockCount() }} por abastecer</div>
+      </div>
+    </div>
+
+    <div class="kpi-card" (click)="setFiltro('CON_STOCK')">
+      <div class="kpi-icon-wrap bg-teal-light">🟢</div>
+      <div class="kpi-content">
+        <div class="kpi-title">Lotes Físicos en Almacén</div>
+        <div class="kpi-value text-teal font-mono">{{ getPhysicalBatchesCount() }}</div>
+        <div class="kpi-sub">{{ getTotalUnidadesAlmacen() }} unidades físicas totales</div>
+      </div>
+    </div>
+
+    <div class="kpi-card" (click)="setFiltro('BAJO_STOCK')">
+      <div class="kpi-icon-wrap bg-amber-light">⚠️</div>
+      <div class="kpi-content">
+        <div class="kpi-title">Stock Bajo / Crítico</div>
+        <div class="kpi-value text-warning font-mono">{{ getKpiBajoStock() }}</div>
+        <div class="kpi-sub">≤ 10 unidades restantes</div>
+      </div>
+    </div>
+
+    <div class="kpi-card" (click)="setFiltro('ALERTA_CANJE')">
+      <div class="kpi-icon-wrap bg-orange-light">⏳</div>
+      <div class="kpi-content">
+        <div class="kpi-title">Alerta Canje FEFO</div>
+        <div class="kpi-value text-orange font-mono">{{ getCanjeCount() }}</div>
+        <div class="kpi-sub">≤ 30 días para expirar</div>
+      </div>
+    </div>
+
+    <div class="kpi-card" (click)="setFiltro('RETIRAR')">
+      <div class="kpi-icon-wrap bg-red-light">⛔</div>
+      <div class="kpi-content">
+        <div class="kpi-title">Retirar de Anaquel</div>
+        <div class="kpi-value text-danger font-mono">{{ getRetirarCount() }}</div>
+        <div class="kpi-sub">≤ 25 días o vencidos (bloqueados POS)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de Filtros y Búsqueda -->
+  <div class="inventory-toolbar-card card-glass p-3 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="filter-pills-row d-flex gap-2 flex-wrap">
+      <button type="button" class="inv-filter-btn" [class.active]="filtroTipo === 'TODOS'" (click)="setFiltro('TODOS')">
+        Todos ({{ getMedicamentosTotalCount() }})
+      </button>
+
+      <button type="button" class="inv-filter-btn btn-stock-opt" [class.active]="filtroTipo === 'CON_STOCK'" (click)="setFiltro('CON_STOCK')">
+        🟢 Con Stock ({{ getMedicamentosConStockCount() }})
+      </button>
+
+      <button type="button" class="inv-filter-btn btn-stock-low" [class.active]="filtroTipo === 'POR_ABASTECER'" (click)="setFiltro('POR_ABASTECER')">
+        🛒 Por Abastecer ({{ getMedicamentosSinStockCount() }})
+      </button>
+
+      <button type="button" class="inv-filter-btn btn-stock-low" [class.active]="filtroTipo === 'BAJO_STOCK'" (click)="setFiltro('BAJO_STOCK')">
+        ⚠️ Stock Bajo ({{ getKpiBajoStock() }})
+      </button>
+
+      <button type="button" class="inv-filter-btn btn-fefo-alert" [class.active]="filtroTipo === 'ALERTA_CANJE'" (click)="setFiltro('ALERTA_CANJE')">
+        ⏳ Canje (≤30d) ({{ getCanjeCount() }})
+      </button>
+
+      <button type="button" class="inv-filter-btn btn-fefo-retirar" [class.active]="filtroTipo === 'RETIRAR'" (click)="setFiltro('RETIRAR')">
+        🛑 Retirar Mostrador ({{ getRetirarCount() }})
+      </button>
+
+      <button type="button" class="inv-filter-btn btn-receta" [class.active]="filtroTipo === 'CON_RECETA'" (click)="setFiltro('CON_RECETA')">
+        🔒 Con Receta ({{ getKpiConReceta() }})
+      </button>
+
+      <button type="button" class="inv-filter-btn btn-libre" [class.active]="filtroTipo === 'VENTA_LIBRE'" (click)="setFiltro('VENTA_LIBRE')">
+        💊 Venta Libre ({{ getKpiVentaLibre() }})
+      </button>
+    </div>
+
+    <div class="search-wrap">
+      <input 
+        type="text" 
+        class="form-control inv-search-input" 
+        placeholder="🔎 Buscar medicamento, lote, laboratorio o código..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="aplicarFiltro()"
+      />
+    </div>
+  </div>
+
+  <!-- Tabla de Inventario Principal -->
+  <div class="inventory-table-card card-glass p-0 mb-4 overflow-hidden">
+    <div *ngIf="isLoading && allBatches.length === 0" class="p-5 text-center">
+      <div class="spinner-border text-primary"></div>
+      <p class="mt-2 text-muted">Cargando existencias de inventario...</p>
+    </div>
+
+    <div *ngIf="!isLoading && batches.length === 0" class="p-5 text-center empty-inv-box">
+      <div style="font-size: 54px; margin-bottom: 12px;">📦</div>
+      <h3 class="font-bold text-dark m-0" style="font-size: 20px;">No se encontraron registros de inventario</h3>
+      <p class="text-muted mt-1 mb-4" style="font-size: 14px; max-width: 480px; margin: 6px auto 20px auto;">
+        {{ searchTerm || filtroTipo !== 'TODOS' ? 'Prueba cambiando los filtros o el término de búsqueda.' : 'Aún no hay medicamentos con lotes registrados. Puedes agregar uno nuevo con el botón de abajo.' }}
+      </p>
+      <div class="d-flex justify-content-center gap-3">
+        <button *ngIf="searchTerm || filtroTipo !== 'TODOS'" type="button" class="btn btn-outline" (click)="limpiarFiltro()">
+          Restablecer Filtros
+        </button>
+        <button type="button" class="btn btn-outline-info font-bold" (click)="openKardexModal()" title="Consultar bitácora de movimientos (Kardex)"><span>📜</span> Kardex</button>
+        <button type="button" class="btn btn-primary font-bold" (click)="openAddMedicineModal()">
+          <span>➕</span> Agregar Medicamento a Inventario
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="batches.length > 0" class="table-responsive">
+      <table class="table inv-modern-table m-0">
+        <thead>
+          <tr>
+            <th class="th-med-info">Medicamento & Fabricante</th>
+            <th class="th-prescription text-center">Control Receta</th>
+            <th class="th-batch text-center">Lote N°</th>
+            <th class="th-fefo text-center">Vencimiento (FEFO)</th>
+            <th class="th-stock text-center">Stock Actual</th>
+            <th class="th-prices text-right">Costo / PVP</th>
+            <th class="th-actions text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of batches; trackBy: trackByBatchId" [class.row-expired]="b.fefoStatus === 'VENCIDO'" [class.row-quarantine]="b.fefoStatus === 'RETIRAR'">
+            
+            <!-- Medicamento y Fabricante -->
+            <td class="cell-med-info">
+              <div class="font-bold med-title-text">{{ b.medicineName }}</div>
+              <div class="med-meta-tags d-flex align-items-center gap-2 mt-1">
+                <span class="badge-lab font-semibold">{{ b.manufacturer }}</span>
+                <span class="badge-barcode font-mono text-xs">Cód: {{ b.barcode }}</span>
+                <span class="badge-cat text-xs text-muted">{{ b.category }}</span>
+              </div>
+            </td>
+
+            <!-- Requiere Receta o Venta Libre (Requerimiento de usuario) -->
+            <td class="cell-prescription text-center">
+              <span *ngIf="b.prescriptionRequired" class="badge-pill-receta badge-receta-yes" title="Obligatorio receta médica para dispensar">
+                🔒 Requiere Receta
+              </span>
+              <span *ngIf="!b.prescriptionRequired" class="badge-pill-receta badge-receta-no" title="Venta libre sin prescripción">
+                🟢 Venta Libre
+              </span>
+            </td>
+
+            <!-- Lote -->
+            <td class="cell-batch text-center font-mono font-bold">
+              <span class="batch-pill-badge">{{ b.batchNumber }}</span>
+            </td>
+
+            <!-- Vencimiento & FEFO -->
+            <td class="cell-fefo text-center">
+              <div class="fefo-date font-mono font-semibold">{{ b.expiryDate }}</div>
+              <span class="badge-fefo-pill mt-1" [ngClass]="b.fefoBadgeClass">
+                {{ b.fefoLabel }}
+              </span>
+            </td>
+
+            <!-- Stock Disponible -->
+            <td class="cell-stock text-center">
+              <div class="stock-display font-mono font-bold" [class.text-danger]="b.quantityAvailable <= 10" [class.text-teal]="b.quantityAvailable > 10">
+                {{ b.quantityAvailable }} uds
+              </div>
+              <span *ngIf="b.quantityAvailable <= 10" class="badge badge-sm badge-danger-soft">
+                Stock Crítico
+              </span>
+            </td>
+
+            <!-- Costo y PVP -->
+            <td class="cell-prices text-right font-mono">
+              <div class="pvp-value font-bold text-primary">PVP: S/ {{ b.sellingPrice | number:'1.2-2' }}</div>
+              <div class="cost-value text-xs text-muted">Costo: S/ {{ b.purchasePrice | number:'1.2-2' }}</div>
+            </td>
+
+            <!-- Acciones -->
+            <td class="cell-actions text-right">
+              <div class="d-flex justify-content-end gap-1">
+                <button type="button" class="btn btn-xs btn-outline-primary" (click)="openStockModal(b)" title="Ajustar cantidad de stock">
+                  ⚡ Stock
+                </button>
+                <button type="button" class="btn btn-xs btn-outline-secondary" (click)="openBatchModal(b)" title="Editar datos del lote">
+                  ✏️
+                </button>
+                <button type="button" class="btn btn-xs btn-outline-danger" (click)="deleteBatch(b)" title="Eliminar este lote">
+                  🗑️
+                </button>
+              </div>
+            </td>
+
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- =============================================================== -->
+
+  <!-- =============================================================== -->
+  <!-- MODAL 1: REGISTRAR NUEVO MEDICAMENTO (DISEÑO PROFESIONAL PULIDO) -->
+  <!-- =============================================================== -->
+  <div *ngIf="showAddMedicineModal" class="custom-modal-fade" (click)="closeAddMedicineModal()">
+    <div class="modal-dialog-center modal-dialog-lg" (click)="$event.stopPropagation()">
+      <div class="modal-card-pro">
+        
+        <!-- Header -->
+        <div class="modal-header-pro">
+          <div class="header-title-wrap">
+            <div class="header-icon-box bg-blue-subtle">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 class="modal-title-text">Registrar Nuevo Medicamento</h2>
+              <p class="modal-subtitle-text">Completa la ficha técnica para incorporarlo al catálogo e inventario físico.</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeAddMedicineModal()" title="Cerrar modal">&times;</button>
+        </div>
+
+        <!-- Formulario -->
+        <form [formGroup]="newMedicineForm" (ngSubmit)="saveNewMedicine()" class="modal-form-pro">
+          <div class="modal-scroll-area">
+            
+            <!-- Nombre del Medicamento -->
+            <div class="form-group-pro">
+              <label class="form-label-pro">
+                Nombre del Medicamento & Presentación <span class="required-star">*</span>
+              </label>
+              <input 
+                type="text" 
+                formControlName="name" 
+                class="form-input-pro font-bold" 
+                placeholder="ej: Paracetamol 500 mg Tabletas x 100" 
+                autofocus
+              />
+            </div>
+
+            <!-- Laboratorio y Categoría en 2 Columnas -->
+            <div class="grid-col-2">
+              <div class="form-group-pro">
+                <label class="form-label-pro">
+                  Laboratorio Fabricante <span class="required-star">*</span>
+                </label>
+                <div class="select-wrapper-pro">
+                  <select formControlName="manufacturer" class="form-select-pro">
+                    <option *ngFor="let lab of laboratoriosPeruanos" [value]="lab">{{ lab }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group-pro">
+                <label class="form-label-pro">Categoría Farmacéutica</label>
+                <input 
+                  type="text" 
+                  formControlName="category" 
+                  class="form-input-pro" 
+                  placeholder="ej: Analgésicos, Antibióticos..." 
+                />
+              </div>
+            </div>
+
+            <!-- Selector Interactivo: ¿Requiere Receta Médica? -->
+            <div class="prescription-box-pro">
+              <label class="prescription-box-label">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                ¿Requiere Receta Médica para su dispensación en POS? <span class="required-star">*</span>
+              </label>
+              <div class="prescription-toggle-grid">
+                <!-- Opción 1: Requiere Receta -->
+                <button 
+                  type="button" 
+                  class="toggle-card-pro"
+                  [class.is-danger-active]="newMedicineForm.get('prescriptionRequired')?.value === true"
+                  (click)="setPrescriptionRequired(true)">
+                  <div class="toggle-card-header">
+                    <span class="toggle-icon-wrap icon-amber">🔒</span>
+                    <strong class="toggle-card-title">Con Receta Médica (Rx)</strong>
+                  </div>
+                  <span class="toggle-card-desc">Exige receta médica obligatoria al cajero en el POS</span>
+                </button>
+
+                <!-- Opción 2: Venta Libre -->
+                <button 
+                  type="button" 
+                  class="toggle-card-pro"
+                  [class.is-success-active]="newMedicineForm.get('prescriptionRequired')?.value === false"
+                  (click)="setPrescriptionRequired(false)">
+                  <div class="toggle-card-header">
+                    <span class="toggle-icon-wrap icon-emerald">🟢</span>
+                    <strong class="toggle-card-title">Venta Libre (OTC)</strong>
+                  </div>
+                  <span class="toggle-card-desc">Dispensación directa al cliente sin receta</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Código de Barras -->
+            <div class="form-group-pro">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label-pro m-0">Código de Barras (GTIN/EAN)</label>
+                <span class="label-hint-text">Opcional (se autogenera si se deja vacío)</span>
+              </div>
+              <input 
+                type="text" 
+                formControlName="barcode" 
+                class="form-input-pro font-mono" 
+                placeholder="Escanea con pistola de código o deja vacío..." 
+              />
+            </div>
+
+            <!-- Tarjeta de Ingreso de Stock Inicial (Opcional) -->
+            <div class="initial-stock-card-pro">
+              <div class="stock-card-header">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="stock-header-icon">📦</span>
+                  <div>
+                    <strong class="stock-header-title">Ingresar Lote y Stock Físico Inicial</strong>
+                    <p class="stock-header-sub m-0">Habilita esta opción para que el producto tenga stock vendible de inmediato.</p>
+                  </div>
+                </div>
+                <label class="switch-toggle-pro">
+                  <input type="checkbox" formControlName="hasInitialStock">
+                  <span class="slider-round"></span>
+                </label>
+              </div>
+
+              <!-- Campos de Lote si está activado -->
+              <div *ngIf="newMedicineForm.get('hasInitialStock')?.value" class="stock-fields-wrap mt-3 pt-3">
+                <div class="grid-col-3 mb-3">
+                  <div class="form-group-pro m-0">
+                    <label class="form-label-pro">Cant. Inicial (Uds) <span class="required-star">*</span></label>
+                    <input type="number" formControlName="initialStock" class="form-input-pro font-mono font-bold text-center" min="1" placeholder="100" />
+                  </div>
+                  <div class="form-group-pro m-0">
+                    <label class="form-label-pro">N° de Lote <span class="required-star">*</span></label>
+                    <input type="text" formControlName="batchNumber" class="form-input-pro font-mono uppercase" placeholder="LOT-2027-..." />
+                  </div>
+                  <div class="form-group-pro m-0">
+                    <label class="form-label-pro">Fecha Vencimiento <span class="required-star">*</span></label>
+                    <input type="date" formControlName="expiryDate" class="form-input-pro font-mono" />
+                  </div>
+                </div>
+
+                <div class="grid-col-2">
+                  <div class="form-group-pro m-0">
+                    <label class="form-label-pro">Costo Compra Proveedor (S/) <span class="required-star">*</span></label>
+                    <input type="number" formControlName="purchasePrice" step="0.01" class="form-input-pro font-mono font-bold" placeholder="2.50" />
+                  </div>
+                  <div class="form-group-pro m-0">
+                    <label class="form-label-pro">Precio Venta al Público (S/) <span class="required-star">*</span></label>
+                    <input type="number" formControlName="sellingPrice" step="0.01" class="form-input-pro font-mono font-bold text-emerald" placeholder="5.00" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Footer Botones -->
+          <div class="modal-footer-pro">
+            <button type="button" class="btn-pro btn-cancel" (click)="closeAddMedicineModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-pro btn-save-primary" [disabled]="newMedicineForm.invalid || isLoading">
+              <span *ngIf="isLoading" class="spinner-border spinner-border-sm mr-2"></span>
+              <span>Guardar en Inventario</span>
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODAL 2: AJUSTAR CANTIDAD DE STOCK (STEPPER MODERNO)            -->
+  <!-- =============================================================== -->
+  <div *ngIf="showStockModal && editingBatch" class="custom-modal-fade" (click)="closeStockModal()">
+    <div class="modal-dialog-center modal-dialog-sm" (click)="$event.stopPropagation()">
+      <div class="modal-card-pro text-center">
+        
+        <div class="modal-header-pro justify-content-between mb-3 pb-2 border-bottom">
+          <div class="d-flex align-items-center gap-2">
+            <div class="header-icon-box bg-amber-subtle">⚡</div>
+            <div class="text-left">
+              <h3 class="modal-title-text" style="font-size: 18px;">Ajustar Cantidad de Stock</h3>
+              <p class="modal-subtitle-text m-0">Conteo físico verificado en anaquel</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeStockModal()">&times;</button>
+        </div>
+
+        <div class="batch-info-pill mb-3">
+          <strong class="batch-med-name">{{ editingBatch.medicineName }}</strong>
+          <div class="batch-meta-sub">
+            <span class="pill-tag">Lote: {{ editingBatch.batchNumber }}</span>
+            <span class="pill-tag">Vence: {{ editingBatch.expiryDate }}</span>
+          </div>
+        </div>
+        
+        <form [formGroup]="stockForm" (ngSubmit)="updateStock()" class="modal-form-pro">
+          <div class="stepper-card-pro mb-3">
+            <label class="stepper-label">UNIDADES EN ALMACÉN</label>
+            <div class="stepper-controls-row">
+              <button 
+                type="button" 
+                class="stepper-btn btn-minus" 
+                (click)="stockForm.patchValue({ quantityAvailable: ((stockForm.get('quantityAvailable')?.value || 0) > 0 ? (stockForm.get('quantityAvailable')?.value || 0) - 1 : 0) })"
+                title="Restar 1 unidad">
+                −
+              </button>
+              
+              <input 
+                type="number" 
+                formControlName="quantityAvailable" 
+                class="stepper-input font-mono font-bold" 
+                min="0" 
+                autofocus 
+              />
+
+              <button 
+                type="button" 
+                class="stepper-btn btn-plus" 
+                (click)="stockForm.patchValue({ quantityAvailable: (stockForm.get('quantityAvailable')?.value || 0) + 1 })"
+                title="Sumar 1 unidad">
+                +
+              </button>
+            </div>
+            <span class="stepper-footnote">Actualización atómica inmediata en inventario y ventas POS</span>
+          </div>
+
+          <div class="modal-footer-pro pt-2">
+            <button type="button" class="btn-pro btn-cancel" (click)="closeStockModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-pro btn-save-primary" [disabled]="stockForm.invalid || isLoading">
+              <span *ngIf="isLoading" class="spinner-border spinner-border-sm mr-1"></span>
+              <span>Guardar Stock</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODAL 3: EDITAR DATOS DEL LOTE (DISEÑO CORPORATIVO)             -->
+  <!-- =============================================================== -->
+  <div *ngIf="showBatchModal && editingBatch" class="custom-modal-fade" (click)="closeBatchModal()">
+    <div class="modal-dialog-center modal-dialog-md" (click)="$event.stopPropagation()">
+      <div class="modal-card-pro">
+        
+        <div class="modal-header-pro">
+          <div class="header-title-wrap">
+            <div class="header-icon-box bg-blue-subtle">✏️</div>
+            <div>
+              <h3 class="modal-title-text">Editar Datos del Lote</h3>
+              <p class="modal-subtitle-text m-0">{{ editingBatch.medicineName }}</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeBatchModal()">&times;</button>
+        </div>
+
+        <form [formGroup]="batchForm" (ngSubmit)="updateBatch()" class="modal-form-pro mt-3">
+          
+          <div class="grid-col-2 mb-3">
+            <div class="form-group-pro m-0">
+              <label class="form-label-pro">N° de Lote DIGEMID <span class="required-star">*</span></label>
+              <input type="text" formControlName="batchNumber" class="form-input-pro font-mono uppercase font-bold" />
+            </div>
+            <div class="form-group-pro m-0">
+              <label class="form-label-pro">Fecha de Vencimiento <span class="required-star">*</span></label>
+              <input type="date" formControlName="expiryDate" class="form-input-pro font-mono" />
+            </div>
+          </div>
+
+          <div class="grid-col-3 mb-3">
+            <div class="form-group-pro m-0">
+              <label class="form-label-pro">Costo Compra (S/)</label>
+              <input type="number" step="0.01" formControlName="purchasePrice" class="form-input-pro font-mono font-bold" />
+            </div>
+            <div class="form-group-pro m-0">
+              <label class="form-label-pro">Precio Venta (S/)</label>
+              <input type="number" step="0.01" formControlName="sellingPrice" class="form-input-pro font-mono font-bold text-emerald" />
+            </div>
+            <div class="form-group-pro m-0">
+              <label class="form-label-pro">Cantidad (Uds)</label>
+              <input type="number" formControlName="quantityAvailable" class="form-input-pro font-mono font-bold text-center" />
+            </div>
+          </div>
+
+          <div class="modal-footer-pro pt-3 border-top">
+            <button type="button" class="btn-pro btn-cancel" (click)="closeBatchModal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-pro btn-save-primary" [disabled]="batchForm.invalid || isLoading">
+              <span *ngIf="isLoading" class="spinner-border spinner-border-sm mr-1"></span>
+              <span>Actualizar Lote</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+  <!-- =============================================================== -->
+  <!-- MODAL: KARDEX Y AUDITORÍA DE MOVIMIENTOS                        -->
+  <!-- =============================================================== -->
+  <div class="modal-backdrop" *ngIf="showKardexModal">
+    <div class="modal-dialog modal-lg card-glass">
+      <div class="modal-header d-flex justify-content-between align-items-center">
+        <div>
+          <h3 class="font-bold m-0 d-flex align-items-center gap-2">
+            <span>📜</span> Bitácora Kardex — Trazabilidad de Movimientos
+          </h3>
+          <span class="text-xs text-muted">Historial auditable de entradas por compras, salidas por ventas y ajustes físicos</span>
+        </div>
+        <button class="close-btn" (click)="closeKardexModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="loadingKardex" class="text-center p-4">
+          <div class="spinner-border text-primary" role="status"></div>
+          <div class="mt-2 text-muted">Cargando bitácora de transacciones...</div>
+        </div>
+
+        <div *ngIf="!loadingKardex && kardexList.length === 0" class="empty-state text-center p-4">
+          <div style="font-size: 32px;">📋</div>
+          <h5 class="font-bold mt-2">No se registran movimientos aún</h5>
+          <p class="text-muted text-xs">Las entradas y salidas se registrarán automáticamente con compras y ventas.</p>
+        </div>
+
+        <div *ngIf="!loadingKardex && kardexList.length > 0" class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+          <table class="table inv-modern-table m-0">
+            <thead>
+              <tr>
+                <th>Fecha & Hora</th>
+                <th class="text-center">Tipo</th>
+                <th>Medicamento</th>
+                <th class="text-center">Cantidad</th>
+                <th>Referencia / Motivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let k of kardexList">
+                <td class="font-mono text-xs">{{ k.fecha | date:'yyyy-MM-dd HH:mm' }}</td>
+                <td class="text-center">
+                  <span class="badge" [ngClass]="k.tipo === 'ENTRADA' ? 'badge-success' : 'badge-danger-soft'">
+                    {{ k.tipo }}
+                  </span>
+                </td>
+                <td class="font-bold text-sm">{{ getMedicineNameById(k.productoId) }}</td>
+                <td class="text-center font-mono font-bold" [class.text-teal]="k.tipo === 'ENTRADA'" [class.text-danger]="k.tipo === 'SALIDA'">
+                  {{ k.tipo === 'ENTRADA' ? '+' : '-' }}{{ k.cantidad }} uds
+                </td>
+                <td class="text-xs text-muted">{{ k.referencia }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" (click)="closeKardexModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>

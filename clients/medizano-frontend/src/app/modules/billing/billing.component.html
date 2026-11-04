@@ -1,0 +1,1073 @@
+<div class="billing-screen">
+  <!-- Header -->
+  <div class="billing-header">
+    <div class="header-content">
+      <div class="header-title">
+        <h1 class="screen-title">
+          <svg-icon name="billing" class="title-icon" [size]="28"></svg-icon>
+          Ventas
+        </h1>
+        <p class="screen-subtitle">Registra ventas y cobra en soles</p>
+      </div>
+      <button class="btn-reset" (click)="resetBill()" [disabled]="isLoading">
+        <svg-icon name="refresh" class="btn-reset-icon" [size]="16"></svg-icon>
+        <span>Limpiar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Layout -->
+  <div class="billing-layout">
+    <div class="search-summary-row">
+      <!-- Work Area -->
+      <div class="work-area">
+      <!-- Search Section -->
+      <div class="search-section">
+        <div class="search-card">
+          <h3 class="section-title">Agregar productos</h3>
+          
+          <div class="search-fields-row">
+            <!-- Barcode Search -->
+            <div class="form-group">
+              <label class="form-label">Escanear codigo de barras</label>
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  class="form-input"
+                  [(ngModel)]="searchBarcode"
+                  (keyup.enter)="onBarcodeScan()"
+                  placeholder="Escanea o ingresa el codigo (GTIN/EAN)"
+                  [disabled]="isLoading || isScanning"
+                />
+                <button
+                  type="button"
+                  class="btn-camera"
+                  (click)="startScanning()"
+                  [disabled]="isLoading || isScanning || !hasCamera"
+                  title="Escanear con camara"
+                >
+                  <svg-icon name="barcode" [size]="18"></svg-icon>
+                </button>
+                <button
+                  type="button"
+                  class="btn-search"
+                  (click)="onBarcodeScan()"
+                  [disabled]="isLoading || isScanning || !searchBarcode.trim()"
+                  title="Buscar codigo"
+                >
+                  <svg-icon name="search" [size]="18"></svg-icon>
+                </button>
+              </div>
+              <small class="form-hint">El codigo identifica el producto. Usa la camara para escanear.</small>
+            </div>
+
+            <!-- Medicine Search -->
+            <div class="form-group">
+              <label class="form-label">Buscar medicamento</label>
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  class="form-input"
+                  [(ngModel)]="searchMedicine"
+                  (ngModelChange)="onMedicineQueryChange($event)"
+                  (keyup.enter)="onMedicineSearch()"
+                  placeholder="Buscar por nombre del medicamento"
+                  [disabled]="isLoading"
+                />
+                <button
+                  type="button"
+                  class="btn-search"
+                  (click)="onMedicineSearch()"
+                  [disabled]="isLoading || !searchMedicine.trim() || searchMedicine.trim().length < 2"
+                >
+                  <svg-icon name="search" [size]="18"></svg-icon>
+                </button>
+              </div>
+              <div class="search-results-dropdown" *ngIf="searchMedicine.trim().length >= 2 && (medicineSearchResults.length > 0 || isSearchingMedicines)">
+                <div class="search-result-item" *ngIf="isSearchingMedicines">
+                  <div class="result-main">
+                    <div class="result-name">Buscando...</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="search-result-item search-result-button"
+                  *ngFor="let medicine of medicineSearchResults"
+                  (click)="selectMedicineResult(medicine)"
+                >
+                  <div class="result-main">
+                    <div class="result-name">{{ medicine.name }}</div>
+                    <div class="result-meta">
+                      {{ medicine.manufacturer }} - {{ medicine.category || 'Sin categoría' }} - Stock: {{ medicine.availableStock ?? 0 }}
+                    </div>
+                  </div>
+                  <div class="result-badges">
+                    <span class="badge-gst">IGV {{ medicine.gstPercentage }}%</span>
+                    <span class="badge-rx" *ngIf="medicine.prescriptionRequired">Receta</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items List -->
+      <div class="items-section" *ngIf="items.length > 0">
+        <div class="section-header">
+          <h3 class="section-title">Productos de la venta</h3>
+        </div>
+        <div class="items-list">
+          <div class="item-card" *ngFor="let item of items; let i = index">
+            <div class="item-info">
+              <h4 class="item-name">{{ item.medicine?.name || 'Medicamento' }}</h4>
+              <p class="item-details" *ngIf="item.medicine">
+                {{ item.medicine.manufacturer }} - Codigo: {{ item.medicine.hsnCode }}
+              </p>
+              <div class="item-batch-tag" *ngIf="item.batchNumber" style="margin-top: 4px;">
+                <span style="display: inline-block; font-size: 0.75rem; background: rgba(59, 130, 246, 0.12); color: #2563eb; padding: 2px 8px; border-radius: 6px; font-weight: 600;">
+                  Lote: {{ item.batchNumber }} <span *ngIf="item.batchExpiry" style="font-weight: 400; opacity: 0.85;">(Vence: {{ item.batchExpiry }})</span>
+                </span>
+              </div>
+            </div>
+            <div class="item-controls">
+              <div class="quantity-control">
+                <button
+                  type="button"
+                  class="btn-quantity"
+                  (click)="updateQuantity(i, item.quantity - 1)"
+                  [disabled]="item.quantity <= 1"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  class="quantity-input"
+                  [value]="item.quantity"
+                  (change)="updateQuantity(i, +$any($event.target).value)"
+                  min="1"
+                />
+                <button
+                  type="button"
+                  class="btn-quantity"
+                  (click)="updateQuantity(i, item.quantity + 1)"
+                >
+                  +
+                </button>
+              </div>
+              <div class="item-price">
+                <div class="price-detail-row" *ngIf="item.unitPrice && item.unitPrice > 0">
+                  <span class="price-label">Precio unitario:</span>
+                  <span class="price-value-unit">S/ {{ item.unitPrice | number:'1.2-2' }}</span>
+                </div>
+                <div class="price-detail-row">
+                  <span class="price-label">Subtotal:</span>
+                  <span class="price-value" *ngIf="item.total && item.total > 0">
+                    S/ {{ item.total | number:'1.2-2' }}
+                  </span>
+                  <span class="price-value price-pending" *ngIf="!item.total || item.total === 0">
+                    Calculando
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn-remove"
+                (click)="removeItem(i)"
+                title="Quitar producto"
+              >
+                <svg-icon name="error" [size]="18"></svg-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="items.length === 0">
+        <svg-icon name="billing" class="empty-icon" [size]="64"></svg-icon>
+        <h3 class="empty-title">No hay productos agregados</h3>
+        <p class="empty-message">Escanea un codigo o busca un medicamento para agregarlo</p>
+      </div>
+      </div>
+
+      <!-- Summary Sidebar -->
+      <div class="summary-sidebar summary-panel">
+        <form [formGroup]="billForm">
+          <div class="summary-card">
+            <!-- Stepper Progress Header -->
+            <div class="checkout-stepper-header">
+              <button
+                type="button"
+                class="stepper-step"
+                [class.active]="checkoutStep === 'ITEMS'"
+                [class.completed]="checkoutStep === 'CUSTOMER' || checkoutStep === 'PAYMENT'"
+                (click)="goToStep('ITEMS')"
+              >
+                <span class="step-num">1</span>
+                <span class="step-label">Canasta</span>
+              </button>
+              <div class="stepper-line" [class.filled]="checkoutStep === 'CUSTOMER' || checkoutStep === 'PAYMENT'"></div>
+              <button
+                type="button"
+                class="stepper-step"
+                [class.active]="checkoutStep === 'CUSTOMER'"
+                [class.completed]="checkoutStep === 'PAYMENT'"
+                [disabled]="items.length === 0"
+                (click)="goToStep('CUSTOMER')"
+              >
+                <span class="step-num">2</span>
+                <span class="step-label">Cliente</span>
+              </button>
+              <div class="stepper-line" [class.filled]="checkoutStep === 'PAYMENT'"></div>
+              <button
+                type="button"
+                class="stepper-step"
+                [class.active]="checkoutStep === 'PAYMENT'"
+                [disabled]="items.length === 0"
+                (click)="goToStep('PAYMENT')"
+              >
+                <span class="step-num">3</span>
+                <span class="step-label">Pago</span>
+              </button>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- PASO 1: RESUMEN DE PRODUCTOS / ACEPTAR CANASTA -->
+            <!-- ============================================== -->
+            <div class="step-content step-items-summary" *ngIf="checkoutStep === 'ITEMS'">
+              <div class="step-card-header">
+                <div>
+                  <h3 class="card-title">Resumen de la Venta</h3>
+                  <p class="card-subtitle">Verifica los productos antes de cobrar</p>
+                </div>
+                <span class="items-count-badge">{{ items.length }} medicamento(s)</span>
+              </div>
+
+              <!-- Lista resumida de productos en canasta -->
+              <div class="mini-items-review">
+                <div class="empty-mini-items" *ngIf="items.length === 0">
+                  <span class="empty-mini-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></span>
+                  <h4>Canasta vacia</h4>
+                  <p>Escanea un codigo de barras o busca un medicamento a la izquierda para iniciar la venta.</p>
+                </div>
+
+                <div class="mini-item-row" *ngFor="let it of items; let idx = index">
+                  <div class="mini-item-info">
+                    <strong class="mini-item-name">{{ it.medicine?.name || it.barcode }}</strong>
+                    <span class="mini-item-meta">
+                      {{ it.quantity }} uds. x S/ {{ it.unitPrice | number:'1.2-2' }}
+                      <span *ngIf="it.batchNumber" class="item-batch-tag">Lt: {{ it.batchNumber }}</span>
+                    </span>
+                  </div>
+                  <span class="mini-item-total font-bold">S/ {{ it.total | number:'1.2-2' }}</span>
+                </div>
+              </div>
+
+              <!-- Desglose de Totales -->
+              <div class="step-totals-box">
+                <div class="total-row">
+                  <span class="total-label">Subtotal (Neto)</span>
+                  <span class="total-value">S/ {{ subtotal | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-row">
+                  <span class="total-label">I.G.V. (18%)</span>
+                  <span class="total-value">S/ {{ totalGst | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-row total-row-highlight">
+                  <span class="total-label">TOTAL A PAGAR</span>
+                  <span class="total-value total-value-highlight">S/ {{ totalAmount | number:'1.2-2' }}</span>
+                </div>
+              </div>
+
+              <!-- Botón Aceptar y Continuar -->
+              <button
+                type="button"
+                class="btn-accept-and-continue"
+                (click)="goToStep('CUSTOMER')"
+                [disabled]="items.length === 0 || totalAmount <= 0"
+              >
+                <span>Aceptar y Continuar al Cobro</span>
+                <span class="btn-arrow-icon">➔</span>
+              </button>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- PASO 2: DATOS DEL CLIENTE (apiperu.pe / RENIEC) -->
+            <!-- ============================================== -->
+            <div class="step-content step-customer-section" *ngIf="checkoutStep === 'CUSTOMER'">
+              <div class="step-card-header">
+                <div>
+                  <h3 class="card-title">Datos del Cliente</h3>
+                  <p class="card-subtitle">Consulta oficial RENIEC / SUNAT con apiperu.pe</p>
+                </div>
+                <button
+                  type="button"
+                  class="quick-sale-badge quick-sale-btn"
+                  (click)="setClienteGeneral()"
+                  title="Restablecer a cliente general"
+                >
+                  Venta Rapida
+                </button>
+              </div>
+
+              <!-- Selector de Tipo de Documento -->
+              <div class="doc-type-pills">
+                <button
+                  type="button"
+                  class="doc-pill"
+                  [class.active]="customerDocType === 'DNI'"
+                  (click)="setDocType('DNI')"
+                >
+                  <span class="pill-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line></svg></span>
+                  <span>DNI (RENIEC)</span>
+                </button>
+                <button
+                  type="button"
+                  class="doc-pill"
+                  [class.active]="customerDocType === 'RUC'"
+                  (click)="setDocType('RUC')"
+                >
+                  <span class="pill-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"></rect><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line></svg></span>
+                  <span>RUC (SUNAT)</span>
+                </button>
+                <button
+                  type="button"
+                  class="doc-pill"
+                  [class.active]="customerDocType === 'SIN_DOC'"
+                  (click)="setDocType('SIN_DOC')"
+                >
+                  <span class="pill-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                  <span>Sin documento</span>
+                </button>
+              </div>
+
+              <!-- Barra de Consulta RENIEC / SUNAT Inteligente -->
+              <div class="doc-search-bar" *ngIf="customerDocType !== 'SIN_DOC'">
+                <div class="doc-input-wrapper">
+                  <span class="doc-input-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                  <input
+                    #docInput
+                    type="text"
+                    inputmode="numeric"
+                    class="form-input form-input-small doc-input"
+                    formControlName="customerDocNumber"
+                    (input)="onDocNumberChange(docInput.value)"
+                    (keyup.enter)="buscarDocumentoReniec(docInput.value)"
+                    [placeholder]="customerDocType === 'DNI' ? 'Escribe 8 digitos de DNI...' : 'Escribe 11 digitos de RUC...'"
+                    [attr.maxlength]="customerDocType === 'DNI' ? 8 : 11"
+                  />
+                  <!-- Contador de dígitos -->
+                  <span class="doc-char-counter" *ngIf="docInput.value">
+                    {{ docInput.value.length }}/{{ customerDocType === 'DNI' ? 8 : 11 }}
+                  </span>
+                  <!-- Botón limpiar -->
+                  <button
+                    type="button"
+                    class="btn-clear-doc"
+                    *ngIf="docInput.value"
+                    (click)="clearCustomerDoc(); docInput.value = ''"
+                    title="Limpiar"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  class="btn-reniec-search"
+                  (click)="buscarDocumentoReniec(docInput.value)"
+                  [disabled]="isSearchingReniec || !docInput.value"
+                  title="Consultar padrón oficial"
+                >
+                  <span *ngIf="!isSearchingReniec">Buscar {{ customerDocType }}</span>
+                  <span *ngIf="isSearchingReniec" class="spinner-inline">Buscando...</span>
+                </button>
+              </div>
+
+              <!-- Tarjeta de Verificación Exitosa -->
+              <div class="reniec-verified-card" *ngIf="reniecStatus === 'found'">
+                <div class="verified-icon-box">✓</div>
+                <div class="verified-info">
+                  <div class="verified-title">
+                    <strong>{{ billForm.get('customerName')?.value }}</strong>
+                    <span class="badge-verified-pill">{{ customerDocType }} Verificado</span>
+                  </div>
+                  <div class="verified-sub">apiperu.pe • {{ customerDocType }}: {{ customerDocNumber }}</div>
+                </div>
+                <button type="button" class="btn-clear-verified" (click)="clearCustomerDoc()" title="Consultar otro documento">
+                  Cambiar
+                </button>
+              </div>
+
+              <!-- Campos de Datos del Cliente con Autocomplete -->
+              <div class="customer-fields-grid">
+                <div class="form-group form-group-small position-relative">
+                  <label class="form-label">
+                    {{ customerDocType === 'RUC' ? 'Razon Social' : 'Nombre del cliente' }}
+                  </label>
+                  <input
+                    type="text"
+                    class="form-input form-input-small"
+                    formControlName="customerName"
+                    (input)="onCustomerNameInput($any($event.target).value)"
+                    placeholder="Escribe el nombre o busca un cliente..."
+                  />
+
+                  <!-- Dropdown de Autocomplete de Clientes por Nombre -->
+                  <div class="customer-autocomplete-dropdown" *ngIf="customerSearchResults.length > 0">
+                    <button
+                      type="button"
+                      class="autocomplete-client-item"
+                      *ngFor="let cliente of customerSearchResults"
+                      (click)="selectCustomerResult(cliente)"
+                    >
+                      <div class="client-item-main">
+                        <strong class="client-item-name">{{ cliente.nombre }}</strong>
+                        <span class="client-item-doc" *ngIf="cliente.documento">Doc: {{ cliente.documento }}</span>
+                      </div>
+                      <span class="client-item-badge">Seleccionar</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="customer-contacts-row">
+                  <div class="form-group form-group-small email-form-group">
+                    <label class="form-label label-with-badge">
+                      <span>Correo / Gmail (opcional)</span>
+                      <span class="badge-gmail-hint">Recibo digital</span>
+                    </label>
+                    <div class="input-with-clear">
+                      <input
+                        type="email"
+                        class="form-input form-input-small"
+                        formControlName="customerEmail"
+                        placeholder="correo@ejemplo.com (Gmail, Hotmail, Univer.lat...)"
+                      />
+                      <button
+                        type="button"
+                        class="btn-clear-field"
+                        *ngIf="billForm.get('customerEmail')?.value"
+                        (click)="billForm.patchValue({customerEmail: ''})"
+                        title="Borrar correo"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                  <div class="form-group form-group-small phone-form-group">
+                    <label class="form-label">Celular (opcional)</label>
+                    <input
+                      type="text"
+                      class="form-input form-input-small"
+                      formControlName="customerPhone"
+                      placeholder="987654321 (opcional)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Botones de Navegación del Paso 2 -->
+              <div class="step-nav-actions">
+                <button type="button" class="btn-step-back" (click)="goToStep('ITEMS')">
+                  ← Volver a Canasta
+                </button>
+                <button type="button" class="btn-step-next" (click)="proceedFromCustomerToPayment()">
+                  <span>Continuar al Pago</span>
+                  <span>➔</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- PASO 3: MÉTODO DE PAGO Y CONFIRMACIÓN FINAL    -->
+            <!-- ============================================== -->
+            <div class="step-content step-payment-section" *ngIf="checkoutStep === 'PAYMENT'">
+              <!-- Resumen Rápido del Cliente Seleccionado -->
+              <div class="selected-customer-pill-bar">
+                <div class="customer-pill-info">
+                  <span class="customer-pill-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+                  <div>
+                    <strong class="customer-pill-name">{{ billForm.get('customerName')?.value || 'Cliente general' }}</strong>
+                    <small class="customer-pill-sub" *ngIf="customerDocNumber">{{ customerDocType }}: {{ customerDocNumber }}</small>
+                  </div>
+                </div>
+                <button type="button" class="btn-edit-pill-customer" (click)="goToStep('CUSTOMER')">
+                  Editar
+                </button>
+              </div>
+
+              <div class="step-card-header">
+                <div>
+                  <h3 class="card-title">Metodo de Pago</h3>
+                  <p class="card-subtitle">Selecciona la pasarela o cobra en caja</p>
+                </div>
+                <div class="payment-header-actions" *ngIf="selectedPaymentMode === PaymentMode.CASH">
+                  <button
+                    type="button"
+                    class="btn-complete-payment"
+                    (click)="completePayment()"
+                    [disabled]="items.length === 0 || totalAmount <= 0"
+                  >
+                    Pago exacto
+                  </button>
+                </div>
+              </div>
+
+              <!-- Pestañas de Métodos de Pago -->
+              <div class="payment-method-tabs payment-method-tabs-three">
+                <button
+                  type="button"
+                  class="payment-tab-btn"
+                  [class.active]="selectedPaymentMode === PaymentMode.CASH"
+                  (click)="setPaymentMode(PaymentMode.CASH)"
+                >
+                  <span class="payment-tab-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle></svg></span>
+                  <span class="payment-tab-label">EFECTIVO</span>
+                </button>
+                <button
+                  type="button"
+                  class="payment-tab-btn"
+                  [class.active]="selectedPaymentMode === PaymentMode.PAYPAL"
+                  (click)="setPaymentMode(PaymentMode.PAYPAL)"
+                >
+                  <span class="payment-tab-icon"><b>P</b></span>
+                  <span class="payment-tab-label">PAYPAL</span>
+                </button>
+                <button
+                  type="button"
+                  class="payment-tab-btn"
+                  [class.active]="selectedPaymentMode === PaymentMode.MERCADO_PAGO"
+                  (click)="setPaymentMode(PaymentMode.MERCADO_PAGO)"
+                >
+                  <span class="payment-tab-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></span>
+                  <span class="payment-tab-label">MERCADO PAGO</span>
+                </button>
+              </div>
+
+              <!-- Efectivo: Monto recibido, Pago exacto y Vuelto -->
+              <div *ngIf="selectedPaymentMode === PaymentMode.CASH" formArrayName="payments">
+                <div
+                  *ngFor="let payment of paymentsFormArray.controls; let i = index"
+                  [formGroupName]="i"
+                  class="payment-item-wrapper"
+                >
+                  <div class="cash-fields">
+                    <input
+                      type="number"
+                      class="form-input cash-input"
+                      formControlName="cashProvided"
+                      (input)="onPaymentValueChange()"
+                      placeholder="Efectivo recibido"
+                      step="0.10"
+                      min="0"
+                    />
+                    <button type="button" class="btn-exact-cash" (click)="setExactCash(i)">
+                      Exacto
+                    </button>
+                    <div class="balance-display">
+                      <span class="balance-label">Vuelto:</span>
+                      <span class="balance-value">S/ {{ getCashChange(i) | number:'1.2-2' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PayPal Info -->
+              <div *ngIf="selectedPaymentMode === PaymentMode.PAYPAL" class="mp-panel paypal-panel">
+                <div class="mp-info-badge paypal-badge">
+                  <span class="mp-pill paypal-pill">PayPal Sandbox · automático</span>
+                  <p class="mp-description">
+                    Se procesará mediante <strong>PayPal Orders API v2</strong>. Al aprobarse, MediZano capturará el pago automáticamente.
+                  </p>
+                </div>
+                <div class="paypal-rate-info">
+                  <span class="rate-label">Equivalente Sandbox:</span>
+                  <span class="rate-value">USD ${{ (totalAmount / 3.75) | number:'1.2-2' }}</span>
+                </div>
+              </div>
+
+              <!-- Mercado Pago Info -->
+              <div *ngIf="selectedPaymentMode === PaymentMode.MERCADO_PAGO" class="mp-panel">
+                <div class="mp-info-badge">
+                  <span class="mp-pill">Checkout Pro Oficial</span>
+                  <p class="mp-description">
+                    MediZano generará un QR y un enlace por el monto exacto para cobrar al cliente desde su billetera digital.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Resumen de Pago y Totales -->
+              <div class="summary-section total-section">
+                <div class="totals-list">
+                  <div class="total-row">
+                    <span class="total-label">Subtotal</span>
+                    <span class="total-value">S/ {{ subtotal | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="total-row">
+                    <span class="total-label">IGV (18%)</span>
+                    <span class="total-value">S/ {{ totalGst | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="total-row total-row-highlight">
+                    <span class="total-label">Monto a pagar</span>
+                    <span class="total-value total-value-highlight">S/ {{ totalAmount | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="total-row" *ngIf="selectedPaymentMode === PaymentMode.CASH">
+                    <span class="total-label">Pagado</span>
+                    <span class="total-value">S/ {{ totalPaid | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="total-row total-row-change" *ngIf="selectedPaymentMode === PaymentMode.CASH && getCashChange(0) > 0">
+                    <span class="total-label text-success">Vuelto</span>
+                    <span class="total-value total-value-change">S/ {{ getCashChange(0) | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="total-row total-row-final" *ngIf="selectedPaymentMode === PaymentMode.CASH && amountDue > 0">
+                    <span class="total-label text-danger">Monto insuficiente</span>
+                    <span class="total-value total-value-final text-danger">S/ {{ amountDue | number:'1.2-2' }}</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn-create-bill"
+                  [class.btn-paypal]="selectedPaymentMode === PaymentMode.PAYPAL"
+                  [class.btn-mp]="selectedPaymentMode === PaymentMode.MERCADO_PAGO"
+                  (click)="createBill()"
+                  [disabled]="isLoading || items.length === 0 || hasInvalidPrices || (selectedPaymentMode === PaymentMode.CASH && amountDue > 0)"
+                >
+                  <span *ngIf="isLoading" class="spinner-mini"></span>
+                  <span *ngIf="!isLoading && selectedPaymentMode === PaymentMode.CASH">Registrar venta en efectivo</span>
+                  <span *ngIf="!isLoading && selectedPaymentMode === PaymentMode.PAYPAL">Pagar con PayPal (USD ${{ (totalAmount / 3.75) | number:'1.2-2' }})</span>
+                  <span *ngIf="!isLoading && selectedPaymentMode === PaymentMode.MERCADO_PAGO">Generar QR Mercado Pago (S/ {{ totalAmount | number:'1.2-2' }})</span>
+                </button>
+
+                <button type="button" class="btn-step-back-subtle" (click)="goToStep('CUSTOMER')">
+                  ← Modificar Datos del Cliente
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QR y enlace de cobro para atención en caja -->
+<div class="payment-link-overlay" *ngIf="showPaymentLinkModal">
+  <section class="payment-link-modal" role="dialog" aria-modal="true" aria-labelledby="payment-link-title">
+    <header class="payment-link-header">
+      <div>
+        <span class="payment-provider-pill">Mercado Pago</span>
+        <h2 id="payment-link-title">Cobro por QR</h2>
+        <p>Orden {{ paymentOrderNumber }}</p>
+      </div>
+      <button
+        type="button"
+        class="payment-link-close"
+        (click)="closePaymentLinkModal()"
+        [attr.aria-label]="paymentQrStatus === 'approved' ? 'Finalizar cobro' : 'Cerrar y dejar orden pendiente'"
+      >×</button>
+    </header>
+
+    <div class="payment-link-body">
+      <div class="payment-qr-column" [class.payment-approved]="paymentQrStatus === 'approved'">
+        <div class="payment-amount-label">Total a pagar</div>
+        <div class="payment-amount">S/ {{ paymentAmount | number:'1.2-2' }}</div>
+
+        <div class="payment-qr-frame" *ngIf="paymentQrStatus !== 'approved'">
+          <img [src]="paymentQrDataUrl" alt="Código QR para pagar con Mercado Pago" />
+        </div>
+        <div class="payment-success-mark" *ngIf="paymentQrStatus === 'approved'" aria-hidden="true">✓</div>
+
+        <p class="payment-qr-help" *ngIf="paymentQrStatus !== 'approved'">
+          El cliente debe escanear este QR con la cámara de su celular y completar el pago en Mercado Pago.
+        </p>
+        <p class="payment-qr-help" *ngIf="paymentQrStatus !== 'approved' && isMercadoPagoSandbox">
+          Prueba: usa la cuenta Comprador de prueba en una ventana privada. No uses la cuenta vendedora que creó la aplicación.
+        </p>
+        <p class="payment-qr-help payment-success-text" *ngIf="paymentQrStatus === 'approved'">
+          Pago recibido. El stock y el comprobante ya fueron procesados.
+        </p>
+      </div>
+
+      <div class="payment-link-column">
+        <div
+          class="payment-status-card"
+          [class.status-checking]="paymentQrStatus === 'checking'"
+          [class.status-approved]="paymentQrStatus === 'approved'"
+        >
+          <span class="payment-status-indicator">
+            <span class="payment-status-spinner" *ngIf="paymentQrStatus !== 'approved'"></span>
+            <span *ngIf="paymentQrStatus === 'approved'">✓</span>
+          </span>
+          <div>
+            <strong *ngIf="paymentQrStatus === 'waiting'">Esperando pago</strong>
+            <strong *ngIf="paymentQrStatus === 'checking'">Verificando pago</strong>
+            <strong *ngIf="paymentQrStatus === 'approved'">Pago aprobado</strong>
+            <p>{{ paymentStatusMessage }}</p>
+          </div>
+        </div>
+
+        <div class="payment-link-box" *ngIf="paymentQrStatus !== 'approved'">
+          <span>Enlace para enviar al cliente</span>
+          <code>{{ paymentLink }}</code>
+        </div>
+
+        <div class="payment-link-actions" *ngIf="paymentQrStatus !== 'approved'">
+          <button type="button" class="payment-action primary" (click)="sharePaymentLink()">Compartir enlace</button>
+          <button type="button" class="payment-action" (click)="copyPaymentLink()">Copiar</button>
+          <button type="button" class="payment-action" (click)="openPaymentLink()">Abrir checkout</button>
+        </div>
+
+        <div class="payment-link-actions approved-actions" *ngIf="paymentQrStatus === 'approved'">
+          <button type="button" class="payment-action primary" (click)="openMercadoPagoReceipt()">Ver Recibo / Boleta Digital</button>
+          <button type="button" class="payment-action" (click)="downloadApprovedPaymentReceipt()">Descargar comprobante</button>
+          <button type="button" class="payment-action" (click)="closePaymentLinkModal()">Finalizar venta</button>
+        </div>
+
+        <p class="payment-security-note">
+          MediZano nunca solicita datos de tarjeta. El cliente los ingresa únicamente en la página segura de Mercado Pago.
+        </p>
+      </div>
+    </div>
+
+    <footer class="payment-link-footer" *ngIf="paymentQrStatus !== 'approved'">
+      <span>La orden permanece pendiente y no descuenta stock hasta que Mercado Pago la apruebe.</span>
+      <button type="button" (click)="closePaymentLinkModal()">Cerrar y dejar pendiente</button>
+    </footer>
+  </section>
+</div>
+
+<!-- Camera Scanner Modal -->
+<div class="scanner-overlay" *ngIf="isScanning" (click)="stopScanning()">
+  <div class="scanner-container" (click)="$event.stopPropagation()">
+    <div class="scanner-header">
+      <h3 class="scanner-title">Escanear codigo</h3>
+      <button type="button" class="btn-close-scanner" (click)="stopScanning()" aria-label="Cerrar escaner">
+        <svg-icon name="error" [size]="20"></svg-icon>
+      </button>
+    </div>
+    <div class="scanner-body">
+      <video id="video-scanner" class="scanner-video" autoplay playsinline muted></video>
+      <div class="scanner-overlay-frame">
+        <div class="scanner-frame"></div>
+        <p class="scanner-hint">Ubica el codigo dentro del marco</p>
+      </div>
+    </div>
+    <div class="scanner-footer">
+      <button type="button" class="btn-stop-scan" (click)="stopScanning()">
+        Detener escaneo
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Selección de Lote -->
+<div class="modal-overlay" *ngIf="showBatchModal" (click)="closeBatchModal()">
+  <div class="modal-container batch-modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <h3 class="modal-title">Seleccionar lote para venta</h3>
+        <p class="modal-subtitle" *ngIf="selectedMedicineForBatch">{{ selectedMedicineForBatch.name }}</p>
+      </div>
+      <button type="button" class="btn-close-modal" (click)="closeBatchModal()" aria-label="Cerrar">
+        <svg-icon name="error" class="close-icon" [size]="20"></svg-icon>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-instructions">Este medicamento cuenta con múltiples lotes disponibles. Selecciona el lote con el que deseas despachar la venta:</p>
+      <div class="batch-cards-grid">
+        <div class="batch-selection-card" *ngFor="let batch of availableBatchesForMedicine" (click)="selectBatch(batch)">
+          <div class="batch-card-top">
+            <span class="batch-card-badge">Lote: <strong>{{ batch.batchNumber }}</strong></span>
+            <span class="batch-card-price">S/ {{ (batch.sellingPrice || selectedMedicineForBatch?.sellingPrice) | number:'1.2-2' }}</span>
+          </div>
+          <div class="batch-card-info">
+            <div class="info-row">
+              <span class="info-label">Stock disponible:</span>
+              <span class="info-value font-bold text-success">{{ batch.quantityAvailable }} uds.</span>
+            </div>
+            <div class="info-row" *ngIf="batch.expiryDate">
+              <span class="info-label">Vencimiento:</span>
+              <span class="info-value">{{ batch.expiryDate | date:'shortDate' }}</span>
+            </div>
+          </div>
+          <button type="button" class="btn-choose-batch">
+            Vender de este lote
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="closeBatchModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL DE RECIBO Y COMPROBANTE DE PAGO (BOLETA ELECTRÓNICA) -->
+<!-- ======================================================== -->
+<div class="receipt-modal-backdrop" *ngIf="showReceiptModal" (click)="closeReceiptModal()">
+  <div class="receipt-modal-card" (click)="$event.stopPropagation()">
+    <!-- Banner Superior de Éxito -->
+    <div class="receipt-success-banner">
+      <div class="success-icon-bubble">
+        <svg viewBox="0 0 24 24" class="svg-banner-icon" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <div class="banner-text">
+        <h2 class="banner-title">Venta Registrada con Exito</h2>
+        <span class="banner-subtitle">{{ lastReceiptData?.type }} • {{ lastReceiptData?.seriesNumber }}</span>
+      </div>
+      <button type="button" class="btn-close-receipt" (click)="closeReceiptModal()" aria-label="Cerrar modal">✕</button>
+    </div>
+
+    <div class="receipt-modal-content">
+      <!-- Ticket Térmico Oficial Imprimible -->
+      <div class="thermal-ticket-container" id="receipt-printable">
+        <div class="thermal-ticket">
+          <!-- Encabezado de la Farmacia -->
+          <div class="ticket-header">
+            <div class="ticket-logo-text">MEDIZANO</div>
+            <div class="ticket-sub">BOTICA & FARMACIA ESPECIALIZADA</div>
+            <div class="ticket-company-info">
+              <span>Comprobante de Venta Digital</span>
+            </div>
+          </div>
+
+          <div class="ticket-divider-dash"></div>
+
+          <!-- Identificación del Comprobante -->
+          <div class="ticket-doc-header">
+            <div class="ticket-doc-name">{{ lastReceiptData?.type }}</div>
+            <div class="ticket-doc-number">{{ lastReceiptData?.seriesNumber }}</div>
+          </div>
+
+          <div class="ticket-divider-dash"></div>
+
+          <!-- Metadatos de la Venta -->
+          <div class="ticket-meta-grid">
+            <div class="meta-item">
+              <span class="meta-label">FECHA:</span>
+              <span class="meta-val">{{ lastReceiptData?.date | date:'dd/MM/yyyy hh:mm:ss a':'-0500' }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">CAJERO:</span>
+              <span class="meta-val">{{ lastReceiptData?.cashier }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">CLIENTE:</span>
+              <span class="meta-val font-bold">{{ lastReceiptData?.customerName }}</span>
+            </div>
+            <div class="meta-item" *ngIf="lastReceiptData?.customerDoc">
+              <span class="meta-label">DOC:</span>
+              <span class="meta-val">{{ lastReceiptData?.customerDoc }}</span>
+            </div>
+            <div class="meta-item" *ngIf="lastReceiptData?.customerEmail">
+              <span class="meta-label">EMAIL:</span>
+              <span class="meta-val">{{ lastReceiptData?.customerEmail }}</span>
+            </div>
+          </div>
+
+          <div class="ticket-divider-dash"></div>
+
+          <!-- Tabla de Medicamentos -->
+          <table class="ticket-items-table">
+            <thead>
+              <tr>
+                <th class="th-cant">CANT</th>
+                <th class="th-desc">DESCRIPCION</th>
+                <th class="th-unit">P.UNIT</th>
+                <th class="th-tot">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of lastReceiptData?.items">
+                <td class="td-cant">{{ item.quantity }}</td>
+                <td class="td-desc">
+                  <div class="item-name">{{ item.name }}</div>
+                  <div class="item-batch" *ngIf="item.batchNumber">Lt: {{ item.batchNumber }}</div>
+                </td>
+                <td class="td-unit">S/ {{ item.unitPrice | number:'1.2-2' }}</td>
+                <td class="td-tot font-bold">S/ {{ item.total | number:'1.2-2' }}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="ticket-divider-dash"></div>
+
+          <!-- Totales e Impuestos -->
+          <div class="ticket-totals-section">
+            <div class="total-row">
+              <span>OP. GRAVADA (Subtotal):</span>
+              <span>S/ {{ lastReceiptData?.subtotal | number:'1.2-2' }}</span>
+            </div>
+            <div class="total-row">
+              <span>I.G.V. (18%):</span>
+              <span>S/ {{ lastReceiptData?.igv | number:'1.2-2' }}</span>
+            </div>
+            <div class="total-row grand-total">
+              <span>IMPORTE TOTAL:</span>
+              <span>S/ {{ lastReceiptData?.total | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div class="ticket-divider-dash"></div>
+
+          <!-- Datos del Pago -->
+          <div class="ticket-payment-details">
+            <div class="payment-row">
+              <span>FORMA DE PAGO:</span>
+              <span class="badge-payment">{{ lastReceiptData?.paymentMode }}</span>
+            </div>
+            <div class="payment-row" *ngIf="lastReceiptData?.cashProvided">
+              <span>PAGO CON:</span>
+              <span>S/ {{ lastReceiptData?.cashProvided | number:'1.2-2' }}</span>
+            </div>
+            <div class="payment-row" *ngIf="lastReceiptData?.cashChange > 0">
+              <span class="font-bold">VUELTO:</span>
+              <span class="font-bold">S/ {{ lastReceiptData?.cashChange | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div class="ticket-divider-dash"></div>
+
+          <!-- QR Code SUNAT -->
+          <div class="ticket-qr-box" *ngIf="receiptQrCodeUrl">
+            <img [src]="receiptQrCodeUrl" alt="Código QR SUNAT" class="ticket-qr-img" />
+            <p class="ticket-sunat-legend">Representacion impresa de la Boleta de Venta Electronica. Autorizado por SUNAT.</p>
+            <p class="ticket-hash-legend">Gracias por su compra en MediZano Botica</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra Lateral de Envío a Gmail y Acciones -->
+      <div class="receipt-actions-sidebar">
+        <!-- Tarjeta de Envío de Recibo Digital -->
+        <div class="receipt-action-card email-delivery-card">
+          <div class="card-section-title">
+            <span class="icon-gmail"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></span>
+            <h4>Recibo Digital por Correo</h4>
+          </div>
+
+          <!-- Caso 1: Comprobante enviado automáticamente a correo válido -->
+          <div class="email-status-banner auto-delivered" *ngIf="receiptEmailSent">
+            <div class="status-indicator">
+              <span class="check-circle">✓</span>
+              <div>
+                <strong>Comprobante enviado automáticamente</strong>
+                <p>Entregado a: <strong>{{ emailReceiptAddress }}</strong> <span *ngIf="receiptEmailTimestamp">• {{ receiptEmailTimestamp }}</span></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Caso 2: Error al enviar correo -->
+          <div class="email-status-banner error-delivered" *ngIf="receiptEmailError && !sendingReceiptEmail">
+            <div class="status-indicator">
+              <span class="error-cross">✕</span>
+              <div>
+                <strong>✕ Error al enviar correo:</strong>
+                <p>{{ receiptEmailError }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Caso 3: Envío en proceso en segundo plano -->
+          <div class="email-status-banner sending-auto" *ngIf="sendingReceiptEmail">
+            <span class="spinner-inline"></span>
+            <span>Enviando boleta electrónica a <strong>{{ emailReceiptAddress }}</strong>...</span>
+          </div>
+
+          <!-- Caso 4: Sin correo registrado (Regla 3: Venta completada sin correo) -->
+          <div class="email-status-banner no-email-banner" *ngIf="!receiptEmailSent && !receiptEmailError && !sendingReceiptEmail && !lastReceiptData?.customerEmail">
+            <div class="status-indicator">
+              <span class="info-circle">i</span>
+              <div>
+                <strong>Sin correo registrado (Venta completada)</strong>
+                <p>La venta se completó exitosamente sin emisión de recibo digital.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input para ingresar o reenviar correo a última hora -->
+          <div class="resend-email-section">
+            <label class="resend-label">
+              {{ receiptEmailSent ? '¿Reenviar a otro correo?' : '¿Enviar comprobante por correo al cliente?' }}
+            </label>
+            <div class="email-input-group">
+              <input
+                type="email"
+                class="form-input email-field"
+                [(ngModel)]="emailReceiptAddress"
+                [ngModelOptions]="{standalone: true}"
+                placeholder="correo@ejemplo.com (Gmail, Hotmail, Univer.lat...)"
+              />
+              <button
+                type="button"
+                class="btn-send-email"
+                (click)="sendReceiptManually()"
+                [disabled]="sendingReceiptEmail || !emailReceiptAddress"
+              >
+                <span *ngIf="!sendingReceiptEmail">{{ receiptEmailSent ? 'Reenviar' : 'Enviar comprobante' }}</span>
+                <span *ngIf="sendingReceiptEmail" class="spinner-inline">Enviando...</span>
+              </button>
+            </div>
+
+            <!-- Botón 1-Clic para Abrir Correo con el comprobante completo para cualquier cliente -->
+            <div class="email-direct-box">
+              <button
+                type="button"
+                class="btn-open-gmail-direct"
+                (click)="openUniversalEmail('auto')"
+                title="Abrir correo (Gmail, Outlook/Hotmail, Univer.lat) con el comprobante listo para enviar al cliente">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.272H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" fill="#EA4335"/>
+                </svg>
+                <span>✉️ Enviar Comprobante al Correo (1-Clic)</span>
+              </button>
+              <div class="provider-quick-links" style="display: flex; gap: 6px; margin-top: 6px; justify-content: center;">
+                <button type="button" class="btn-sub-provider" (click)="openUniversalEmail('gmail')" style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; border-radius:6px; font-size:11px; padding:3px 8px; cursor:pointer;" title="Abrir en Gmail Web">Gmail</button>
+                <button type="button" class="btn-sub-provider" (click)="openUniversalEmail('outlook')" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:6px; font-size:11px; padding:3px 8px; cursor:pointer;" title="Abrir en Hotmail / Outlook">Hotmail/Outlook</button>
+                <button type="button" class="btn-sub-provider" (click)="openUniversalEmail('mailto')" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:6px; font-size:11px; padding:3px 8px; cursor:pointer;" title="Abrir en Correo Institucional / Univer.lat">Univer.lat / App</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Acciones Rápidas (Imprimir / Descargar PDF) -->
+        <div class="receipt-action-card quick-actions-card">
+          <div class="card-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <h4>Acciones Rapidas</h4>
+          </div>
+          
+          <div class="action-buttons-stack">
+            <button type="button" class="btn-action-tile print-tile" (click)="printReceipt()">
+              <span class="tile-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg></span>
+              <div class="tile-content">
+                <strong>Imprimir Ticket</strong>
+                <span>Formato termico para ticketera (80mm)</span>
+              </div>
+            </button>
+
+            <button type="button" class="btn-action-tile pdf-tile" (click)="downloadReceiptPdf()">
+              <span class="tile-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></span>
+              <div class="tile-content">
+                <strong>Guardar / Descargar Ticket</strong>
+                <span>Ticket térmico en formato PDF (80mm)</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Botón Finalizar y Nueva Venta -->
+        <button type="button" class="btn-finish-new-sale" (click)="closeReceiptModal()">
+          <span class="btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+          <span>Finalizar y Nueva Venta</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

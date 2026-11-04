@@ -1,0 +1,258 @@
+<div class="user-management-screen">
+  <!-- Header -->
+  <div class="user-management-header">
+    <div class="header-content">
+      <div class="header-title">
+        <h1 class="screen-title">
+          <svg-icon name="user-management" class="title-icon" [size]="28"></svg-icon>
+          Gestión de usuarios
+        </h1>
+        <p class="screen-subtitle">Administra credenciales y estados de las cuentas</p>
+      </div>
+      <button 
+        class="btn-refresh" 
+        (click)="loadUsers()"
+        [disabled]="isLoading"
+        aria-label="Actualizar usuarios"
+      >
+        <svg-icon name="refresh" class="refresh-icon" [size]="18" *ngIf="!isLoading"></svg-icon>
+        <span class="spinner-mini" *ngIf="isLoading"></span>
+        <span>Actualizar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters-card">
+      <div class="filters-content">
+        <div class="filter-group">
+          <label class="filter-label">Buscar</label>
+          <div class="search-input-wrapper">
+            <svg-icon name="search" class="search-icon" [size]="20"></svg-icon>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Buscar por usuario, nombre o correo..."
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="filterUsers()"
+            />
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Rol</label>
+          <select class="filter-select" [(ngModel)]="selectedRole" (ngModelChange)="filterUsers()">
+            <option value="ALL">Todos los roles</option>
+            <option *ngFor="let role of uniqueRoles" [value]="role">{{ getRoleLabel(role) }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="users-section">
+    <div class="users-card">
+      <div class="table-container">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Nombre completo</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Creado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="isLoading">
+              <td colspan="7" class="loading-cell">
+                <div class="loading-spinner"></div>
+                <span>Cargando usuarios...</span>
+              </td>
+            </tr>
+            <tr *ngIf="!isLoading && filteredUsers.length === 0">
+              <td colspan="7" class="empty-cell">
+                <svg-icon name="user" class="empty-icon" [size]="48"></svg-icon>
+                <p>No se encontraron usuarios</p>
+              </td>
+            </tr>
+            <tr *ngFor="let user of filteredUsers" class="user-row">
+              <td class="username-cell">{{ user.username }}</td>
+              <td>{{ user.fullName }}</td>
+              <td class="email-cell">{{ user.email }}</td>
+              <td>
+                <span class="role-badge" [ngClass]="getRoleBadgeClass(user.role)">
+                  {{ getRoleLabel(user.role) }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="user.active ? 'badge-active' : 'badge-inactive'">
+                  {{ user.active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="date-cell">{{ formatDate(user.createdAt) }}</td>
+              <td class="actions-cell">
+                <button 
+                  class="btn-action btn-change-password"
+                  (click)="openPasswordModal(user)"
+                  title="Cambiar contraseña"
+                >
+                  <svg-icon name="user" class="action-icon" [size]="16"></svg-icon>
+                  <span>Cambiar contraseña</span>
+                </button>
+                <button 
+                  class="btn-action btn-toggle-status"
+                  [ngClass]="user.active ? 'btn-deactivate' : 'btn-activate'"
+                  (click)="toggleUserStatus(user)"
+                  [title]="user.active ? 'Desactivar usuario' : 'Activar usuario'"
+                >
+                  <svg-icon name="user" class="action-icon" [size]="16"></svg-icon>
+                  <span>{{ user.active ? 'Desactivar' : 'Activar' }}</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="table-footer">
+        <p class="user-count">Mostrando {{ filteredUsers.length }} de {{ users.length }} usuarios</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Password Change Modal -->
+<div class="modal-overlay" *ngIf="showPasswordModal" (click)="closePasswordModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-wrapper">
+        <div class="modal-icon-wrapper">
+          <svg-icon name="user" class="modal-title-icon" [size]="24"></svg-icon>
+        </div>
+        <h2 class="modal-title">Cambiar contraseña</h2>
+      </div>
+      <button class="btn-close" (click)="closePasswordModal()" aria-label="Cerrar">
+        <svg-icon name="error" class="close-icon" [size]="18"></svg-icon>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="user-info-section">
+        <div class="user-info-header">
+          <svg-icon name="user" class="user-info-icon" [size]="20"></svg-icon>
+          <span class="user-info-title">Información del usuario</span>
+        </div>
+        <div class="user-info-grid">
+          <div class="user-info-item">
+            <span class="user-info-label">Usuario</span>
+            <span class="user-info-value">{{ selectedUser?.username }}</span>
+          </div>
+          <div class="user-info-item">
+            <span class="user-info-label">Nombre completo</span>
+            <span class="user-info-value">{{ selectedUser?.fullName }}</span>
+          </div>
+          <div class="user-info-item">
+            <span class="user-info-label">Rol</span>
+            <span class="user-info-value role-badge" [ngClass]="getRoleBadgeClass(selectedUser?.role || '')">
+              {{ getRoleLabel(selectedUser?.role || '') }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+        <div class="form-field">
+          <label for="newPassword" class="form-label">
+            <svg-icon name="user" class="label-icon" [size]="16"></svg-icon>
+            Nueva contraseña
+          </label>
+          <div class="input-wrapper">
+            <input
+              [type]="showNewPassword ? 'text' : 'password'"
+              class="form-input"
+              id="newPassword"
+              formControlName="newPassword"
+              placeholder="Ingresa la nueva contraseña (mínimo 6 caracteres)"
+              [class.input-invalid]="newPassword?.invalid && newPassword?.touched"
+              [class.input-focus]="newPassword?.value"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="toggleNewPasswordVisibility()"
+              [attr.aria-label]="showNewPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <svg-icon [name]="showNewPassword ? 'eye-off' : 'eye'" [size]="18"></svg-icon>
+            </button>
+            <div class="input-focus-line"></div>
+          </div>
+          <div class="form-error" *ngIf="newPassword?.invalid && newPassword?.touched">
+            <svg-icon name="error" class="error-icon" [size]="14"></svg-icon>
+            <span *ngIf="newPassword?.errors?.['required']">La contraseña es obligatoria</span>
+            <span *ngIf="newPassword?.errors?.['minlength']">La contraseña debe tener al menos 8 caracteres</span>
+            <span *ngIf="newPassword?.errors?.['pattern']">La contraseña debe incluir letras y números</span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="confirmPassword" class="form-label">
+            <svg-icon name="user" class="label-icon" [size]="16"></svg-icon>
+            Confirmar contraseña
+          </label>
+          <div class="input-wrapper">
+            <input
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              class="form-input"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              placeholder="Confirma la nueva contraseña"
+              [class.input-invalid]="confirmPassword?.invalid && confirmPassword?.touched"
+              [class.input-focus]="confirmPassword?.value"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="toggleConfirmPasswordVisibility()"
+              [attr.aria-label]="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <svg-icon [name]="showConfirmPassword ? 'eye-off' : 'eye'" [size]="18"></svg-icon>
+            </button>
+            <div class="input-focus-line"></div>
+          </div>
+          <div class="form-error" *ngIf="confirmPassword?.invalid && confirmPassword?.touched">
+            <svg-icon name="error" class="error-icon" [size]="14"></svg-icon>
+            <span *ngIf="confirmPassword?.errors?.['required']">Confirma la contraseña</span>
+            <span *ngIf="confirmPassword?.errors?.['passwordMismatch']">Las contraseñas no coinciden</span>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="closePasswordModal()"
+            [disabled]="isChangingPassword"
+          >
+            <svg-icon name="error" class="btn-icon" [size]="16"></svg-icon>
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="passwordForm.invalid || isChangingPassword"
+          >
+            <span *ngIf="isChangingPassword" class="spinner"></span>
+            <svg-icon *ngIf="!isChangingPassword" name="check" class="btn-icon" [size]="16"></svg-icon>
+            <span *ngIf="!isChangingPassword">Cambiar contraseña</span>
+            <span *ngIf="isChangingPassword">Cambiando...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

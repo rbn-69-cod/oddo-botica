@@ -1,0 +1,120 @@
+<div class="login-history-screen">
+  <!-- Header -->
+  <div class="login-history-header">
+    <div class="header-content">
+      <div class="header-title">
+        <h1 class="screen-title">
+          <svg-icon name="login-history" class="title-icon" [size]="28"></svg-icon>
+          Historial de accesos
+        </h1>
+        <p class="screen-subtitle">Consulta los ingresos y cierres de sesión de los usuarios</p>
+      </div>
+      <div class="header-actions">
+        <button 
+          class="btn-clear" 
+          (click)="clearLoginHistory()"
+          [disabled]="isLoading || loginLogoutLogs.length === 0"
+          aria-label="Limpiar historial de accesos"
+        >
+          <svg-icon name="error" class="clear-icon" [size]="18"></svg-icon>
+          <span>Limpiar historial</span>
+        </button>
+        <button 
+          class="btn-refresh" 
+          (click)="loadLoginLogoutLogs()"
+          [disabled]="isLoading"
+          aria-label="Actualizar historial de accesos"
+        >
+          <svg-icon name="refresh" class="refresh-icon" [size]="18" *ngIf="!isLoading"></svg-icon>
+          <span class="spinner-mini" *ngIf="isLoading"></span>
+          <span>Actualizar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filters-card">
+      <div class="filters-content">
+        <div class="filter-group">
+          <label class="filter-label">Buscar</label>
+          <div class="search-input-wrapper">
+            <svg-icon name="search" class="search-icon" [size]="20"></svg-icon>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Buscar por usuario o nombre..."
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="filterLogs()"
+            />
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">Tipo</label>
+          <select class="filter-select" [(ngModel)]="selectedType" (ngModelChange)="filterLogs()">
+            <option value="ALL">Todos los tipos</option>
+            <option value="LOGIN">Solo ingresos</option>
+            <option value="LOGOUT">Solo cierres de sesión</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login/Logout Logs -->
+  <div class="logs-section">
+    <div class="logs-card">
+      <div class="table-container">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Fecha y hora</th>
+              <th>Hace</th>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Acción</th>
+              <th>Dirección IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="isLoading">
+              <td colspan="6" class="loading-cell">
+                <div class="loading-spinner"></div>
+                <span>Cargando historial de accesos...</span>
+              </td>
+            </tr>
+            <tr *ngIf="!isLoading && filteredLogs.length === 0">
+              <td colspan="6" class="empty-cell">
+                <svg-icon name="user" class="empty-icon" [size]="48"></svg-icon>
+                <p>No se encontraron registros de acceso</p>
+              </td>
+            </tr>
+            <tr *ngFor="let log of filteredLogs" class="log-row">
+              <td class="timestamp-cell">{{ formatDate(log.timestamp) }}</td>
+              <td class="time-ago-cell">{{ getTimeAgo(log.timestamp) }}</td>
+              <td>
+                <div class="user-info">
+                  <span class="username">{{ log.username }}</span>
+                  <span class="fullname">{{ log.fullName }}</span>
+                </div>
+              </td>
+              <td><span class="role-badge">{{ getRoleLabel(log.role) }}</span></td>
+              <td>
+                <span class="action-badge" [ngClass]="getActionBadgeClass(log.action)">
+                  {{ getActionType(log.action) }}
+                </span>
+              </td>
+              <td class="ip-cell">{{ log.ipAddress || 'N/A' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="table-footer">
+        <p class="log-count">Mostrando {{ filteredLogs.length }} de {{ loginLogoutLogs.length }} registros</p>
+      </div>
+    </div>
+  </div>
+</div>

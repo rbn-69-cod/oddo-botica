@@ -41,6 +41,18 @@ services:
     networks:
       - oddo-net
 
+  frontend:
+    build:
+      context: ./clients/medizano-frontend
+    container_name: oddo-botica-frontend
+    restart: unless-stopped
+    depends_on:
+      - odoo
+    ports:
+      - "${FRONTEND_HTTP_PORT:-8080}:80"
+    networks:
+      - oddo-net
+
 volumes:
   odoo-db-data:
   odoo-data:

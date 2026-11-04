@@ -1,0 +1,1466 @@
+<div class="purchases-container">
+
+  <!-- =============================================================== -->
+  <!-- SUBMÓDULO 1: ÓRDENES DE COMPRA A LABORATORIOS                   -->
+  <!-- =============================================================== -->
+  <div *ngIf="activeTab === 'compras'" class="module-view fade-in">
+    
+    <!-- Header Exclusivo de Órdenes de Compra -->
+    <div class="header-section">
+      <div class="header-titles">
+        <div class="badge-tag">MediZano Botica · Cadena de Suministro</div>
+        <h1 class="page-title">Órdenes de Compra a Laboratorios</h1>
+        <p class="page-subtitle">Emisión y registro de compras formales a laboratorios farmacéuticos peruanos autorizados</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="abrirNuevaCompra()">
+          <span class="icon">➕</span> Nueva Orden a Laboratorio
+        </button>
+      </div>
+    </div>
+
+    <!-- Alertas del Sistema -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <span>{{ successMessage }}</span>
+      <button class="alert-close" (click)="successMessage = ''">&times;</button>
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      <span>{{ errorMessage }}</span>
+      <button class="alert-close" (click)="errorMessage = ''">&times;</button>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap bg-teal-light">📦</div>
+        <div class="kpi-content">
+          <div class="kpi-title">Compras en Almacén (FEFO)</div>
+          <div class="kpi-value text-success">{{ totalComprasRecibidas }}</div>
+          <div class="kpi-sub">Cargadas al stock de venta</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap bg-amber-light">🚚</div>
+        <div class="kpi-content">
+          <div class="kpi-title">En Tránsito / Por Recibir</div>
+          <div class="kpi-value text-warning">{{ totalComprasPendientes }}</div>
+          <div class="kpi-sub">En tracking logístico</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap bg-blue-light">💰</div>
+        <div class="kpi-content">
+          <div class="kpi-title">Monto Total Adquisiciones</div>
+          <div class="kpi-value text-primary">S/ {{ montoTotalMes | number:'1.2-2' }}</div>
+          <div class="kpi-sub">Total facturado a laboratorios</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de Búsqueda y Filtros -->
+    <div class="filter-card">
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="filtro"
+          (keyup.enter)="buscar()"
+          placeholder="Buscar por N° Documento, Laboratorio o RUC..."
+          class="form-control"
+        />
+        <select [(ngModel)]="estadoFiltro" (change)="buscar()" class="form-select">
+          <option value="TODOS">Todos los estados</option>
+          <option value="PENDIENTE">1. Enviada a Proveedor</option>
+          <option value="ORDEN_ACEPTADA">2. Orden Aceptada</option>
+          <option value="EMPAQUETANDO">3. Empaquetando en Almacén</option>
+          <option value="EN_CAMINO">4. En Camino (Courier - 2 días)</option>
+          <option value="EN_ENTREGA">5. En Entrega</option>
+          <option value="POR_VERIFICAR">6. Bultos Entregados</option>
+          <option value="RECIBIDA">8. Ingresada a Stock FEFO</option>
+          <option value="CANCELADA">Canceladas</option>
+        </select>
+        <button class="btn btn-secondary" (click)="buscar()">Buscar</button>
+        <button class="btn btn-outline" (click)="limpiar()">Limpiar</button>
+      </div>
+      <div class="counter">
+        Total compras: <strong>{{ totalElements }}</strong>
+      </div>
+    </div>
+
+    <!-- Tabla de Compras -->
+    <div class="table-card">
+      <div *ngIf="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Consultando base de compras y estados de tracking...</p>
+      </div>
+
+      <table *ngIf="!loading && compras.length > 0" class="data-table">
+        <thead>
+          <tr>
+            <th>N° Documento</th>
+            <th>Laboratorio Proveedor</th>
+            <th>Emisión</th>
+            <th>Total Facturado</th>
+            <th>Estado / Tracking</th>
+            <th>Recepción</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of compras">
+            <td class="font-mono font-bold text-primary">
+              {{ c.numeroDocumento }}
+              <div class="text-xs text-muted">{{ c.tipoDocumento }}</div>
+            </td>
+            <td>
+              <div class="font-semibold">{{ c.proveedorRazonSocial }}</div>
+              <div class="text-xs text-muted font-mono">RUC: {{ c.proveedorRuc }}</div>
+            </td>
+            <td>{{ c.fechaEmision }}</td>
+            <td class="font-bold font-mono">S/ {{ c.total | number:'1.2-2' }}</td>
+            <td>
+              <span class="badge" [ngClass]="getEstadoBadgeClass(c.estado)">
+                {{ getEstadoLabel(c.estado) }}
+              </span>
+              <div *ngIf="c.estado === 'EN_CAMINO'" class="courier-pill-hint">
+                🚚 Olva Courier Farma · 2 días
+              </div>
+            </td>
+            <td>
+              <span *ngIf="c.fechaRecepcion" class="text-success font-semibold text-xs">
+                ✓ {{ c.fechaRecepcion }} (Stock FEFO)
+              </span>
+              <span *ngIf="!c.fechaRecepcion" class="text-muted text-xs">
+                Pendiente de entrega
+              </span>
+            </td>
+            <td class="actions-cell">
+              <button class="btn btn-sm btn-outline" (click)="verDetalles(c)" title="Ver Detalle">
+                👁️ Ver
+              </button>
+
+              <button 
+                *ngIf="c.estado !== 'RECIBIDA' && c.estado !== 'CANCELADA' && c.estado !== 'POR_VERIFICAR'" 
+                class="btn btn-sm btn-info-light" 
+                (click)="avanzarTracking(c)" 
+                title="Avanzar etapa de envío">
+                🚚 Avanzar
+              </button>
+
+              <button 
+                *ngIf="c.estado === 'POR_VERIFICAR' || c.estado === 'PENDIENTE' || c.estado === 'EN_ENTREGA' || c.estado === 'VERIFICANDO'" 
+                class="btn btn-sm btn-teal font-bold" 
+                (click)="irAEscanear(c)" 
+                title="Ir a la mesa de escaneo y verificación">
+                📷 Escanear
+              </button>
+
+              <button 
+                *ngIf="c.estado !== 'RECIBIDA' && c.estado !== 'CANCELADA'" 
+                class="btn btn-sm btn-danger-light" 
+                (click)="cancelar(c)" 
+                title="Cancelar Orden">
+                ❌
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty State Elegante y Moderno -->
+      <div *ngIf="!loading && compras.length === 0" class="empty-orders-state text-center">
+        <div class="empty-orders-graphic">
+          <div class="graphic-circle">
+            <svg class="graphic-svg" viewBox="0 0 48 48" fill="none">
+              <path d="M8 14L24 6L40 14V34L24 42L8 34V14Z" stroke="#0284c7" stroke-width="2.5" stroke-linejoin="round" fill="rgba(2, 132, 199, 0.08)"/>
+              <path d="M24 6V42M8 14L24 22L40 14M8 34L24 22" stroke="#0284c7" stroke-width="2.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <h3 class="empty-title">
+          {{ (filtro || estadoFiltro !== 'TODOS') ? 'No se encontraron resultados' : 'No hay órdenes de compra registradas' }}
+        </h3>
+        <p class="empty-subtitle">
+          {{ (filtro || estadoFiltro !== 'TODOS') 
+            ? 'Intenta con otro término de búsqueda o restablece los filtros para ver todas las compras.' 
+            : 'Emite una orden formal a laboratorios farmacéuticos peruanos (Bagó, Roemmers, Medifarma, etc.) para abastecer la botica.' 
+          }}
+        </p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <button *ngIf="filtro || estadoFiltro !== 'TODOS'" type="button" class="btn btn-outline" (click)="limpiar()">
+            Limpiar Filtros
+          </button>
+          <button type="button" class="btn btn-primary btn-lg" (click)="abrirNuevaCompra()">
+            <span>➕</span> Emitir Orden a Laboratorio
+          </button>
+        </div>
+      </div>
+
+      <div class="pagination-footer" *ngIf="totalPages > 1">
+        <span>Página {{ page + 1 }} de {{ totalPages }}</span>
+        <div class="pagination-buttons">
+          <button class="btn btn-sm" [disabled]="page === 0" (click)="cambiarPagina(-1)">Anterior</button>
+          <button class="btn btn-sm" [disabled]="page >= totalPages - 1" (click)="cambiarPagina(1)">Siguiente</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- SUBMÓDULO 2: ESTADO DE PEDIDOS (TRAZABILIDAD DE FACTURAS)       -->
+  <!-- =============================================================== -->
+  <div *ngIf="activeTab === 'tracking'" class="module-view tracking-view fade-in">
+    
+    <!-- Header Exclusivo de Trazabilidad y Tracking -->
+    <div class="header-section mb-4">
+      <div class="header-titles">
+        <div class="badge-tag">MediZano Botica · Trazabilidad de Facturas y Despachos</div>
+        <h1 class="page-title">🚚 Estado de Pedidos & Despachos de Laboratorios</h1>
+        <p class="page-subtitle">Seguimiento por factura de compra: emisión formal, preparación, despacho con Olva Courier y llegada a botica</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="abrirNuevaCompra()">
+          <span class="icon">➕</span> Nueva Orden a Laboratorio
+        </button>
+        <button class="btn btn-outline" (click)="cargarCompras()" title="Sincronizar estados">
+          🔄 Actualizar
+        </button>
+      </div>
+    </div>
+
+    <!-- Alertas del Sistema -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <span>{{ successMessage }}</span>
+      <button class="alert-close" (click)="successMessage = ''">&times;</button>
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      <span>{{ errorMessage }}</span>
+      <button class="alert-close" (click)="errorMessage = ''">&times;</button>
+    </div>
+
+    <!-- Panel de Métricas de Facturas -->
+    <div class="tracking-kpi-grid mb-4">
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap bg-amber-light">🚚</div>
+        <div class="kpi-content">
+          <div class="kpi-title">Facturas en Tránsito (Courier)</div>
+          <div class="kpi-value text-warning">{{ getConteoEnTransito() }}</div>
+          <div class="kpi-sub">En ruta Olva Courier Farma</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap bg-teal-light">📍</div>
+        <div class="kpi-content">
+          <div class="kpi-title">Bultos en Botica / Por Verificar</div>
+          <div class="kpi-value text-teal">{{ getConteoPorVerificar() }}</div>
+          <div class="kpi-sub">Listos para mesa de escaneo</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap bg-blue-light">🏛️</div>
+        <div class="kpi-content">
+          <div class="kpi-title">Facturas Ingresadas (FEFO)</div>
+          <div class="kpi-value text-success">{{ getConteoRecibidas() }}</div>
+          <div class="kpi-sub">Stock cargado y precios actualizados</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon-wrap bg-purple-light">❄️</div>
+        <div class="kpi-content">
+          <div class="kpi-title">Cadena de Frío & Trazabilidad</div>
+          <div class="kpi-value text-purple font-mono">15°C - 25°C</div>
+          <div class="kpi-sub">Estándar DIGEMID verificado</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar de Filtros y Búsqueda -->
+    <div class="tracking-toolbar card-glass p-3 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="filter-pills-group d-flex gap-2 flex-wrap">
+        <button type="button" class="filter-tab-btn" [class.active]="trackingFiltro === 'TODOS'" (click)="setTrackingFiltro('TODOS')">
+          Todas las Facturas ({{ compras.length }})
+        </button>
+        <button type="button" class="filter-tab-btn" [class.active]="trackingFiltro === 'EN_TRANSITO'" (click)="setTrackingFiltro('EN_TRANSITO')">
+          🚚 En Camino ({{ getConteoEnTransito() }})
+        </button>
+        <button type="button" class="filter-tab-btn" [class.active]="trackingFiltro === 'POR_VERIFICAR'" (click)="setTrackingFiltro('POR_VERIFICAR')">
+          📍 En Botica / Por Verificar ({{ getConteoPorVerificar() }})
+        </button>
+        <button type="button" class="filter-tab-btn" [class.active]="trackingFiltro === 'RECIBIDA'" (click)="setTrackingFiltro('RECIBIDA')">
+          ✅ Recibidas en FEFO ({{ getConteoRecibidas() }})
+        </button>
+      </div>
+
+      <div class="search-box-wrap">
+        <input 
+          type="text" 
+          class="form-control tracking-search-input" 
+          placeholder="🔎 Buscar por N° Factura, RUC o Laboratorio..."
+          [(ngModel)]="trackingSearch"
+        />
+      </div>
+    </div>
+
+    <!-- Lista de Facturas / Pedidos en Trazabilidad -->
+    <div class="tracking-cards-grid" *ngIf="getComprasTracking().length > 0">
+      <div *ngFor="let c of getComprasTracking()" class="tracking-card card-glass mb-4">
+        
+        <!-- Header de la Factura -->
+        <div class="tracking-card-header">
+          <div class="header-left-col">
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+              <span class="doc-badge font-mono font-bold">{{ c.tipoDocumento }}: {{ c.numeroDocumento }}</span>
+              <span class="badge" [ngClass]="getEstadoBadgeClass(c.estado)">{{ getEstadoLabel(c.estado) }}</span>
+              <span class="guia-badge font-mono">Guía Courier: {{ getGuiaRemisionMock(c) }}</span>
+            </div>
+            <div class="provider-title font-bold">{{ c.proveedorRazonSocial }}</div>
+            <div class="text-xs text-muted">
+              RUC: {{ c.proveedorRuc }} · Fecha Emisión: {{ c.fechaEmision }} · Registrado por: {{ c.usuarioRegistro || 'Administrador' }}
+            </div>
+          </div>
+          <div class="header-right-col text-right">
+            <div class="total-amount font-mono font-bold text-primary">S/ {{ c.total | number:'1.2-2' }}</div>
+            <div class="text-xs text-muted">{{ c.detalles.length }} medicamentos en este pedido</div>
+          </div>
+        </div>
+
+        <!-- Tira de Ruta Logística Satelital -->
+        <div class="courier-route-bar">
+          <div class="route-point">
+            <span class="route-icon">🏭</span>
+            <div>
+              <div class="route-label">LABORATORIO ORIGEN</div>
+              <div class="route-val font-semibold">{{ c.proveedorRazonSocial }} (Lima)</div>
+            </div>
+          </div>
+
+          <div class="route-arrow">➔</div>
+
+          <div class="route-point">
+            <span class="route-icon">🚚</span>
+            <div>
+              <div class="route-label">OPERADOR COURIER</div>
+              <div class="route-val font-bold text-teal">Olva Courier Farma · 2 Días Hábiles</div>
+            </div>
+          </div>
+
+          <div class="route-arrow">➔</div>
+
+          <div class="route-point">
+            <span class="route-icon">🏛️</span>
+            <div>
+              <div class="route-label">DESTINO</div>
+              <div class="route-val font-semibold">Botica MediZano · Mesa de Recepción FEFO</div>
+            </div>
+          </div>
+
+          <div class="route-badges ml-auto d-flex gap-2">
+            <span class="info-pill-badge bg-blue-light text-primary font-semibold">❄️ 18.5°C Normal</span>
+            <span class="info-pill-badge bg-teal-light text-teal font-semibold">📦 Bulto Sellado</span>
+          </div>
+        </div>
+
+        <!-- Stepper de 7 Etapas por Factura -->
+        <div class="logistics-timeline">
+          <div class="timeline-track">
+            <div class="timeline-fill" [style.width.%]="getStepProgress(c.estado)"></div>
+            <div class="courier-truck-marker" [style.left.%]="getStepProgress(c.estado)">
+              🚚
+            </div>
+          </div>
+
+          <div class="timeline-nodes">
+            <div class="timeline-node" [class.active]="c.estado === 'PENDIENTE'" [class.done]="getStepProgress(c.estado) > 15">
+              <div class="node-circle">
+                <span *ngIf="getStepProgress(c.estado) > 15">✓</span>
+                <span *ngIf="getStepProgress(c.estado) <= 15">1</span>
+              </div>
+              <div class="node-meta">
+                <div class="node-name">Emitida</div>
+                <div class="node-sub">A laboratorio</div>
+              </div>
+            </div>
+
+            <div class="timeline-node" [class.active]="c.estado === 'ORDEN_ACEPTADA'" [class.done]="getStepProgress(c.estado) > 30">
+              <div class="node-circle">
+                <span *ngIf="getStepProgress(c.estado) > 30">✓</span>
+                <span *ngIf="getStepProgress(c.estado) <= 30">2</span>
+              </div>
+              <div class="node-meta">
+                <div class="node-name">Aceptada</div>
+                <div class="node-sub">Stock confirmado</div>
+              </div>
+            </div>
+
+            <div class="timeline-node" [class.active]="c.estado === 'EMPAQUETANDO'" [class.done]="getStepProgress(c.estado) > 45">
+              <div class="node-circle">
+                <span *ngIf="getStepProgress(c.estado) > 45">✓</span>
+                <span *ngIf="getStepProgress(c.estado) <= 45">3</span>
+              </div>
+              <div class="node-meta">
+                <div class="node-name">Empacando</div>
+                <div class="node-sub">Lote y precinto</div>
+              </div>
+            </div>
+
+            <div class="timeline-node" [class.active]="c.estado === 'EN_CAMINO'" [class.done]="getStepProgress(c.estado) > 65">
+              <div class="node-circle">
+                <span *ngIf="getStepProgress(c.estado) > 65">✓</span>
+                <span *ngIf="getStepProgress(c.estado) <= 65">4</span>
+              </div>
+              <div class="node-meta">
+                <div class="node-name">En Ruta (Olva)</div>
+                <div class="node-sub">Tránsito 2 días</div>
+              </div>
+            </div>
+
+            <div class="timeline-node" [class.active]="c.estado === 'EN_ENTREGA'" [class.done]="getStepProgress(c.estado) > 80">
+              <div class="node-circle">
+                <span *ngIf="getStepProgress(c.estado) > 80">✓</span>
+                <span *ngIf="getStepProgress(c.estado) <= 80">5</span>
+              </div>
+              <div class="node-meta">
+                <div class="node-name">En Destino</div>
+                <div class="node-sub">En puerta botica</div>
+              </div>
+            </div>
+
+            <div class="timeline-node" [class.active]="c.estado === 'POR_VERIFICAR' || c.estado === 'VERIFICANDO'" [class.done]="c.estado === 'RECIBIDA'">
+              <div class="node-circle">
+                <span *ngIf="c.estado === 'RECIBIDA'">✓</span>
+                <span *ngIf="c.estado !== 'RECIBIDA'">6</span>
+              </div>
+              <div class="node-meta">
+                <div class="node-name">Mesa Escaneo</div>
+                <div class="node-sub">Verificación FEFO</div>
+              </div>
+            </div>
+
+            <div class="timeline-node" [class.done]="c.estado === 'RECIBIDA'">
+              <div class="node-circle">
+                <span *ngIf="c.estado === 'RECIBIDA'">✓</span>
+                <span *ngIf="c.estado !== 'RECIBIDA'">7</span>
+              </div>
+              <div class="node-meta">
+                <div class="node-name">Stock FEFO</div>
+                <div class="node-sub">Cargado a POS</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer con Acciones de la Factura -->
+        <div class="tracking-card-footer d-flex justify-content-between align-items-center flex-wrap gap-2 pt-3">
+          <div class="footer-status-hint text-xs text-muted">
+            <span *ngIf="c.estado === 'PENDIENTE'">Factura emitida formalmente; a la espera de aceptación del laboratorio.</span>
+            <span *ngIf="c.estado === 'ORDEN_ACEPTADA'">Laboratorio confirmó stock y comenzó preparación de bultos.</span>
+            <span *ngIf="c.estado === 'EMPAQUETANDO'">Bultos preparados y precintados para retiro de Olva Courier.</span>
+            <span *ngIf="c.estado === 'EN_CAMINO'">En ruta terrestre hacia la botica. Tiempo estimado: 2 días.</span>
+            <span *ngIf="c.estado === 'EN_ENTREGA' || c.estado === 'POR_VERIFICAR'">¡Bultos recibidos! Pasa a la Mesa de Escaneo para verificar e ingresar a FEFO.</span>
+            <span *ngIf="c.estado === 'RECIBIDA'">✅ Mercadería verificada e ingresada exitosamente al Stock FEFO.</span>
+          </div>
+
+          <div class="d-flex gap-2">
+            <!-- Botón para avanzar etapa del courier -->
+            <button 
+              *ngIf="c.estado !== 'POR_VERIFICAR' && c.estado !== 'VERIFICANDO' && c.estado !== 'RECIBIDA' && c.estado !== 'CANCELADA'" 
+              type="button"
+              class="btn btn-sm btn-info-gradient font-bold" 
+              (click)="avanzarTracking(c)">
+              <span>🚚</span> Avanzar Etapa ({{ getSiguienteEstadoNombre(c.estado) }})
+            </button>
+
+            <!-- Botón para ir a escanear -->
+            <button 
+              *ngIf="c.estado === 'POR_VERIFICAR' || c.estado === 'EN_ENTREGA' || c.estado === 'VERIFICANDO'" 
+              type="button"
+              class="btn btn-sm btn-emerald-gradient font-bold" 
+              (click)="irAEscanear(c)">
+              <span>📷</span> Ir a Escanear en Mesa de Recepción ➜
+            </button>
+
+            <button type="button" class="btn btn-sm btn-outline" (click)="verDetalles(c)">
+              👁️ Ver Factura & Ítems
+            </button>
+
+            <button 
+              *ngIf="c.estado !== 'RECIBIDA' && c.estado !== 'CANCELADA'" 
+              type="button"
+              class="btn btn-sm btn-danger-light" 
+              (click)="cancelar(c)" 
+              title="Cancelar Orden">
+              ❌
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Empty State cuando no hay facturas que coincidan con la búsqueda -->
+    <div *ngIf="getComprasTracking().length === 0" class="tracking-empty-card text-center p-5">
+      <div class="empty-radar-wrapper mb-3" style="position: relative; width: 90px; height: 90px; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+        <div style="position: absolute; inset: 0; border-radius: 50%; background: #e0f2fe; opacity: 0.6; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+        <div style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); display: flex; align-items: center; justify-content: center; z-index: 2; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);">
+          <span style="font-size: 36px;">🚚</span>
+        </div>
+      </div>
+
+      <div class="empty-badge-pill mb-2" style="display: inline-block; background: #e0f2fe; color: #0284c7; padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;">
+        RADAR SATELITAL · EN ESPERA DE DESPACHOS
+      </div>
+      <h3 class="font-bold text-dark mt-2 mb-2" style="font-size: 22px;">
+        {{ trackingSearch ? 'No se encontraron facturas con los filtros actuales' : 'No hay pedidos ni facturas pendientes en tránsito' }}
+      </h3>
+      <p class="text-muted mb-4" style="max-width: 540px; margin: 0 auto 24px; font-size: 14.5px;">
+        {{ trackingSearch 
+          ? 'Prueba modificando el término de búsqueda o restablece los filtros de despacho.' 
+          : 'Todas las compras han sido recibidas e ingresadas a FEFO. Emite una orden formal a laboratorios (Bagó, Portugal, Medifarma) para iniciar el tracking de una nueva factura.' 
+        }}
+      </p>
+
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <button *ngIf="trackingSearch || trackingFiltro !== 'TODOS'" type="button" class="btn btn-outline font-bold" (click)="trackingSearch = ''; trackingFiltro = 'TODOS'">
+          🔄 Restablecer Filtros
+        </button>
+        <button type="button" class="btn btn-primary btn-lg font-bold" (click)="abrirNuevaCompra()">
+          <span>➕</span> Emitir Orden a Laboratorio
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- SUBMÓDULO 3: ESCANEAR PRODUCTOS (MESA DE RECEPCIÓN WORKSTATION) -->
+  <!-- =============================================================== -->
+  <div *ngIf="activeTab === 'scanner'" class="module-view scanner-workstation fade-in">
+    
+    <!-- Header Limpio y Moderno -->
+    <div class="header-section mb-3">
+      <div class="header-titles">
+        <div class="badge-tag">MediZano Botica · Control FEFO</div>
+        <h1 class="page-title m-0">Mesa de Recepción & Escaneo</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline" (click)="cargarCompras()">
+          🔄 Actualizar
+        </button>
+        <button class="btn btn-primary" (click)="abrirNuevaCompra()">
+          ➕ Nueva Orden
+        </button>
+      </div>
+    </div>
+
+    <!-- Alertas del Sistema -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <span>{{ successMessage }}</span>
+      <button class="alert-close" (click)="successMessage = ''">&times;</button>
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      <span>{{ errorMessage }}</span>
+      <button class="alert-close" (click)="errorMessage = ''">&times;</button>
+    </div>
+
+    <!-- Banner de Advertencia si está en HTTP -->
+    <div *ngIf="isHttp" class="alert d-flex align-items-center justify-content-between p-3 mb-4 rounded-3" style="background: #fffbeb; border: 1.5px solid #f59e0b; color: #92400e;">
+      <div class="d-flex align-items-center gap-2">
+        <span style="font-size: 22px;">🔐</span>
+        <div>
+          <strong>Conexión segura requerida:</strong> El navegador exige HTTPS para activar la cámara web.
+        </div>
+      </div>
+      <button type="button" class="btn font-bold" (click)="cambiarAHttps()" style="background: #0284c7; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;">
+        🚀 Pasar a HTTPS
+      </button>
+    </div>
+
+    <!-- Empty State cuando no hay ninguna orden pendiente -->
+    <div *ngIf="!selectedCompra || selectedCompra.estado === 'RECIBIDA' || selectedCompra.estado === 'CANCELADA'" class="empty-state card-glass text-center p-5" style="background: #ffffff; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); margin-top: 24px;">
+      <div style="font-size: 56px; margin-bottom: 14px;">📦</div>
+      <h2 class="font-bold mb-2" style="color: #0f172a; font-size: 22px;">No hay órdenes de compra pendientes de recepción</h2>
+      <p class="text-muted mb-4" style="max-width: 480px; margin: 0 auto 24px; font-size: 14px;">
+        Todas las compras emitidas ya fueron verificadas físicamente e ingresadas al almacén FEFO. Puedes consultar los comprobantes y lotes en el <strong>Historial de Compras</strong> o emitir una nueva orden.
+      </p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <button type="button" class="btn btn-outline-teal" (click)="setTab('compras')" style="padding: 10px 24px; font-size: 14px; font-weight: 700;">
+          📋 Ver Historial de Compras
+        </button>
+        <button type="button" class="btn btn-primary" (click)="abrirNuevaCompra()" style="padding: 10px 24px; font-size: 14px; font-weight: 700;">
+          <span>➕</span> Emitir Nueva Orden de Compra
+        </button>
+      </div>
+    </div>
+
+    <!-- Workstation Activo cuando hay orden seleccionada y está pendiente -->
+    <div *ngIf="selectedCompra && selectedCompra.estado !== 'RECIBIDA' && selectedCompra.estado !== 'CANCELADA'" class="workstation-container workstation-card">
+
+      <!-- HERO CARD COMPACTO: LABORATORIO Y ESTADO -->
+      <div class="order-hero-banner mb-3">
+        <div class="hero-content-grid">
+          <!-- Datos del Laboratorio -->
+          <div class="hero-lab-info">
+            <div class="lab-icon-box">🏥</div>
+            <div class="lab-text-meta">
+              <div class="lab-tags-row">
+                <span class="badge-digemid">✓ DIGEMID</span>
+                <span class="badge-doc font-mono">{{ selectedCompra.tipoDocumento }}: {{ selectedCompra.numeroDocumento }}</span>
+                <span class="badge-lock">🔒 Proveedor Bloqueado</span>
+              </div>
+              <h2 class="lab-title">{{ selectedCompra.proveedorRazonSocial }}</h2>
+              <div class="lab-chips-row">
+                <span class="chip font-mono"><strong>RUC:</strong> {{ selectedCompra.proveedorRuc }}</span>
+                <span class="chip"><strong>Emisión:</strong> {{ selectedCompra.fechaEmision }}</span>
+                <span class="chip font-mono font-bold text-teal"><strong>Total:</strong> S/ {{ selectedCompra.total | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selector de Orden Rápido -->
+          <div class="hero-selector-box">
+            <div class="selector-field-wrap">
+              <label class="selector-title">Orden Activa:</label>
+              <select 
+                class="form-select hero-order-select font-mono font-bold" 
+                [ngModel]="selectedCompra?.id" 
+                (ngModelChange)="onCompraSelectChange($event)">
+                <option *ngFor="let c of getComprasActivas()" [value]="c.id">
+                  {{ c.numeroDocumento }} · {{ c.proveedorRazonSocial }} (S/ {{ c.total | number:'1.2-2' }})
+                </option>
+              </select>
+            </div>
+            <div class="status-indicator-box">
+              <span class="badge-status-glow" [ngClass]="getEstadoBadgeClass(selectedCompra.estado)">
+                {{ getEstadoLabel(selectedCompra.estado) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCANNER SEARCH CARD (IDÉNTICO A VENTAS / BILLING) -->
+      <div class="scanner-search-card card-glass mb-4">
+        
+        <div class="search-card-top-row d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <div>
+            <h3 class="search-card-title m-0 font-bold" style="font-size: 18px; color: #0f172a;">Agregar productos / Escanear</h3>
+            <span class="text-xs text-muted">Escanear código de barras para verificación de mercadería e ingreso atómico a almacén</span>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <button 
+              type="button" 
+              class="btn btn-sm btn-outline-teal" 
+              (click)="completarTodos()"
+              title="Llenar cantidades al 100% (Modo Caja Máster)">
+              ⚡ Llenar Todo (Caja Máster)
+            </button>
+
+            <button 
+              type="button" 
+              class="btn btn-sm btn-sound-toggle" 
+              (click)="toggleSound()" 
+              [class.active]="soundEnabled"
+              title="Activar/Desactivar sonido">
+              {{ soundEnabled ? '🔔 Audio ON' : '🔕 Audio OFF' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Fila de Entrada: Input + Botón Cámara Icono + Botón Buscar (Exacto a Ventas) -->
+        <div class="form-group mb-2">
+          <label class="form-label font-bold text-sm mb-1 block" style="color: #1e293b;">Escanear codigo de barras</label>
+          <div class="input-wrapper">
+            <input
+              id="workstation-scanner-input"
+              type="text"
+              class="form-input font-mono"
+              [(ngModel)]="codigoBarrasInput"
+              (keyup.enter)="escanearCodigo()"
+              placeholder="Escanea o ingresa el codigo (GTIN/EAN)"
+              autofocus
+            />
+
+            <!-- Botón Cámara (Icono idéntico a Ventas / Billing) -->
+            <button
+              type="button"
+              class="btn-camera"
+              (click)="startScanning()"
+              [disabled]="!hasCamera"
+              title="Escanear con camara">
+              <svg-icon name="barcode" [size]="18"></svg-icon>
+            </button>
+
+            <!-- Botón Buscar / Confirmar escaneo -->
+            <button
+              type="button"
+              class="btn-search"
+              (click)="escanearCodigo()"
+              title="Buscar o registrar codigo">
+              <svg-icon name="search" [size]="18"></svg-icon>
+            </button>
+          </div>
+          <span class="text-xs text-muted mt-1 block">
+            El codigo identifica el producto. Usa la pistola lectora o la camara para escanear.
+          </span>
+        </div>
+
+        <!-- Chips de Prueba Rápida (Pills elegantes y limpios) -->
+        <div class="quick-sim-bar mt-3 pt-3" style="border-top: 1px dashed #e2e8f0;">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="text-xs font-bold text-muted mr-1">⚡ Atajos de prueba (1-Clic):</span>
+            <button 
+              *ngFor="let ctrl of itemsRecepcionArray.controls; let idx = index" 
+              type="button" 
+              class="sim-chip-pill"
+              (click)="simularEscaneo(ctrl.get('codigoBarra')?.value || (idx === 0 ? '775000000001' : '775000000002'))">
+              💊 {{ ctrl.get('nombreProducto')?.value }}
+              <span class="chip-code font-mono" *ngIf="ctrl.get('codigoBarra')?.value">
+                ({{ ctrl.get('codigoBarra')?.value }}) +1
+              </span>
+              <span class="chip-vincular" *ngIf="!ctrl.get('codigoBarra')?.value">
+                ⚡ Vincular código
+              </span>
+            </button>
+            <button 
+              type="button" 
+              class="sim-chip-pill sim-chip-new"
+              (click)="simularEscaneo('775999888123')">
+              ✨ Código Nuevo (775999888123)
+            </button>
+          </div>
+        </div>
+
+        <!-- Feedback Banner -->
+        <div 
+          *ngIf="lastScannedMessage" 
+          class="scan-feedback-banner mt-3" 
+          [class.success]="lastScannedSuccess" 
+          [class.error]="!lastScannedSuccess">
+          {{ lastScannedMessage }}
+        </div>
+
+      </div>
+
+      <!-- Formulario Reactivo de Recepción -->
+      <form [formGroup]="recepcionForm">
+        
+        <!-- Tabla de Verificación de Medicamentos con Costo y PVP Global -->
+        <div class="checklist-section">
+          <div class="checklist-header">
+            <div>
+              <h4 class="checklist-title">Medicamentos a Verificar Físicamente</h4>
+            </div>
+            <div class="total-progress-pill">
+              Progreso de Recepción: <strong>{{ getTotalProgreso() }}%</strong>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="verification-table">
+              <thead>
+                <tr>
+                  <th>Medicamento & Código de Barras</th>
+                  <th class="text-center">Cant. Pedida</th>
+                  <th class="text-center" style="min-width: 220px;">Cantidad Recibida (Dual)</th>
+                  <th style="min-width: 140px;">Costo Proveedor</th>
+                  <th style="min-width: 170px;">Precio Venta Global</th>
+                  <th class="text-center" style="min-width: 140px;">Condición / Receta</th>
+                  <th>Lote DIGEMID*</th>
+                  <th>Vencimiento*</th>
+                  <th class="text-center">Estado</th>
+                </tr>
+              </thead>
+              <tbody formArrayName="items">
+                <tr 
+                  *ngFor="let ctrl of itemsRecepcionArray.controls; let i = index"
+                  [formGroupName]="i"
+                  [class.row-highlight]="highlightedRowIndex === i"
+                  [class.row-completed]="isItemComplete(i)">
+                  
+                  <!-- Medicamento y Barcode -->
+                  <td>
+                    <div class="product-title-row">
+                      <span class="product-bullet">💊</span>
+                      <strong class="product-name">{{ ctrl.get('nombreProducto')?.value }}</strong>
+                    </div>
+                    <div class="product-meta-row">
+                      <span class="barcode-chip font-mono" *ngIf="ctrl.get('codigoBarra')?.value">
+                        <svg-icon name="barcode" [size]="14" style="vertical-align: -2px; margin-right: 4px;"></svg-icon>{{ ctrl.get('codigoBarra')?.value }}
+                      </span>
+                      <span class="badge-barcode-missing" *ngIf="!ctrl.get('codigoBarra')?.value">
+                        ⚠️ Sin código (Escanea para asignar)
+                      </span>
+                    </div>
+                  </td>
+
+                  <!-- Cantidad Pedida -->
+                  <td class="text-center font-mono font-bold">
+                    {{ ctrl.get('cantidadComprada')?.value }} uds
+                  </td>
+
+                  <!-- Cantidad Recibida (Dual) -->
+                  <td>
+                    <div class="stepper-control-row">
+                      <button type="button" class="step-btn" (click)="restarUno(i)" title="Restar 1">-1</button>
+                      <input
+                        type="number"
+                        formControlName="cantidadRecibida"
+                        class="qty-input font-mono font-bold text-center"
+                        min="0"
+                        [max]="ctrl.get('cantidadComprada')?.value"
+                      />
+                      <button type="button" class="step-btn" (click)="sumarUno(i)" title="Sumar 1 (+1 por escaneo)">+1</button>
+                      <button type="button" class="step-btn-quick" (click)="sumarCantidad(i, 10)" title="Sumar 10">+10</button>
+                      <button type="button" class="step-btn-quick" (click)="completarItem(i)" title="Completar todo este ítem">Máx</button>
+                    </div>
+
+                    <div class="item-progress-wrapper">
+                      <div class="item-progress-bar">
+                        <div 
+                          class="item-progress-fill" 
+                          [class.complete]="isItemComplete(i)"
+                          [style.width.%]="getItemProgressPercent(i)">
+                        </div>
+                      </div>
+                      <span class="item-progress-text font-mono font-bold">
+                        {{ ctrl.get('cantidadRecibida')?.value }} / {{ ctrl.get('cantidadComprada')?.value }} uds ({{ getItemProgressPercent(i) }}%)
+                      </span>
+                    </div>
+                  </td>
+
+                  <!-- Costo Compra Proveedor -->
+                  <td>
+                    <div class="price-input-wrapper">
+                      <span class="currency-prefix">S/</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        formControlName="costoUnitario"
+                        class="form-control font-mono field-compact font-bold"
+                      />
+                    </div>
+                    <span class="text-xs text-muted block mt-1">Factura laboratorio</span>
+                  </td>
+
+                  <!-- Precio de Venta Global al Público (PVP) -->
+                  <td>
+                    <div class="price-input-wrapper">
+                      <span class="currency-prefix text-primary">S/</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        formControlName="precioVenta"
+                        class="form-control font-mono field-compact font-bold text-primary"
+                      />
+                    </div>
+                    <div class="margin-badge mt-1 font-mono">
+                      Margen: +{{ calcularMargenPorcentaje(ctrl.get('costoUnitario')?.value, ctrl.get('precioVenta')?.value) }}%
+                      (Ganancia: S/ {{ calcularGananciaUnitaria(ctrl.get('costoUnitario')?.value, ctrl.get('precioVenta')?.value) | number:'1.2-2' }})
+                    </div>
+                    <span class="text-xs text-teal font-semibold block">🌐 Se actualiza en ventas</span>
+                  </td>
+
+                  <!-- Condición de Venta / Receta Médica -->
+                  <td class="text-center">
+                    <button
+                      type="button"
+                      class="btn-receta-pill"
+                      [class.badge-receta-yes]="ctrl.get('prescriptionRequired')?.value"
+                      [class.badge-receta-no]="!ctrl.get('prescriptionRequired')?.value"
+                      (click)="toggleRecetaRecepcion(i)"
+                      title="Clic para cambiar entre Venta Libre y Con Receta Médica">
+                      <span *ngIf="ctrl.get('prescriptionRequired')?.value">🩺 Con Receta (Rx)</span>
+                      <span *ngIf="!ctrl.get('prescriptionRequired')?.value">💊 Venta Libre</span>
+                    </button>
+                    <span class="text-xs text-muted block mt-1" style="font-size: 10px;">Clic para alternar</span>
+                  </td>
+
+                  <!-- Lote DIGEMID -->
+                  <td>
+                    <div class="input-badge-wrapper">
+                      <span class="field-prefix">LOTE:</span>
+                      <input
+                        type="text"
+                        formControlName="batchNumber"
+                        class="form-control font-mono uppercase field-compact"
+                        placeholder="BAG-2026-X1"
+                      />
+                    </div>
+                  </td>
+
+                  <!-- Fecha de Vencimiento -->
+                  <td>
+                    <input
+                      type="date"
+                      formControlName="expiryDate"
+                      class="form-control font-mono field-compact"
+                    />
+                    <div class="text-xs text-muted mt-1">Criterio FEFO</div>
+                  </td>
+
+                  <!-- Estado del Ítem -->
+                  <td class="text-center">
+                    <span *ngIf="isItemComplete(i)" class="status-pill status-complete">
+                      ✓ Completo
+                    </span>
+                    <span *ngIf="!isItemComplete(i) && (ctrl.get('cantidadRecibida')?.value > 0)" class="status-pill status-partial">
+                      ⏳ En Proceso
+                    </span>
+                    <span *ngIf="ctrl.get('cantidadRecibida')?.value === 0" class="status-pill status-pending">
+                      ○ Sin Escanear
+                    </span>
+                  </td>
+
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+        <!-- Barra Inferior de Calidad & Carga a Stock FEFO -->
+        <div class="fefo-approval-bar">
+          <div class="fefo-left">
+            <label class="fefo-label">Observaciones de Control de Calidad Farmacéutico:</label>
+            <input
+              type="text"
+              formControlName="observaciones"
+              class="fefo-input"
+              placeholder="Inspección visual conforme, empaques sellados, sin adulteraciones..."
+            />
+          </div>
+
+          <div class="fefo-actions">
+            <button 
+              type="button" 
+              class="btn btn-success-fefo" 
+              [disabled]="loading || !isTodoVerificado()" 
+              (click)="abrirConfirmarModal()">
+              <span class="btn-icon">🟢</span>
+              <span>Aprobar Recepción y Actualizar Precios Globales (FEFO)</span>
+            </button>
+          </div>
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODAL: CÁMARA EN VIVO (IDÉNTICO A VENTAS / POS)                  -->
+  <!-- =============================================================== -->
+  <div class="scanner-overlay" *ngIf="isScanning" (click)="stopScanning()">
+    <div class="scanner-container" (click)="$event.stopPropagation()">
+      <div class="scanner-header">
+        <h3 class="scanner-title">Escanear código</h3>
+        <button type="button" class="btn-close-scanner" (click)="stopScanning()" aria-label="Cerrar escáner">
+          <span class="close-icon">&times;</span>
+        </button>
+      </div>
+      <div class="scanner-body">
+        <video id="video-scanner" class="scanner-video" autoplay playsinline muted></video>
+        <div class="scanner-overlay-frame">
+          <div class="scanner-frame"></div>
+          <p class="scanner-hint">Ubica el código dentro del marco</p>
+        </div>
+      </div>
+      <div class="scanner-footer">
+        <button type="button" class="btn-stop-scan" (click)="stopScanning()">
+          Detener escaneo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODAL: ASIGNAR CÓDIGO DE BARRAS NUEVO / DESCONOCIDO             -->
+  <!-- =============================================================== -->
+  <div class="modal-backdrop" *ngIf="showAssignBarcodeModal">
+    <div class="modal-dialog card-glass" style="max-width: 540px;">
+      <div class="modal-header">
+        <div>
+          <h3 class="font-bold m-0">🆕 Nuevo Código de Barras Detectado</h3>
+          <span class="text-xs text-muted">Vincular código físico con el medicamento de la orden</span>
+        </div>
+        <button class="close-btn" (click)="cerrarAssignModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="barcode-highlight-box mb-3">
+          <span class="text-xs text-muted font-bold block mb-1">CÓDIGO ESCANEADO:</span>
+          <span class="font-mono font-bold text-xl text-teal">{{ scannedUnknownBarcode }}</span>
+        </div>
+
+        <p class="text-sm text-secondary mb-3">
+          Este código de barras aún no estaba registrado para ningún ítem de esta orden de compra.
+          ¿A qué medicamento de la orden corresponde este producto físico recibido?
+        </p>
+
+        <div class="form-group mb-4">
+          <label class="font-bold mb-1 block">Seleccionar Medicamento de la Orden:</label>
+          <select class="form-select font-semibold text-sm" [(ngModel)]="selectedItemIndexToAssign">
+            <option *ngFor="let it of itemsRecepcionArray.controls; let idx = index" [value]="idx">
+              {{ it.get('nombreProducto')?.value }} (Pedido: {{ it.get('cantidadComprada')?.value }} uds · Recibidas: {{ it.get('cantidadRecibida')?.value }})
+            </option>
+          </select>
+        </div>
+
+        <div class="info-alert-box text-xs text-muted p-2 rounded bg-light">
+          💡 <strong>Nota:</strong> Al vincularlo, el código quedará registrado permanentemente para este medicamento y cada futuro escaneo sumará +1 automáticamente.
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" (click)="cerrarAssignModal()">Cancelar</button>
+        <button type="button" class="btn btn-teal font-bold" (click)="asignarCodigoNuevo()">
+          ✅ Asignar Código y Contabilizar (+1)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODAL: NUEVA ORDEN DE COMPRA A LABORATORIO                     -->
+  <!-- =============================================================== -->
+  <div class="modal-backdrop" *ngIf="showNuevaModal" (click)="cerrarNuevaModal()">
+    <div class="modal-dialog modal-lg card-glass" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="header-title-wrapper">
+          <div class="header-icon-box">📋</div>
+          <div>
+            <h3 class="font-bold m-0" style="font-size: 18px; color: #0f172a;">Emitir Nueva Orden de Compra</h3>
+            <p class="text-xs text-muted m-0" style="color: #64748b;">Solicitud formal de abastecimiento a laboratorios peruanos autorizados (DIGEMID)</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn" (click)="cerrarNuevaModal()" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <!-- MODAL NUEVA ORDEN CON MODO INDIVIDUAL Y CONSOLIDADO MULTI-LABORATORIO -->
+      <form [formGroup]="compraForm" (ngSubmit)="guardarCompra()">
+        <div class="modal-body">
+          <div *ngIf="errorMessage" class="alert alert-danger mb-3">
+            <span>⚠️ {{ errorMessage }}</span>
+            <button class="alert-close" (click)="errorMessage = ''">&times;</button>
+          </div>
+
+          <!-- Selector de Modo de Compra Farmacéutico -->
+          <div class="purchase-mode-toggle-card p-3 mb-4 rounded-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+              <span class="mode-label font-bold text-sm">Modo de Emisión de Órdenes:</span>
+              <span class="badge-mode-hint text-xs">
+                {{ modoCompra === 'INDIVIDUAL' ? '📄 1 Factura formal para un único laboratorio' : '🌐 Emisión paralela: Genera N Facturas independientes en un solo paso' }}
+              </span>
+            </div>
+            <div class="mode-pills-selector">
+              <button 
+                type="button" 
+                class="mode-pill-btn" 
+                [class.active]="modoCompra === 'INDIVIDUAL'"
+                (click)="setModoCompra('INDIVIDUAL')">
+                <span class="mode-icon">🏢</span>
+                <span class="mode-text">
+                  <strong>Orden a un Solo Laboratorio</strong>
+                  <small class="d-block text-xs">Para reposición enfocada con un fabricante específico</small>
+                </span>
+              </button>
+
+              <button 
+                type="button" 
+                class="mode-pill-btn highlight-multi" 
+                [class.active]="modoCompra === 'MULTI_LABORATORIO'"
+                (click)="setModoCompra('MULTI_LABORATORIO')">
+                <span class="mode-icon">🌐</span>
+                <span class="mode-text">
+                  <strong class="d-flex align-items-center gap-1">
+                    Pedido Consolidado Multi-Laboratorio
+                    <span class="badge-smart-split">✨ Auto-Split</span>
+                  </strong>
+                  <small class="d-block text-xs">Escoge productos de varios laboratorios; el sistema crea cada orden por separado</small>
+                </span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Encabezado de la Orden Individual: Laboratorio, Documento, Fechas -->
+          <div *ngIf="modoCompra === 'INDIVIDUAL'" class="order-header-box p-3 mb-4 rounded-3" style="background: #f8fafc; border: 1.5px solid #e2e8f0;">
+            <!-- Banner informativo sobre órdenes por laboratorio -->
+            <div class="d-flex justify-content-between align-items-center p-2 mb-3 rounded-2" style="background: #f1f5f9; border: 1px dashed #cbd5e1; font-size: 12px;">
+              <span>🏢 <strong>Regla Farmacéutica:</strong> Cada orden emitida corresponde estrictamente a un laboratorio (Factura independiente). Si necesitas pedir a varios laboratorios, se genera una orden por cada uno.</span>
+              <button type="button" class="btn btn-xs btn-outline" (click)="cambiarLaboratorioParaNuevaOrden()">
+                ➕ Pedir a Otro Laboratorio
+              </button>
+            </div>
+
+            <div class="grid-3 mb-3">
+              <div class="form-group">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="m-0 font-bold">Laboratorio Fabricante (Perú)*</label>
+                  <button type="button" class="btn btn-xs btn-outline" (click)="recomendarProductosLaboratorio()" title="Sugerir productos de este laboratorio">
+                    💡 Sugerir Productos
+                  </button>
+                </div>
+                <select formControlName="proveedorId" class="form-select font-bold" (change)="onProveedorSelectChange($event)">
+                  <option *ngFor="let p of proveedores" [ngValue]="p.id">
+                    {{ p.razonSocial }} (RUC: {{ p.ruc }})
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Tipo de Documento*</label>
+                <select formControlName="tipoDocumento" class="form-select">
+                  <option *ngFor="let t of tiposDocumento" [value]="t">{{ t }}</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>N° de Documento / Factura*</label>
+                <input type="text" formControlName="numeroDocumento" class="form-control font-mono font-bold" placeholder="F001-XXXXXX" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label>Fecha de Emisión*</label>
+                <input type="date" formControlName="fechaEmision" class="form-control font-medium" />
+              </div>
+
+              <div class="form-group">
+                <label>Observaciones del Pedido</label>
+                <input type="text" formControlName="observaciones" class="form-control" placeholder="ej: Reposición mensual de stock crítico..." />
+              </div>
+            </div>
+          </div>
+
+          <!-- Encabezado Multi-Laboratorio: Fecha y Observaciones -->
+          <div *ngIf="modoCompra === 'MULTI_LABORATORIO'" class="order-header-box p-3 mb-4 rounded-3" style="background: #f0fdfa; border: 1.5px solid #99f6e4;">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span style="font-size: 22px;">🌐</span>
+              <div>
+                <strong style="color: #0f766e;">Modo Consolidado Multi-Laboratorio Activo:</strong>
+                <span class="text-xs text-muted d-block">Agrega los medicamentos que necesites. Al seleccionar del catálogo, el laboratorio se detecta automáticamente. Cada laboratorio recibirá su propia factura correlativa.</span>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="font-bold text-xs">Fecha de Emisión Global*</label>
+                <input type="date" formControlName="fechaEmision" class="form-control font-medium" />
+              </div>
+              <div class="form-group">
+                <label class="font-bold text-xs">Observaciones Generales</label>
+                <input type="text" formControlName="observaciones" class="form-control" placeholder="ej: Compra consolidada de botica..." />
+              </div>
+            </div>
+          </div>
+
+          <!-- Nota Informativa Flujo Logístico -->
+          <div class="p-3 mb-3 rounded-3" style="background: #f0fdf4; border: 1.5px solid #bbf7d0; color: #166534; font-size: 13px;">
+            💡 <strong>Flujo Farmacéutico:</strong> Al emitir la orden a laboratorios no es necesario indicar códigos de barras. Los códigos se registrarán y vincularán físicamente con la cámara o pistola de escaneo cuando la mercadería llegue a la <strong>Mesa de Recepción</strong>.
+          </div>
+
+          <!-- Medicamentos a Solicitar (Ingreso libre de compra) -->
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+              <h4 class="m-0 font-bold" style="font-size: 16px; color: #0f172a;">Medicamentos a Solicitar</h4>
+              <span class="text-xs text-muted">Detalla las unidades y costos pactados con el fabricante:</span>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-sm btn-pill-add" (click)="agregarDetalle()">
+                <span>➕</span> Agregar Medicamento
+              </button>
+            </div>
+          </div>
+
+          <div formArrayName="detalles" class="detalles-list">
+            <div *ngFor="let item of detallesFormArray.controls; let i = index" [formGroupName]="i" class="detalle-row">
+              
+              <!-- Fila Superior: Nombre del medicamento y Asignación de Laboratorio -->
+              <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <span class="item-header-badge">Ítem #{{ i + 1 }}</span>
+                  
+                  <!-- Asignación de Laboratorio por Producto (Visible en Multi-Lab) -->
+                  <div *ngIf="modoCompra === 'MULTI_LABORATORIO'" class="d-flex align-items-center gap-1">
+                    <span class="text-xs font-bold" style="color: #0f766e;">🏭 Laboratorio:</span>
+                    <select formControlName="proveedorId" class="form-select form-select-sm font-bold" style="font-size: 11.5px; height: 26px; width: auto; max-width: 280px; background: #e0f2fe; border-color: #7dd3fc; color: #0369a1;">
+                      <option *ngFor="let p of proveedores" [ngValue]="p.id">
+                        {{ p.razonSocial }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                  <span class="item-subtotal-badge font-mono">
+                    Subtotal: S/ {{ ((item.get('cantidadComprada')?.value || 0) * (item.get('costoUnitario')?.value || 0)) | number:'1.2-2' }}
+                  </span>
+                  <button 
+                    type="button" 
+                    class="btn-remove-item" 
+                    (click)="eliminarDetalle(i)" 
+                    [disabled]="detallesFormArray.length <= 1"
+                    title="Eliminar este medicamento">
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+                  <label class="font-bold text-xs m-0">Nombre del Medicamento / Presentación a Solicitar*</label>
+                  <div class="text-xs text-muted d-flex align-items-center gap-1">
+                    <span>O seleccionar del catálogo:</span>
+                    <select class="form-select form-select-sm" style="font-size: 11.5px; padding: 2px 8px; height: 26px; width: auto;" (change)="onSeleccionarMedicamentoCatalogo(i, $event)">
+                      <option value="">-- Escoger del catálogo --</option>
+                      <option *ngFor="let m of medicamentosCatalogo" [value]="m.id">
+                        {{ m.name }} ({{ m.manufacturer }}) · S/ {{ m.purchasePrice }} · {{ m.prescriptionRequired ? '🩺 Rx' : '💊 Libre' }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+                <input type="text" formControlName="nombreProducto" class="form-control font-semibold" placeholder="Escribe el nombre del medicamento (si es nuevo) o selecciona uno arriba..." />
+              </div>
+
+              <!-- Condición de Venta / Receta Médica -->
+              <div class="d-flex align-items-center justify-content-between mb-3 p-2 rounded-2" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                <div class="d-flex align-items-center gap-2">
+                  <span style="font-size: 14px;">📋</span>
+                  <span class="text-xs font-bold text-dark">Condición de Venta / Prescripción:</span>
+                </div>
+                <button
+                  type="button"
+                  class="btn-receta-pill"
+                  [class.badge-receta-yes]="item.get('prescriptionRequired')?.value"
+                  [class.badge-receta-no]="!item.get('prescriptionRequired')?.value"
+                  (click)="toggleRecetaDetalle(i)"
+                  title="Alternar si requiere receta">
+                  <span *ngIf="item.get('prescriptionRequired')?.value">🩺 Requiere Receta Médica (Rx)</span>
+                  <span *ngIf="!item.get('prescriptionRequired')?.value">💊 Venta Libre (Sin Receta)</span>
+                </button>
+              </div>
+
+              <!-- Fila Inferior: Cantidad, Costo Unit, PVP y Lote -->
+              <div class="grid-4 align-items-end">
+                <div class="form-group">
+                  <label>Cant. Pedida (Uds)*</label>
+                  <input type="number" formControlName="cantidadComprada" class="form-control font-mono text-center font-bold" min="1" />
+                </div>
+
+                <div class="form-group">
+                  <label>Costo Prov. (S/)*</label>
+                  <input type="number" step="0.01" formControlName="costoUnitario" class="form-control font-mono text-center font-bold" />
+                </div>
+
+                <div class="form-group">
+                  <label>PVP Venta (S/)*</label>
+                  <input type="number" step="0.01" formControlName="precioVenta" class="form-control font-mono text-center font-bold text-primary" />
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                  <div class="form-group flex-1">
+                    <label>Lote Sugerido</label>
+                    <input type="text" formControlName="loteSugerido" class="form-control font-mono text-center" />
+                  </div>
+                  <button type="button" class="btn-remove-item" (click)="eliminarDetalle(i)" title="Eliminar ítem">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Resumen Económico -->
+          <div class="total-summary-card">
+            <div class="summary-breakdown">
+              <div>Subtotal Neto: <strong class="font-mono">S/ {{ calcularSubtotal() | number:'1.2-2' }}</strong></div>
+              <div>IGV (18%): <span class="font-mono">S/ {{ (calcularSubtotal() * 0.18) | number:'1.2-2' }}</span></div>
+              <div class="text-xs text-muted">Total de unidades solicitadas: {{ detallesFormArray.length }} líneas</div>
+            </div>
+            <div class="summary-total">
+              <div class="total-label">Total Facturado</div>
+              <div class="total-amount font-mono">S/ {{ (calcularSubtotal() * 1.18) | number:'1.2-2' }}</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" (click)="cerrarNuevaModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading">
+            <span>🚀</span> Emitir Orden al Laboratorio
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODAL: VER DETALLE DE COMPRA                                    -->
+  <!-- =============================================================== -->
+  <div class="modal-backdrop" *ngIf="showDetalleModal && selectedCompra">
+    <div class="modal-dialog modal-lg card-glass">
+      <div class="modal-header">
+        <div>
+          <h3 class="font-bold m-0">Detalle de Compra N° {{ selectedCompra.numeroDocumento }}</h3>
+          <span class="text-xs text-muted">Trazabilidad de orden de compra emitida</span>
+        </div>
+        <button class="close-btn" (click)="cerrarDetalleModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-3 mb-3">
+          <div><strong>Laboratorio:</strong><br>{{ selectedCompra.proveedorRazonSocial }}</div>
+          <div><strong>RUC:</strong><br><span class="font-mono font-bold">{{ selectedCompra.proveedorRuc }}</span></div>
+          <div><strong>Estado:</strong><br><span class="badge" [ngClass]="getEstadoBadgeClass(selectedCompra.estado)">{{ getEstadoLabel(selectedCompra.estado) }}</span></div>
+        </div>
+        <div class="grid-3 mb-4">
+          <div><strong>Fecha Emisión:</strong><br>{{ selectedCompra.fechaEmision }}</div>
+          <div><strong>Fecha Recepción:</strong><br>{{ selectedCompra.fechaRecepcion || 'Pendiente' }}</div>
+          <div><strong>Total Facturado:</strong><br><span class="font-bold text-success font-mono">S/ {{ selectedCompra.total | number:'1.2-2' }}</span></div>
+        </div>
+
+        <h5 class="font-bold mb-2">Medicamentos Comprados</h5>
+        <table class="verification-table">
+          <thead>
+            <tr>
+              <th>Medicamento</th>
+              <th>Cantidad</th>
+              <th>Costo Unit.</th>
+              <th>Subtotal</th>
+              <th>Lote Asignado</th>
+              <th>Vencimiento</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of selectedCompra.detalles">
+              <td><strong>{{ d.nombreProducto }}</strong></td>
+              <td class="font-mono">{{ d.cantidadComprada }} uds</td>
+              <td class="font-mono">S/ {{ d.costoUnitario | number:'1.2-2' }}</td>
+              <td class="font-mono font-bold">S/ {{ d.subtotal | number:'1.2-2' }}</td>
+              <td><span class="font-mono">{{ d.loteSugerido || '-' }}</span></td>
+              <td>{{ d.fechaVencimiento || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" (click)="cerrarDetalleModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODAL: CONFIRMACIÓN FEFO & ACTUALIZACIÓN GLOBAL DE PRECIOS      -->
+  <!-- =============================================================== -->
+  <div class="modal-backdrop" *ngIf="showConfirmModal && selectedCompra">
+    <div class="modal-dialog card-glass">
+      <div class="modal-header">
+        <h3 class="font-bold m-0">📦 Confirmar Recepción & Actualizar Precios Globales</h3>
+        <button class="close-btn" (click)="cerrarConfirmarModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="errorMessage" class="alert alert-danger mb-3">
+          <span>⚠️ {{ errorMessage }}</span>
+          <button class="alert-close" (click)="errorMessage = ''">&times;</button>
+        </div>
+        <p>¿Estás seguro de confirmar la recepción de la orden <strong>{{ selectedCompra.numeroDocumento }}</strong>?</p>
+        <div class="card-glass-light p-3 mb-3">
+          <div><strong>Laboratorio:</strong> {{ selectedCompra.proveedorRazonSocial }}</div>
+          <div><strong>Total Medicamentos:</strong> {{ itemsRecepcionArray.length }} ítems verificados físicamente</div>
+          <div><strong>Criterio de Inventario:</strong> Primeros en Vencer, Primeros en Salir (FEFO)</div>
+          <div class="mt-2 text-primary font-bold">
+            🌐 Los Precios de Venta al Público definidos se sincronizarán globalmente en toda la botica para el módulo de Ventas / POS.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" (click)="cerrarConfirmarModal()">Cancelar</button>
+        <button type="button" class="btn btn-success-fefo" [disabled]="loading" (click)="confirmarRecepcionFinal()">
+          {{ loading ? 'Actualizando Inventario y Precios...' : '✓ Confirmar e Ingresar a Stock' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =============================================================== -->
+  <!-- MODAL DE ADVERTENCIA: CAMBIO DE LABORATORIO EN MODO INDIVIDUAL   -->
+  <!-- =============================================================== -->
+  <div *ngIf="mostrarAlertaCambioLab" class="modal-backdrop custom-modal-fade">
+    <div class="modal-dialog-center">
+      <div class="card-warning-modal card-glass p-4 text-center">
+        <div class="warning-icon-pill mb-3">⚠️</div>
+        <h3 class="font-bold text-dark mb-2" style="font-size: 20px;">¿Cambiar de Laboratorio Fabricante?</h3>
+        <p class="text-muted mb-4" style="font-size: 14px; max-width: 460px; margin: 0 auto 20px;">
+          Actualmente tienes <strong>{{ detallesFormArray.length }} medicamento(s)</strong> configurados para 
+          <span class="text-primary font-bold">{{ getProveedorNombre(laboratorioAnteriorId) }}</span>. 
+          Una factura formal farmacéutica sólo puede pertenecer a un único proveedor.
+        </p>
+
+        <div class="warning-actions-stack d-flex flex-column gap-2" style="max-width: 440px; margin: 0 auto;">
+          <button type="button" class="btn btn-primary btn-lg font-bold" (click)="confirmarCambioLabDividir()">
+            📦 Dividir y Generar Pedido Separado (Recomendado)
+            <small class="d-block text-xs font-normal opacity-90">Emite los medicamentos actuales y crea una nueva orden para {{ getProveedorNombre(laboratorioNuevoPendienteId) }}</small>
+          </button>
+          
+          <button type="button" class="btn btn-warning-soft font-bold" (click)="confirmarCambioLabLimpiar()">
+            🗑️ Descartar lista actual y cambiar a {{ getProveedorNombre(laboratorioNuevoPendienteId) }}
+          </button>
+          
+          <button type="button" class="btn btn-outline" (click)="cancelarCambioLab()">
+            ↩️ Mantener {{ getProveedorNombre(laboratorioAnteriorId) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============================================================== -->
+  <!-- MODAL DE RESUMEN: ÉXITO DE EMISIÓN MULTI-LABORATORIO             -->
+  <!-- =============================================================== -->
+  <div *ngIf="resumenMultiEmision && resumenMultiEmision.length > 0" class="modal-backdrop custom-modal-fade">
+    <div class="modal-dialog-center">
+      <div class="card-success-multi card-glass p-4">
+        <div class="text-center mb-3">
+          <div class="success-icon-burst mb-2">🎉</div>
+          <h2 class="font-bold text-dark m-0" style="font-size: 22px;">¡{{ resumenMultiEmision.length }} Órdenes de Compra Emitidas con Éxito!</h2>
+          <p class="text-muted text-sm mt-1 mb-0">Cada laboratorio ha recibido su orden formal con factura correlativa y tracking satelital independiente.</p>
+        </div>
+
+        <div class="multi-results-list mb-4">
+          <div *ngFor="let item of resumenMultiEmision" class="result-item-card p-3 mb-2 rounded-2 d-flex justify-content-between align-items-center">
+            <div class="item-left">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge-doc font-mono font-bold">{{ item.numeroDocumento }}</span>
+                <span class="item-lab font-bold text-dark">{{ item.proveedorRazonSocial }}</span>
+              </div>
+              <div class="item-sub text-xs text-muted mt-1">
+                {{ item.totalItems }} medicamentos · Guía Courier: <span class="font-mono text-teal">{{ item.guiaRemision }}</span>
+              </div>
+            </div>
+            <div class="item-right text-right">
+              <div class="item-amount font-bold font-mono text-primary">S/ {{ item.total | number:'1.2-2' }}</div>
+              <span class="badge badge-sm bg-teal-light text-teal font-semibold">En preparación</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-success-actions d-flex justify-content-center gap-3 flex-wrap">
+          <button type="button" class="btn btn-outline font-bold" (click)="cerrarResumenMulti()">
+            📋 Ver Órdenes de Compra
+          </button>
+          <button type="button" class="btn btn-primary font-bold" (click)="irATrackingDesdeMulti()">
+            🚚 Ir a Seguimiento / Tracking Satelital ➜
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
