@@ -39,7 +39,9 @@ services:
       - ./config/odoo.conf:/etc/odoo/odoo.conf:ro
       - ./addons:/mnt/extra-addons:ro
     networks:
-      - oddo-net
+      oddo-net:
+        aliases:
+          - medizano_odoo
 
   frontend:
     build:
