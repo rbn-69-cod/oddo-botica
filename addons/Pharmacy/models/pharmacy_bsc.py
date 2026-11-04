@@ -140,3 +140,11 @@ class PharmacyBscDashboard(models.TransientModel):
             else "El desempeño global se encuentra dentro de las metas definidas."
         )
         return self
+
+    def action_open_indicators(self):
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Indicadores BSC",
+            "res_model": "pharmacy.bsc.indicator",
+            "view_mode": "list,form",
+        }

@@ -83,7 +83,7 @@
                     <separator string="Lectura ejecutiva"/>
                     <field name="executive_message" nolabel="1"/>
                     <footer>
-                        <button string="Ver indicadores" type="action" name="%(pharmacy_bsc_indicator_action)d" class="btn-primary"/>
+                        <button string="Ver indicadores" type="object" name="action_open_indicators" class="btn-primary"/>
                         <button string="Cerrar" special="cancel" class="btn-secondary"/>
                     </footer>
                 </sheet>
