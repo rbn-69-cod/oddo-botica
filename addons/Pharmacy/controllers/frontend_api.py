@@ -73,6 +73,7 @@ class PharmacyFrontendApi(http.Controller):
             return self._json({"message": "Invalid username or password"}, 401)
         user = request.env["res.users"].sudo().browse(uid)
         role = self._frontend_role(user)
+        roles = self._frontend_roles(user)
         return self._json(
             {
                 "authenticated": True,
@@ -82,6 +83,7 @@ class PharmacyFrontendApi(http.Controller):
                 "email": user.email or "",
                 "fullName": user.name,
                 "role": role,
+                "roles": roles,
             }
         )
 
@@ -99,6 +101,23 @@ class PharmacyFrontendApi(http.Controller):
             return "ANALYST"
         return "CASHIER"
 
+    @classmethod
+    def _frontend_roles(cls, user):
+        roles = []
+        for role, group in (
+            ("ADMIN", "Pharmacy.group_pharmacy_admin"),
+            ("MANAGER", "Pharmacy.group_pharmacy_manager"),
+            ("STOCK_KEEPER", "Pharmacy.group_pharmacy_storekeeper"),
+            ("CUSTOMER_SUPPORT", "Pharmacy.group_pharmacy_pharmacist"),
+            ("ANALYST", "Pharmacy.group_pharmacy_accounts"),
+            ("CASHIER", "Pharmacy.group_pharmacy_cashier"),
+        ):
+            if user.has_group(group):
+                roles.append(role)
+        if user.has_group("base.group_system") and "ADMIN" not in roles:
+            roles.insert(0, "ADMIN")
+        return roles or ["CASHIER"]
+
     def _users(self):
         users = request.env["res.users"].sudo().search([("share", "=", False)])
         records = [
@@ -108,6 +127,12 @@ class PharmacyFrontendApi(http.Controller):
                 "email": user.email or "",
                 "fullName": user.name,
                 "role": self._frontend_role(user),
+                "roles": self._frontend_roles(user),
+                "groups": [
+                    group.name.get("es_PE") or group.name.get("en_US")
+                    for group in user.groups_id
+                    if group.name
+                ],
                 "active": user.active,
                 "createdAt": user.create_date.isoformat() if user.create_date else "",
                 "updatedAt": user.write_date.isoformat() if user.write_date else "",
