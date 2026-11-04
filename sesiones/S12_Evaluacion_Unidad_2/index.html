@@ -1,0 +1,1971 @@
+
+<!doctype html>
+<html lang="es" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="http://localhost:8000/medizano/sesiones/S12_Evaluacion_Unidad_2/">
+      
+      
+        <link rel="prev" href="../S11_Integracion_Cliente_Frontend_Angular_Keycloak/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+  
+    <title>MediZano POS - Microservicios - S12 - Producto de Unidad 2</title>
+  
+
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#s12-evaluacion-y-sustentacion-del-producto-de-unidad-2-sistema-distribuido-robusto" class="md-skip">
+          Saltar a contenido
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabecera">
+    <a href="../.." title="MediZano POS - Microservicios" class="md-header__button md-logo" aria-label="MediZano POS - Microservicios" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MediZano POS - Microservicios
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              S12 - Producto de Unidad 2
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Cambiar a modo oscuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo oscuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Cambiar a modo claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Búsqueda" placeholder="Búsqueda" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Buscar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpiar" aria-label="Limpiar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando búsqueda
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rbn-69-cod/MediZano_microservicios" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rbn-69-cod/MediZano_microservicios
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Pestañas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Inicio
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../proyecto-sello/" class="md-tabs__link">
+          
+  
+  
+  Proyecto Sello
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../S01_Construccion_Servicio_Base/" class="md-tabs__link">
+          
+  
+  
+  I. Sistema Distribuido Base
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../S06_Comunicacion_Sincrona_Resiliente/" class="md-tabs__link">
+          
+  
+  
+  II. Sistema Distribuido Robusto
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegación" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="MediZano POS - Microservicios" class="md-nav__button md-logo" aria-label="MediZano POS - Microservicios" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    MediZano POS - Microservicios
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rbn-69-cod/MediZano_microservicios" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rbn-69-cod/MediZano_microservicios
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inicio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../proyecto-sello/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proyecto Sello
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../S01_Construccion_Servicio_Base/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    I. Sistema Distribuido Base
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    II. Sistema Distribuido Robusto
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    II. Sistema Distribuido Robusto
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../S06_Comunicacion_Sincrona_Resiliente/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S6 - Comunicación Síncrona Resiliente (Feign + Resilience4j)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../S07_Seguridad_Distribuida_Control_Acceso/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S7 - Seguridad Distribuida (JWT / Keycloak)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../S08_Mensajeria_Asincrona_Entre_Servicios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S8 - Mensajería Asíncrona (Apache Kafka)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../S09_Consistencia_Distribuida_Procesos_Negocio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S9 - Consistencia Distribuida (Saga e Idempotencia)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../S10_Observabilidad_Diagnostico_Sistemas_Distribuidos/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S10 - Observabilidad Centralizada (Prometheus, Loki, Grafana)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../S11_Integracion_Cliente_Frontend_Angular_Keycloak/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S11 - Integración Frontend Angular
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S12 - Producto de Unidad 2
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    S12 - Producto de Unidad 2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tablero-de-enlaces-directos-en-vivo-entorno-de-produccion-aws" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚀 Tablero de Enlaces Directos en Vivo (Entorno de Producción AWS)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-proposito-de-la-evaluacion-de-unidad-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Propósito de la Evaluación de Unidad 2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-topologia-arquitectonica-integral-los-8-microservicios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Topología Arquitectónica Integral (Los 8 Microservicios)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Topología Arquitectónica Integral (Los 8 Microservicios)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#especificacion-oficial-de-los-8-microservicios-del-proyecto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Especificación Oficial de los 8 Microservicios del Proyecto
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pautas-y-cronograma-de-la-sustentacion-23-minutos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pautas y Cronograma de la Sustentación (23 Minutos)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-guia-oficial-de-demostracion-tecnica-en-vivo-las-6-pruebas-obligatorias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Guía Oficial de Demostración Técnica en Vivo (Las 6 Pruebas Obligatorias)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Guía Oficial de Demostración Técnica en Vivo (Las 6 Pruebas Obligatorias)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prueba-1-caida-forzada-de-microservicio-y-resiliencia-con-fallback-resilience4j-feign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 1: Caída Forzada de Microservicio y Resiliencia con Fallback (Resilience4j + Feign)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prueba-2-seguridad-perimetral-y-autonomia-de-resource-server-jwt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 2: Seguridad Perimetral y Autonomía de Resource Server (JWT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prueba-3-mensajeria-asincrona-en-event-driven-architecture-apache-kafka-kraft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 3: Mensajería Asíncrona en Event-Driven Architecture (Apache Kafka KRaft)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prueba-4-consistencia-distribuida-y-transaccion-compensatoria-saga-coreografiada" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 4: Consistencia Distribuida y Transacción Compensatoria (Saga Coreografiada)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prueba-5-observabilidad-centralizada-y-trazabilidad-distribuida-traceid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 5: Observabilidad Centralizada y Trazabilidad Distribuida (traceId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prueba-6-demostracion-funcional-end-to-end-desde-frontend-angular-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 6: Demostración Funcional End-to-End desde Frontend Angular 17
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-matriz-de-evidencias-reales-del-sistema-en-produccion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Matriz de Evidencias Reales del Sistema en Producción
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Matriz de Evidencias Reales del Sistema en Producción">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-registro-activo-de-microservicios-en-eureka-server-8761" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1. Registro Activo de Microservicios en Eureka Server (:8761)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-catalogo-swagger-ui-unificado-a-traves-del-api-gateway-8090" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2. Catálogo Swagger UI Unificado a través del API Gateway (:8090)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-cluster-apache-kafka-kraft-en-kafbat-ui-18085" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3. Cluster Apache Kafka KRaft en Kafbat UI (:18085)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-prometheus-targets-en-estado-up-9090targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4. Prometheus Targets en Estado UP (:9090/targets)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-metricas-jvm-heap-en-graficador-promql-de-prometheus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5. Métricas JVM Heap en Graficador PromQL de Prometheus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-terminal-pos-en-angular-17-en-produccion-https5422625238billing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6. Terminal POS en Angular 17 en Producción (https://54.226.25.238/#/billing)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57-control-de-stock-y-lotes-fefo-en-angular-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7. Control de Stock y Lotes FEFO en Angular (#/inventory)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#58-auditoria-y-gestion-de-usuarios-rbac-user-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.8. Auditoría y Gestión de Usuarios RBAC (#/user-management)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-asignacion-individual-de-responsabilidad-tecnica-defensa-de-los-4-integrantes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Asignación Individual de Responsabilidad Técnica (Defensa de los 4 Integrantes)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-banco-de-preguntas-teoricas-para-la-competencia-ce023-n3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Banco de Preguntas Teóricas para la Competencia CE023-N3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-rubrica-oficial-de-evaluacion-de-la-unidad-2-escala-0-20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Rúbrica Oficial de Evaluación de la Unidad 2 (Escala 0 – 20)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tablero-de-enlaces-directos-en-vivo-entorno-de-produccion-aws" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚀 Tablero de Enlaces Directos en Vivo (Entorno de Producción AWS)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-proposito-de-la-evaluacion-de-unidad-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Propósito de la Evaluación de Unidad 2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-topologia-arquitectonica-integral-los-8-microservicios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Topología Arquitectónica Integral (Los 8 Microservicios)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Topología Arquitectónica Integral (Los 8 Microservicios)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#especificacion-oficial-de-los-8-microservicios-del-proyecto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Especificación Oficial de los 8 Microservicios del Proyecto
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pautas-y-cronograma-de-la-sustentacion-23-minutos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pautas y Cronograma de la Sustentación (23 Minutos)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-guia-oficial-de-demostracion-tecnica-en-vivo-las-6-pruebas-obligatorias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Guía Oficial de Demostración Técnica en Vivo (Las 6 Pruebas Obligatorias)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Guía Oficial de Demostración Técnica en Vivo (Las 6 Pruebas Obligatorias)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prueba-1-caida-forzada-de-microservicio-y-resiliencia-con-fallback-resilience4j-feign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 1: Caída Forzada de Microservicio y Resiliencia con Fallback (Resilience4j + Feign)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prueba-2-seguridad-perimetral-y-autonomia-de-resource-server-jwt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 2: Seguridad Perimetral y Autonomía de Resource Server (JWT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prueba-3-mensajeria-asincrona-en-event-driven-architecture-apache-kafka-kraft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 3: Mensajería Asíncrona en Event-Driven Architecture (Apache Kafka KRaft)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prueba-4-consistencia-distribuida-y-transaccion-compensatoria-saga-coreografiada" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 4: Consistencia Distribuida y Transacción Compensatoria (Saga Coreografiada)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prueba-5-observabilidad-centralizada-y-trazabilidad-distribuida-traceid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 5: Observabilidad Centralizada y Trazabilidad Distribuida (traceId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prueba-6-demostracion-funcional-end-to-end-desde-frontend-angular-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prueba 6: Demostración Funcional End-to-End desde Frontend Angular 17
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-matriz-de-evidencias-reales-del-sistema-en-produccion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Matriz de Evidencias Reales del Sistema en Producción
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Matriz de Evidencias Reales del Sistema en Producción">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-registro-activo-de-microservicios-en-eureka-server-8761" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1. Registro Activo de Microservicios en Eureka Server (:8761)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-catalogo-swagger-ui-unificado-a-traves-del-api-gateway-8090" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2. Catálogo Swagger UI Unificado a través del API Gateway (:8090)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-cluster-apache-kafka-kraft-en-kafbat-ui-18085" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3. Cluster Apache Kafka KRaft en Kafbat UI (:18085)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-prometheus-targets-en-estado-up-9090targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4. Prometheus Targets en Estado UP (:9090/targets)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-metricas-jvm-heap-en-graficador-promql-de-prometheus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5. Métricas JVM Heap en Graficador PromQL de Prometheus
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-terminal-pos-en-angular-17-en-produccion-https5422625238billing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6. Terminal POS en Angular 17 en Producción (https://54.226.25.238/#/billing)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57-control-de-stock-y-lotes-fefo-en-angular-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7. Control de Stock y Lotes FEFO en Angular (#/inventory)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#58-auditoria-y-gestion-de-usuarios-rbac-user-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.8. Auditoría y Gestión de Usuarios RBAC (#/user-management)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-asignacion-individual-de-responsabilidad-tecnica-defensa-de-los-4-integrantes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Asignación Individual de Responsabilidad Técnica (Defensa de los 4 Integrantes)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-banco-de-preguntas-teoricas-para-la-competencia-ce023-n3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Banco de Preguntas Teóricas para la Competencia CE023-N3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-rubrica-oficial-de-evaluacion-de-la-unidad-2-escala-0-20" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Rúbrica Oficial de Evaluación de la Unidad 2 (Escala 0 – 20)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="s12-evaluacion-y-sustentacion-del-producto-de-unidad-2-sistema-distribuido-robusto">S12 - Evaluación y Sustentación del Producto de Unidad 2: Sistema Distribuido Robusto<a class="headerlink" href="#s12-evaluacion-y-sustentacion-del-producto-de-unidad-2-sistema-distribuido-robusto" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Universidad Peruana Unión (UPeU) · Facultad de Ingeniería y Arquitectura</strong><br />
+<strong>Curso:</strong> Desarrollo de Aplicaciones Distribuidas<br />
+<strong>Unidad 2:</strong> Construcción de un Sistema Distribuido Robusto, Resiliente y Observado<br />
+<strong>Competencia Cátedra:</strong> CE023-N3 (Diseño, implementación y observabilidad de arquitecturas distribuidas orientadas a eventos y microservicios)</p>
+</blockquote>
+<hr />
+<h2 id="tablero-de-enlaces-directos-en-vivo-entorno-de-produccion-aws">🚀 Tablero de Enlaces Directos en Vivo (Entorno de Producción AWS)<a class="headerlink" href="#tablero-de-enlaces-directos-en-vivo-entorno-de-produccion-aws" title="Permanent link">&para;</a></h2>
+<p>Durante la sustentación técnica en vivo frente al jurado, los siguientes servicios están desplegados y operando en la instancia EC2 de producción:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Servicio / Herramienta</th>
+<th style="text-align: left;">URL de Acceso en Vivo</th>
+<th style="text-align: center;">Puerto</th>
+<th style="text-align: left;">Credenciales por Defecto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Punto de Venta POS (Angular 17)</strong></td>
+<td style="text-align: left;"><a href="https://54.226.25.238/">https://54.226.25.238/</a></td>
+<td style="text-align: center;"><code>:443</code></td>
+<td style="text-align: left;"><code>admin</code> / <code>admin123</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Portal de Documentación MkDocs</strong></td>
+<td style="text-align: left;"><a href="http://54.226.25.238:8000/medizano/">http://54.226.25.238:8000/medizano/</a></td>
+<td style="text-align: center;"><code>:8000</code></td>
+<td style="text-align: left;">Acceso Público</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Eureka Service Discovery</strong></td>
+<td style="text-align: left;"><a href="http://54.226.25.238:8761/">http://54.226.25.238:8761/</a></td>
+<td style="text-align: center;"><code>:8761</code></td>
+<td style="text-align: left;">Acceso Público</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>API Gateway (Swagger UI Central)</strong></td>
+<td style="text-align: left;"><a href="http://54.226.25.238:8090/swagger-ui.html">http://54.226.25.238:8090/swagger-ui.html</a></td>
+<td style="text-align: center;"><code>:8090</code></td>
+<td style="text-align: left;">Token JWT en Authorize</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Apache Kafka UI (Kafbat Cluster)</strong></td>
+<td style="text-align: left;"><a href="http://54.226.25.238:18085/">http://54.226.25.238:18085/</a></td>
+<td style="text-align: center;"><code>:18085</code></td>
+<td style="text-align: left;">Acceso Público</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Prometheus Metrics Server</strong></td>
+<td style="text-align: left;"><a href="http://54.226.25.238:9090/">http://54.226.25.238:9090/</a></td>
+<td style="text-align: center;"><code>:9090</code></td>
+<td style="text-align: left;">Acceso Público</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Grafana Observabilidad Centralizada</strong></td>
+<td style="text-align: left;"><a href="http://54.226.25.238:3000/">http://54.226.25.238:3000/</a></td>
+<td style="text-align: center;"><code>:3000</code></td>
+<td style="text-align: left;"><code>admin</code> / <code>admin</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="1-proposito-de-la-evaluacion-de-unidad-2">1. Propósito de la Evaluación de Unidad 2<a class="headerlink" href="#1-proposito-de-la-evaluacion-de-unidad-2" title="Permanent link">&para;</a></h2>
+<p>El propósito de esta sesión es la <strong>presentación, defensa arquitectónica y sustentación técnica en vivo</strong> del <strong>Producto de Unidad 2: Sistema Distribuido Robusto</strong>. Se demuestra la madurez del sistema frente a fallos, la consistencia eventual de los datos en transacciones de negocio complejas, el aislamiento de seguridad mediante tokens criptográficos, el desacoplamiento temporal mediante mensajería por eventos y la observabilidad distribuida en tiempo real sobre los <strong>8 microservicios del proyecto MediZano POS</strong>.</p>
+<hr />
+<h2 id="2-topologia-arquitectonica-integral-los-8-microservicios">2. Topología Arquitectónica Integral (Los 8 Microservicios)<a class="headerlink" href="#2-topologia-arquitectonica-integral-los-8-microservicios" title="Permanent link">&para;</a></h2>
+<p>MediZano implementa una arquitectura basada en <strong>Database per Service</strong>, comunicación síncrona resiliente mediante <strong>OpenFeign + Resilience4j</strong>, mensajería reactiva asíncrona con <strong>Apache Kafka (KRaft)</strong> y observabilidad centralizada con <strong>Prometheus, Grafana y Grafana Loki</strong>.</p>
+<pre class="mermaid"><code>flowchart TB
+    Browser["Navegador / Terminal POS"] --&gt;|HTTPS :443| Nginx["Nginx Reverse Proxy"]
+    Nginx --&gt;|Archivos SPA| Browser
+    Nginx --&gt;|Proxy /api/**| GW["Spring Cloud Gateway :8090"]
+
+    subgraph Infraestructura ["Infraestructura de Soporte"]
+      DISC["Eureka Server :8761"]
+      CONF["Config Server :8888"]
+    end
+
+    GW -.-&gt; DISC
+    GW -.-&gt; CONF
+
+    subgraph Backend ["Ecosistema Backend - 8 Microservicios"]
+      US["usuario-ms :8087 - Roles y Sesiones"]
+      CA["inventario-ms :8081 - Medicamentos"]
+      CL["cliente-ms :8084 - RUC / DNI"]
+      OR["orden-ms :8082 - Órdenes y Ventas"]
+      IN["inventario-ms :8085 - Stock y FEFO"]
+      PA["pago-ms :8083 - Pasarelas e Idempotencia"]
+      FA["facturacion-ms :8086 - SUNAT e Email"]
+      PR["proveedor-ms :8088 - Compras y Lotes"]
+    end
+
+    GW --&gt; US
+    GW --&gt; CA
+    GW --&gt; CL
+    GW --&gt; OR
+    GW --&gt; IN
+    GW --&gt; PA
+    GW --&gt; FA
+    GW --&gt; PR
+
+    subgraph Eventos ["Event-Driven Architecture - Kafka KRaft"]
+      KAFKA[("Apache Kafka :19092")]
+      OR -.-&gt; KAFKA
+      KAFKA -.-&gt; PA
+      PA -.-&gt; KAFKA
+      KAFKA -.-&gt; OR
+      KAFKA -.-&gt; FA
+    end
+
+    subgraph Observabilidad ["Plataforma de Observabilidad"]
+      PROM["Prometheus :9090"]
+      LOKI["Grafana Loki :3100"]
+      GRAF["Grafana :3000"]
+    end
+
+    US -.-&gt; PROM
+    OR -.-&gt; PROM
+    IN -.-&gt; PROM
+    PROM --&gt; GRAF
+    LOKI --&gt; GRAF</code></pre>
+<h3 id="especificacion-oficial-de-los-8-microservicios-del-proyecto">Especificación Oficial de los 8 Microservicios del Proyecto<a class="headerlink" href="#especificacion-oficial-de-los-8-microservicios-del-proyecto" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">N°</th>
+<th style="text-align: left;">Microservicio</th>
+<th style="text-align: center;">Puerto Interno</th>
+<th style="text-align: left;">Base de Datos</th>
+<th style="text-align: center;">Tipo</th>
+<th style="text-align: left;">Responsabilidad de Negocio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>1</strong></td>
+<td style="text-align: left;"><strong><code>usuario-ms</code></strong></td>
+<td style="text-align: center;"><code>:8087</code></td>
+<td style="text-align: left;"><code>medizano_usuario</code></td>
+<td style="text-align: center;">No Transaccional</td>
+<td style="text-align: left;">Autenticación, generación y firma de JWT, control de roles (RBAC).</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: left;"><strong><code>inventario-ms</code></strong></td>
+<td style="text-align: center;"><code>:8081</code></td>
+<td style="text-align: left;"><code>medizano_catalogo</code></td>
+<td style="text-align: center;">No Transaccional</td>
+<td style="text-align: left;">Catálogo de productos farmacéuticos, código de barras GTIN, categorías.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>3</strong></td>
+<td style="text-align: left;"><strong><code>cliente-ms</code></strong></td>
+<td style="text-align: center;"><code>:8084</code></td>
+<td style="text-align: left;"><code>medizano_cliente</code></td>
+<td style="text-align: center;">No Transaccional</td>
+<td style="text-align: left;">Directorio de clientes, validación de documentos DNI/RUC.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>4</strong></td>
+<td style="text-align: left;"><strong><code>orden-ms</code></strong></td>
+<td style="text-align: center;"><code>:8082</code></td>
+<td style="text-align: left;"><code>medizano_orden</code></td>
+<td style="text-align: center;"><strong>Transaccional</strong></td>
+<td style="text-align: left;">Orquestación síncrona de ventas POS, inicio de Saga y publicación de eventos.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>5</strong></td>
+<td style="text-align: left;"><strong><code>inventario-ms</code></strong></td>
+<td style="text-align: center;"><code>:8085</code></td>
+<td style="text-align: left;"><code>medizano_inventario</code></td>
+<td style="text-align: center;"><strong>Transaccional</strong></td>
+<td style="text-align: left;">Kardex, control de existencias, reservas de stock y rotación de lotes FEFO.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>6</strong></td>
+<td style="text-align: left;"><strong><code>pago-ms</code></strong></td>
+<td style="text-align: center;"><code>:8083</code></td>
+<td style="text-align: left;"><code>medizano_pago</code></td>
+<td style="text-align: center;"><strong>Transaccional</strong></td>
+<td style="text-align: left;">Procesamiento de pagos, control de idempotencia y validación de cobros.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>7</strong></td>
+<td style="text-align: left;"><strong><code>facturacion-ms</code></strong></td>
+<td style="text-align: center;"><code>:8086</code></td>
+<td style="text-align: left;"><code>medizano_facturacion</code></td>
+<td style="text-align: center;">No Transaccional</td>
+<td style="text-align: left;">Generación de comprobantes de pago (Boleta/Factura 18% IGV) y envío SMTP.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>8</strong></td>
+<td style="text-align: left;"><strong><code>proveedor-ms</code></strong></td>
+<td style="text-align: center;"><code>:8088</code></td>
+<td style="text-align: left;"><code>medizano_proveedor</code></td>
+<td style="text-align: center;"><strong>Transaccional</strong></td>
+<td style="text-align: left;">Gestión de proveedores, órdenes de compra y recepción de lotes farmacéuticos.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-pautas-y-cronograma-de-la-sustentacion-23-minutos">3. Pautas y Cronograma de la Sustentación (23 Minutos)<a class="headerlink" href="#3-pautas-y-cronograma-de-la-sustentacion-23-minutos" title="Permanent link">&para;</a></h2>
+<p>La sustentación está rigurosamente estructurada según los lineamientos de evaluación de la cátedra:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Etapa</th>
+<th style="text-align: center;">Duración</th>
+<th style="text-align: left;">Objetivo Principal</th>
+<th style="text-align: left;">Integrantes / Roles</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>1. Video Pitch / Intro</strong></td>
+<td style="text-align: center;"><strong>2 min</strong></td>
+<td style="text-align: left;">Exposición concisa sobre la evolución del sistema desde el monolito/base U1 hacia un cluster de microservicios robusto en AWS.</td>
+<td style="text-align: left;">Kenyi Calsin</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>2. Defensa Técnica Arquitectónica</strong></td>
+<td style="text-align: center;"><strong>8 min</strong></td>
+<td style="text-align: left;">Justificación de decisiones arquitectónicas y demostración de aporte de código individual (2 microservicios por integrante: 1 transaccional y 1 no transaccional).</td>
+<td style="text-align: left;">Los 4 integrantes</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>3. Demo Técnica en Vivo</strong></td>
+<td style="text-align: center;"><strong>8 min</strong></td>
+<td style="text-align: left;">Demostración práctica en tiempo real ejecutando las <strong>6 pruebas obligatorias</strong> de resiliencia, seguridad, Kafka, Saga, observabilidad y Angular.</td>
+<td style="text-align: left;">Los 4 integrantes</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>4. Preguntas Teóricas (Cátedra)</strong></td>
+<td style="text-align: center;"><strong>5 min</strong></td>
+<td style="text-align: left;">Ronda individual de preguntas conceptuales y de diseño para calificar la competencia <strong>CE023-N3</strong>.</td>
+<td style="text-align: left;">Jurado Evaluador</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-guia-oficial-de-demostracion-tecnica-en-vivo-las-6-pruebas-obligatorias">4. Guía Oficial de Demostración Técnica en Vivo (Las 6 Pruebas Obligatorias)<a class="headerlink" href="#4-guia-oficial-de-demostracion-tecnica-en-vivo-las-6-pruebas-obligatorias" title="Permanent link">&para;</a></h2>
+<p>Cada prueba cuenta con comandos reproducibles, evidencias visuales y criterios de éxito verificables:</p>
+<h3 id="prueba-1-caida-forzada-de-microservicio-y-resiliencia-con-fallback-resilience4j-feign">Prueba 1: Caída Forzada de Microservicio y Resiliencia con Fallback (Resilience4j + Feign)<a class="headerlink" href="#prueba-1-caida-forzada-de-microservicio-y-resiliencia-con-fallback-resilience4j-feign" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Objetivo:</strong> Demostrar que ante la indisponibilidad total de un microservicio dependiente (<code>inventario-ms</code>), el sistema no colapsa en cascada ni arroja errores genéricos 500, sino que ejecuta una degradación elegante controlada por <strong>Resilience4j Circuit Breaker</strong>.</li>
+<li><strong>Comando para provocar la caída:</strong>
+  <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>stop<span class="w"> </span>medizano-inventario-ms
+</code></pre></div></li>
+<li><strong>Petición ejecutada desde el API Gateway:</strong>
+  <div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-i<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://54.226.25.238:8090/api/v1/ordenes<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer &lt;TOKEN_VALIDO&gt;"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">"Content-Type: application/json"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">'{</span>
+<span class="s1">    "clienteId": 1,</span>
+<span class="s1">    "items": [{"productoId": 1, "cantidad": 2, "precioUnitario": 12.50}],</span>
+<span class="s1">    "metodoPago": "EFECTIVO"</span>
+<span class="s1">  }'</span>
+</code></pre></div></li>
+<li><strong>Resultado Obtenido (Fallback Controlado):</strong>
+  <div class="highlight"><pre><span></span><code><span class="err">HTTP/</span><span class="mf">1.1</span><span class="w"> </span><span class="mi">503</span><span class="w"> </span><span class="err">Service</span><span class="w"> </span><span class="err">U</span><span class="kc">na</span><span class="err">vailable</span>
+<span class="err">Co</span><span class="kc">ntent</span><span class="mi">-</span><span class="err">Type</span><span class="p">:</span><span class="w"> </span><span class="err">applica</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">/jso</span><span class="kc">n</span>
+
+<span class="p">{</span>
+<span class="w">  </span><span class="nt">"timestamp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-30T02:45:10Z"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="mi">503</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"error"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Service Unavailable"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Fallback: El servicio de inventario no se encuentra disponible temporalmente. La orden no pudo reservar stock pero fue resguardada de forma segura."</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/api/v1/ordenes"</span>
+<span class="p">}</span>
+</code></pre></div></li>
+<li><strong>Restauración del servicio:</strong>
+  <div class="highlight"><pre><span></span><code>docker<span class="w"> </span>start<span class="w"> </span>medizano-inventario-ms
+</code></pre></div></li>
+</ul>
+<hr />
+<h3 id="prueba-2-seguridad-perimetral-y-autonomia-de-resource-server-jwt">Prueba 2: Seguridad Perimetral y Autonomía de Resource Server (JWT)<a class="headerlink" href="#prueba-2-seguridad-perimetral-y-autonomia-de-resource-server-jwt" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Objetivo:</strong> Demostrar el modelo de <strong>Zero Trust</strong>. Tanto el API Gateway como cada microservicio individual operan como un <strong>OAuth2 Resource Server</strong> autónomo capaz de validar la firma del token JWT sin depender de llamadas síncronas a <code>usuario-ms</code>.</li>
+<li><strong>Escenario A: Petición al Gateway sin cabecera de autenticación:</strong>
+  <div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-i<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span>http://54.226.25.238:8090/api/v1/inventario
+<span class="c1"># Respuesta: HTTP/1.1 401 Unauthorized</span>
+</code></pre></div></li>
+<li><strong>Escenario B: Intento de evasión (Bypass) directo al puerto interno del microservicio:</strong>
+  <div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-i<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span>http://54.226.25.238:8085/api/v1/inventario
+<span class="c1"># Respuesta: HTTP/1.1 401 Unauthorized (Spring Security bloquea la petición directa)</span>
+</code></pre></div></li>
+<li><strong>Escenario C: Petición con Token JWT legítimo generado en Login:</strong>
+  <div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-i<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span>http://54.226.25.238:8090/api/v1/inventario<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."</span>
+<span class="c1"># Respuesta: HTTP/1.1 200 OK + Listado de inventario</span>
+</code></pre></div></li>
+</ul>
+<hr />
+<h3 id="prueba-3-mensajeria-asincrona-en-event-driven-architecture-apache-kafka-kraft">Prueba 3: Mensajería Asíncrona en Event-Driven Architecture (Apache Kafka KRaft)<a class="headerlink" href="#prueba-3-mensajeria-asincrona-en-event-driven-architecture-apache-kafka-kraft" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Objetivo:</strong> Demostrar el desacoplamiento temporal de la plataforma. Al generarse una orden, los microservicios colaboradores (<code>pago-ms</code>, <code>facturacion-ms</code>) se comunican mediante eventos asíncronos sin bloquear el hilo HTTP de respuesta al cajero.</li>
+<li><strong>Tópicos Activos en el Cluster Kafka:</strong></li>
+<li><code>orden-eventos</code> (Particiones: 4 | Eventos: <code>orden.creada</code>, <code>orden.cancelada</code>)</li>
+<li><code>pago-eventos</code> (Particiones: 4 | Eventos: <code>pago.validado</code>, <code>pago.fallido</code>)</li>
+<li><code>inventario-eventos</code> (Particiones: 4 | Eventos: <code>stock.reservado</code>, <code>stock.liberado</code>)</li>
+<li><strong>Verificación en Kafbat UI (<code>http://54.226.25.238:18085/</code>):</strong></li>
+<li>Se comprueba la existencia de las 12 particiones totales en el cluster KRaft.</li>
+<li>Se visualiza la cola de mensajes en tiempo real, observando el payload JSON del evento <code>orden.creada</code> con su respectivo <code>orderId</code>, <code>montoTotal</code> y <code>traceId</code>.</li>
+</ul>
+<hr />
+<h3 id="prueba-4-consistencia-distribuida-y-transaccion-compensatoria-saga-coreografiada">Prueba 4: Consistencia Distribuida y Transacción Compensatoria (Saga Coreografiada)<a class="headerlink" href="#prueba-4-consistencia-distribuida-y-transaccion-compensatoria-saga-coreografiada" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Objetivo:</strong> Garantizar la consistencia eventual entre microservicios con bases de datos aisladas ante un fallo de pago imprevisto.</li>
+<li><strong>Escenario de Compensación:</strong></li>
+<li>Se registra una orden de venta. <code>inventario-ms</code> descuenta el stock provisionalmente.</li>
+<li><code>pago-ms</code> procesa la transacción simulando una tarjeta denegada o sin fondos.</li>
+<li><code>pago-ms</code> emite el evento <code>pago.fallido</code> al tópico <code>pago-eventos</code>.</li>
+<li><code>orden-ms</code> intercepta <code>pago.fallido</code>, actualiza el estado de la orden a <code>CANCELADA</code> y publica la orden de anulación.</li>
+<li><code>inventario-ms</code> consume el evento y ejecuta la <strong>transacción compensatoria</strong>: el stock previamente reservado se reintegra al lote correspondiente, manteniendo la integridad del inventario.</li>
+<li><strong>Garantía de Idempotencia:</strong></li>
+<li>Si la pasarela de pagos reenvía la petición con la misma <code>idempotencyKey</code>, <code>pago-ms</code> responde con la transacción original almacenada en base de datos sin generar un cobro duplicado.</li>
+</ul>
+<hr />
+<h3 id="prueba-5-observabilidad-centralizada-y-trazabilidad-distribuida-traceid">Prueba 5: Observabilidad Centralizada y Trazabilidad Distribuida (<code>traceId</code>)<a class="headerlink" href="#prueba-5-observabilidad-centralizada-y-trazabilidad-distribuida-traceid" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Objetivo:</strong> Monitorear métricas del JVM y realizar diagnóstico forense de trazas distribuidas sin acceder a consolas de terminal.</li>
+<li><strong>Herramientas Verificadas:</strong></li>
+<li><strong>Prometheus (<code>:9090</code>):</strong> Recolección en tiempo real de métricas Actuator con sondeo cada 5s. Targets 100% en estado UP.</li>
+<li><strong>Grafana Loki (<code>:3100</code>):</strong> Ingesta centralizada de logs desde todos los contenedores Docker mediante Alloy.</li>
+<li><strong>Grafana (<code>:3000</code>):</strong> En el panel <em>Explore</em>, se filtra por <code>{app="orden-ms"} |= "traceId"</code> para comprobar que el identificador generado al inicio de la venta acompaña cada línea de bitácora en <code>gateway</code>, <code>orden-ms</code>, <code>inventario-ms</code> y <code>pago-ms</code>.</li>
+</ul>
+<hr />
+<h3 id="prueba-6-demostracion-funcional-end-to-end-desde-frontend-angular-17">Prueba 6: Demostración Funcional End-to-End desde Frontend Angular 17<a class="headerlink" href="#prueba-6-demostracion-funcional-end-to-end-desde-frontend-angular-17" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Objetivo:</strong> Ejecutar la venta completa en la interfaz web de producción (<code>https://54.226.25.238/</code>).</li>
+<li><strong>Flujo Operativo:</strong></li>
+<li>Inicio de sesión con credenciales de farmacéutico en <code>#/auth/login</code>.</li>
+<li>Apertura del Terminal POS en <code>#/billing</code>.</li>
+<li>Búsqueda y agregado de medicamentos al carrito de compras.</li>
+<li>Identificación del cliente mediante documento DNI/RUC validado con <code>cliente-ms</code>.</li>
+<li>Pago síncrono, cálculo automático del IGV (18%) y confirmación de la venta.</li>
+<li>Navegación a <code>#/inventory</code> para corroborar visualmente la rebaja de stock físico y la actualización del semáforo de existencias.</li>
+</ul>
+<hr />
+<h2 id="5-matriz-de-evidencias-reales-del-sistema-en-produccion">5. Matriz de Evidencias Reales del Sistema en Producción<a class="headerlink" href="#5-matriz-de-evidencias-reales-del-sistema-en-produccion" title="Permanent link">&para;</a></h2>
+<p>Todas las evidencias documentadas corresponden a capturas directas tomadas con <strong>Google Chrome</strong> sobre la infraestructura real desplegada en AWS:</p>
+<h3 id="51-registro-activo-de-microservicios-en-eureka-server-8761">5.1. Registro Activo de Microservicios en Eureka Server (<code>:8761</code>)<a class="headerlink" href="#51-registro-activo-de-microservicios-en-eureka-server-8761" title="Permanent link">&para;</a></h3>
+<p>Los 8 microservicios del sistema registrados dinámicamente y reportando heartbeat constante:</p>
+<p><img alt="Eureka Discovery con Microservicios en Ejecución" src="../../assets/images/s06-eureka-chrome.png" /></p>
+<hr />
+<h3 id="52-catalogo-swagger-ui-unificado-a-traves-del-api-gateway-8090">5.2. Catálogo Swagger UI Unificado a través del API Gateway (<code>:8090</code>)<a class="headerlink" href="#52-catalogo-swagger-ui-unificado-a-traves-del-api-gateway-8090" title="Permanent link">&para;</a></h3>
+<p>Centralización de la documentación interactiva OpenAPI/Swagger de los microservicios:</p>
+<p><img alt="Swagger UI en el API Gateway" src="../../assets/images/s06-swagger-chrome.png" /></p>
+<hr />
+<h3 id="53-cluster-apache-kafka-kraft-en-kafbat-ui-18085">5.3. Cluster Apache Kafka KRaft en Kafbat UI (<code>:18085</code>)<a class="headerlink" href="#53-cluster-apache-kafka-kraft-en-kafbat-ui-18085" title="Permanent link">&para;</a></h3>
+<p>Visualización del cluster de mensajería con 12 particiones y monitoreo de tópicos en tiempo real:</p>
+<p><img alt="Kafbat UI Cluster Apache Kafka" src="../../assets/images/s10-kafka-ui.png" /></p>
+<hr />
+<h3 id="54-prometheus-targets-en-estado-up-9090targets">5.4. Prometheus Targets en Estado UP (<code>:9090/targets</code>)<a class="headerlink" href="#54-prometheus-targets-en-estado-up-9090targets" title="Permanent link">&para;</a></h3>
+<p>Inspección de endpoints de scraping de Actuator de todos los microservicios:</p>
+<p><img alt="Prometheus Targets UP" src="../../assets/images/s10-prometheus-targets.png" /></p>
+<hr />
+<h3 id="55-metricas-jvm-heap-en-graficador-promql-de-prometheus">5.5. Métricas JVM Heap en Graficador PromQL de Prometheus<a class="headerlink" href="#55-metricas-jvm-heap-en-graficador-promql-de-prometheus" title="Permanent link">&para;</a></h3>
+<p>Seguimiento del consumo de memoria Heap en tiempo real por cada servicio:</p>
+<p><img alt="Prometheus Heap Memory Graph" src="../../assets/images/s10-prometheus-graph.png" /></p>
+<hr />
+<h3 id="56-terminal-pos-en-angular-17-en-produccion-https5422625238billing">5.6. Terminal POS en Angular 17 en Producción (<code>https://54.226.25.238/#/billing</code>)<a class="headerlink" href="#56-terminal-pos-en-angular-17-en-produccion-https5422625238billing" title="Permanent link">&para;</a></h3>
+<p>Interfaz de facturación y despacho rápido de medicamentos:</p>
+<p><img alt="Terminal POS Angular" src="../../assets/images/s11-angular-pos-ventas.png" /></p>
+<hr />
+<h3 id="57-control-de-stock-y-lotes-fefo-en-angular-inventory">5.7. Control de Stock y Lotes FEFO en Angular (<code>#/inventory</code>)<a class="headerlink" href="#57-control-de-stock-y-lotes-fefo-en-angular-inventory" title="Permanent link">&para;</a></h3>
+<p>Monitoreo de existencias farmacéuticas bajo normativa DIGEMID:</p>
+<p><img alt="Inventario FEFO Angular" src="../../assets/images/s11-angular-inventario.png" /></p>
+<hr />
+<h3 id="58-auditoria-y-gestion-de-usuarios-rbac-user-management">5.8. Auditoría y Gestión de Usuarios RBAC (<code>#/user-management</code>)<a class="headerlink" href="#58-auditoria-y-gestion-de-usuarios-rbac-user-management" title="Permanent link">&para;</a></h3>
+<p>Panel de administración de roles y perfiles corporativos:</p>
+<p><img alt="Administración de Usuarios" src="../../assets/images/s11-angular-usuarios.png" /></p>
+<hr />
+<h2 id="6-asignacion-individual-de-responsabilidad-tecnica-defensa-de-los-4-integrantes">6. Asignación Individual de Responsabilidad Técnica (Defensa de los 4 Integrantes)<a class="headerlink" href="#6-asignacion-individual-de-responsabilidad-tecnica-defensa-de-los-4-integrantes" title="Permanent link">&para;</a></h2>
+<p>Cada integrante del equipo defiende ante el jurado <strong>2 microservicios asignados (1 transaccional y 1 no transaccional)</strong>, demostrando autoría de código, justificación de arquitectura y dominio de las tecnologías implementadas:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">N°</th>
+<th style="text-align: left;">Integrante</th>
+<th style="text-align: left;">Microservicio Transaccional</th>
+<th style="text-align: left;">Microservicio No Transaccional</th>
+<th style="text-align: left;">Código Clave y Puntos Fuertes a Defender</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>1</strong></td>
+<td style="text-align: left;"><strong>Aldo Calla</strong></td>
+<td style="text-align: left;"><strong><code>orden-ms</code></strong> (<code>:8082</code>)<br>• Órdenes y detalles de venta POS</td>
+<td style="text-align: left;"><strong><code>cliente-ms</code></strong> (<code>:8084</code>)<br>• Directorio de clientes y DNI/RUC</td>
+<td style="text-align: left;">• Orquestación síncrona con OpenFeign.<br>• Definición de Circuit Breaker con Resilience4j.<br>• Validación de datos del cliente.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: left;"><strong>Kenyi Calsin</strong></td>
+<td style="text-align: left;"><strong><code>inventario-ms</code></strong> (<code>:8085</code>)<br>• Kardex, lotes y rotación FEFO</td>
+<td style="text-align: left;"><strong><code>usuario-ms</code></strong> (<code>:8087</code>)<br>• Roles RBAC, JWT y sesiones</td>
+<td style="text-align: left;">• Algoritmo de despacho FEFO (<em>First Expired, First Out</em>).<br>• Transacción compensatoria para reponer stock cancelado.<br>• Control de acceso distribuido.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>3</strong></td>
+<td style="text-align: left;"><strong>Igarlos Ruben</strong></td>
+<td style="text-align: left;"><strong><code>proveedor-ms</code></strong> (<code>:8088</code>)<br>• Compras y recepción de lotes</td>
+<td style="text-align: left;"><strong><code>inventario-ms</code></strong> (<code>:8081</code>)<br>• Medicamentos, precios y GTIN</td>
+<td style="text-align: left;">• Abastecimiento de stock y órdenes de compra.<br>• Consulta de datos maestros para recepción.<br>• Trazabilidad de proveedores y productos.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>4</strong></td>
+<td style="text-align: left;"><strong>Diego Chambilla</strong></td>
+<td style="text-align: left;"><strong><code>pago-ms</code></strong> (<code>:8083</code>)<br>• Cobros, pasarelas e idempotencia</td>
+<td style="text-align: left;"><strong><code>facturacion-ms</code></strong> (<code>:8086</code>)<br>• Comprobantes, reportes y correo</td>
+<td style="text-align: left;">• Implementación de filtro de idempotencia con tokens UUID.<br>• Consulta de comprobantes y reportes.<br>• Envío asíncrono de correo digital con SpaceMail SMTP.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-banco-de-preguntas-teoricas-para-la-competencia-ce023-n3">7. Banco de Preguntas Teóricas para la Competencia CE023-N3<a class="headerlink" href="#7-banco-de-preguntas-teoricas-para-la-competencia-ce023-n3" title="Permanent link">&para;</a></h2>
+<p>Preguntas clave con respuestas técnicas rigurosas para la fase individual de preguntas de la cátedra:</p>
+<ul>
+<li><strong>1. ¿Cómo maneja Resilience4j la transición entre los estados <code>CLOSED</code>, <code>OPEN</code> y <code>HALF-OPEN</code>?</strong>  </li>
+<li>
+<p><em>Respuesta:</em> Inicialmente el circuito está <code>CLOSED</code> (las peticiones fluyen con normalidad). Si la tasa de fallos supera el umbral configurado (ej. 50% de fallos en una ventana deslizante de 10 peticiones), transita a <code>OPEN</code>, interrumpiendo el paso de peticiones inmediatamente y ejecutando el método de <code>fallback</code>. Transcurrido un tiempo de espera (<em>wait-duration-in-open-state</em>, ej. 10s), el circuito pasa a <code>HALF-OPEN</code>, permitiendo pasar un número controlado de peticiones de prueba. Si estas tienen éxito, vuelve a <code>CLOSED</code>; si alguna falla, regresa a <code>OPEN</code>. Esto previene el agotamiento de hilos del cliente (<em>thread starvation</em>) y evita el efecto avalancha en la red.</p>
+</li>
+<li>
+<p><strong>2. ¿Por qué se optó por una Saga Coreografiada con Apache Kafka y no una Saga Orquestada con un motor como Camunda?</strong>  </p>
+</li>
+<li>
+<p><em>Respuesta:</em> Para el tamaño y naturaleza de MediZano (8 microservicios), la coreografía elimina el punto único de fallo (<em>SPOF</em>) y el acoplamiento que representaría un servicio orquestador centralizado. Cada microservicio reacciona de forma autónoma a los eventos de dominio de su interés (<code>orden.creada</code>, <code>pago.fallido</code>), logrando un mayor rendimiento y facilitando el escalado horizontal independiente.</p>
+</li>
+<li>
+<p><strong>3. ¿Cómo garantiza <code>pago-ms</code> que un pago no se procese por duplicado ante una falla de red del cajero (Idempotencia)?</strong>  </p>
+</li>
+<li>
+<p><em>Respuesta:</em> El frontend genera un encabezado <code>Idempotency-Key</code> (UUIDv4) antes de enviar la solicitud. <code>pago-ms</code> intercepta la clave y busca en su base de datos si ya existe un registro con dicha llave. Si existe, retorna inmediatamente la respuesta almacenada con código HTTP 200 sin volver a interactuar con la pasarela ni emitir un segundo cobro. Si no existe, procesa el pago y persiste la llave junto al resultado dentro de la misma transacción.</p>
+</li>
+<li>
+<p><strong>4. ¿Por qué la autenticación JWT en cada microservicio es sin estado (<em>stateless</em>) y qué ventaja tiene sobre el manejo de sesiones en Redis?</strong>  </p>
+</li>
+<li>
+<p><em>Respuesta:</em> Al utilizar JWT, la información de identidad y roles del usuario viaja contenida y firmada criptográficamente en el payload del token. Cada microservicio actúa como un <em>Resource Server</em> autónomo: valida la firma con la clave compartida sin necesidad de realizar consultas a una base de datos central o caché de sesiones distribuida (como Redis), reduciendo drásticamente la latencia de red y eliminando dependencias de infraestructura para la autorización.</p>
+</li>
+<li>
+<p><strong>5. ¿Qué papel cumple Micrometer Tracing y cómo viaja el <code>traceId</code> a través de Kafka y llamadas Feign?</strong>  </p>
+</li>
+<li>
+<p><em>Respuesta:</em> Micrometer Tracing inyecta identificadores estandarizados según la especificación W3C Trace Context (<code>traceparent</code>). En llamadas síncronas HTTP Feign, el <code>traceId</code> se propaga automáticamente en los encabezados HTTP. En mensajería asíncrona Kafka, se transporta dentro de los <em>Kafka Record Headers</em>, lo que permite a Grafana Loki y Prometheus reconstruir el árbol de ejecución de una transacción a lo largo de múltiples servicios desacoplados.</p>
+</li>
+<li>
+<p><strong>6. ¿Por qué Nginx es fundamental como Reverse Proxy en producción y cómo resuelve los bloqueos de CORS?</strong>  </p>
+</li>
+<li><em>Respuesta:</em> Nginx actúa como fachada unificada en el puerto <code>:80</code>/<code>:443</code>. Sirve los archivos estáticos de la SPA y reenvía las peticiones a <code>/api/**</code> internamente al API Gateway (<code>:8090</code>). Para el navegador del cliente, tanto la interfaz como las APIs residen bajo el mismo origen (<code>https://54.226.25.238</code>), eliminando por diseño la necesidad de pre-vuelos HTTP OPTIONS y contingencias por políticas de CORS entre dominios.</li>
+</ul>
+<hr />
+<h2 id="8-rubrica-oficial-de-evaluacion-de-la-unidad-2-escala-0-20">8. Rúbrica Oficial de Evaluación de la Unidad 2 (Escala 0 – 20)<a class="headerlink" href="#8-rubrica-oficial-de-evaluacion-de-la-unidad-2-escala-0-20" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Criterio de Evaluación</th>
+<th style="text-align: center;">Ponderación</th>
+<th style="text-align: left;">Nivel Excelente (4 pts)</th>
+<th style="text-align: left;">Nivel Bueno (3 pts)</th>
+<th style="text-align: left;">Nivel Regular (2 pts)</th>
+<th style="text-align: left;">Nivel Deficiente (0–1 pt)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>1. Resiliencia y Comunicación Síncrona</strong></td>
+<td style="text-align: center;"><strong>20% (4 pts)</strong></td>
+<td style="text-align: left;">Circuit Breaker y Fallback operan perfectamente ante caída forzada de microservicio; clientes Feign bien desacoplados.</td>
+<td style="text-align: left;">Circuit Breaker configurado pero el fallback entrega datos incompletos.</td>
+<td style="text-align: left;">Solo se implementó reintentos sin Circuit Breaker.</td>
+<td style="text-align: left;">El sistema arroja error 500 no controlado ante fallas de servicios.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>2. Seguridad Perimetral y Zero Trust</strong></td>
+<td style="text-align: center;"><strong>20% (4 pts)</strong></td>
+<td style="text-align: left;">Autonomía de Resource Server comprobada; rechazo de acceso sin token tanto en Gateway como en puertos internos.</td>
+<td style="text-align: left;">Seguridad operativa en Gateway pero microservicios internos desprotegidos.</td>
+<td style="text-align: left;">Tokens JWT sin validación de roles en endpoints críticos.</td>
+<td style="text-align: left;">Sin autenticación o tokens sin firma verificable.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>3. Mensajería Asíncrona y Saga</strong></td>
+<td style="text-align: center;"><strong>20% (4 pts)</strong></td>
+<td style="text-align: left;">Eventos publicados y consumidos en Kafka KRaft; compensación Saga ejecutada con restitución de stock demostrada en vivo.</td>
+<td style="text-align: left;">Mensajería Kafka funcional pero la compensación requiere intervención manual.</td>
+<td style="text-align: left;">Eventos implementados sin manejo de fallos ni idempotencia.</td>
+<td style="text-align: left;">Sin integración con broker de eventos o inconsistencia de datos.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>4. Observabilidad Centralizada</strong></td>
+<td style="text-align: center;"><strong>20% (4 pts)</strong></td>
+<td style="text-align: left;">Métricas en Prometheus y correlación de logs con <code>traceId</code> unificado en Grafana Loki visualizados en tiempo real.</td>
+<td style="text-align: left;">Prometheus y Grafana operativos pero sin correlación distribuida de trazas.</td>
+<td style="text-align: left;">Solo métricas básicas de Spring Boot Actuator sin centralización.</td>
+<td style="text-align: left;">Sin herramientas de observabilidad configuradas.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>5. Integración Web y Defensa Técnica</strong></td>
+<td style="text-align: center;"><strong>20% (4 pts)</strong></td>
+<td style="text-align: left;">Frontend Angular 17 consume vía Nginx/Gateway sin CORS; cada integrante demuestra dominio de sus 2 microservicios.</td>
+<td style="text-align: left;">Frontend operativo pero con dependencias directas; defensa técnica desigual entre integrantes.</td>
+<td style="text-align: left;">Frontend incompleto o dificultad para explicar el código asignado.</td>
+<td style="text-align: left;">Frontend no funcional o desconocimiento de la arquitectura.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Volver al principio
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "navigation.tabs", "navigation.sections", "navigation.prune", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="../../javascripts/host-switcher.js"></script>
+      
+    
+  </body>
+</html>

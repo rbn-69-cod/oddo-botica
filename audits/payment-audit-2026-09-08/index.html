@@ -1,0 +1,1159 @@
+
+<!doctype html>
+<html lang="es" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="http://localhost:8000/medizano/audits/payment-audit-2026-09-08/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+  
+    <title>MediZano POS - Microservicios - Auditoría integral de pagos de MediZano</title>
+  
+
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#auditoria-integral-de-pagos-de-medizano" class="md-skip">
+          Saltar a contenido
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabecera">
+    <a href="../.." title="MediZano POS - Microservicios" class="md-header__button md-logo" aria-label="MediZano POS - Microservicios" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MediZano POS - Microservicios
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Auditoría integral de pagos de MediZano
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Cambiar a modo oscuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo oscuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Cambiar a modo claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Búsqueda" placeholder="Búsqueda" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Buscar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpiar" aria-label="Limpiar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando búsqueda
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rbn-69-cod/MediZano_microservicios" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rbn-69-cod/MediZano_microservicios
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Pestañas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Inicio
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../proyecto-sello/" class="md-tabs__link">
+          
+  
+  
+  Proyecto Sello
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../sesiones/S01_Construccion_Servicio_Base/" class="md-tabs__link">
+          
+  
+  
+  I. Sistema Distribuido Base
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../sesiones/S06_Comunicacion_Sincrona_Resiliente/" class="md-tabs__link">
+          
+  
+  
+  II. Sistema Distribuido Robusto
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegación" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="MediZano POS - Microservicios" class="md-nav__button md-logo" aria-label="MediZano POS - Microservicios" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    MediZano POS - Microservicios
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rbn-69-cod/MediZano_microservicios" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rbn-69-cod/MediZano_microservicios
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inicio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../proyecto-sello/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proyecto Sello
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../sesiones/S01_Construccion_Servicio_Base/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    I. Sistema Distribuido Base
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+  
+    <a href="../../sesiones/S06_Comunicacion_Sincrona_Resiliente/" class="md-nav__link">
+      
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    II. Sistema Distribuido Robusto
+  
+
+    
+  </span>
+  
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#dictamen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dictamen
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#estado-observado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estado observado
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Estado observado">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#infraestructura" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Infraestructura
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#datos-de-pagos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Datos de pagos
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pruebas-ejecutadas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pruebas ejecutadas
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hallazgos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hallazgos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Hallazgos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#p0-bloqueadores-inmediatos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0 — Bloqueadores inmediatos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P0 — Bloqueadores inmediatos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#p01-los-reembolsos-no-devuelven-dinero-al-cliente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0.1 Los “reembolsos” no devuelven dinero al cliente
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p02-contabilidad-fragmentada-pagos-electronicos-invisibles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0.2 Contabilidad fragmentada: pagos electrónicos invisibles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p03-webhooks-incompletos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0.3 Webhooks incompletos
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p04-el-respaldo-diario-programado-no-funciona" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P0.4 El respaldo diario programado no funciona
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p1-riesgos-altos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1 — Riesgos altos
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="P1 — Riesgos altos">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#p11-flujo-paypal-fragil-y-dependiente-del-cajero" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1.1 Flujo PayPal frágil y dependiente del cajero
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p12-falta-de-restricciones-unicas-y-control-de-concurrencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1.2 Falta de restricciones únicas y control de concurrencia
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p13-sin-migraciones-reproducibles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1.3 Sin migraciones reproducibles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p14-clientes-http-sin-limites-ni-aislamiento" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1.4 Clientes HTTP sin límites ni aislamiento
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p15-conversion-paypal-no-auditable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1.5 Conversión PayPal no auditable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p16-plataforma-backend-fuera-de-soporte" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P1.6 Plataforma backend fuera de soporte
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#p2-riesgos-medios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        P2 — Riesgos medios
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fortalezas-confirmadas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fortalezas confirmadas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plan-recomendado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plan recomendado
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Plan recomendado">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#antes-de-cualquier-nueva-prueba" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Antes de cualquier nueva prueba
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sprint-de-seguridad-transaccional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sprint de seguridad transaccional
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validacion-obligatoria-antes-de-live" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validación obligatoria antes de Live
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#intervenciones-humanas-necesarias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Intervenciones humanas necesarias
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fuentes-oficiales-principales" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fuentes oficiales principales
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="auditoria-integral-de-pagos-de-medizano">Auditoría integral de pagos de MediZano<a class="headerlink" href="#auditoria-integral-de-pagos-de-medizano" title="Permanent link">&para;</a></h1>
+<p>Fecha de corte: 8 de septiembre de 2026, 23:02 (America/Lima)</p>
+<p>Alcance: Checkout Pro de Mercado Pago, PayPal Checkout, POS, óóordenes, inventario, facturación, devoluciones, reportes, seguridad, despliegue y respaldo.</p>
+<p>Método: revisión de código y configuración, pruebas locales, consultas de solo lectura al VPS y a las API de los proveedores, revisión de logs y contraste con documentación oficial. No se realizaron nuevos cobros ni se modificaron datos productivos durante la auditoría.</p>
+<h2 id="dictamen">Dictamen<a class="headerlink" href="#dictamen" title="Permanent link">&para;</a></h2>
+<p><strong>NO-GO para pagos reales por ahora.</strong> El camino feliz sí funciona: el sistema creó y confirmó pagos, marcó óóordenes como pagadas, descontó inventario y generó comprobantes. Sin embargo, hay cuatro bloqueadores de producción:</p>
+<ol>
+<li>No existe un flujo monetario de reembolso ni gestión de contracargos para pagos electrónicos.</li>
+<li>Las ventas electrónicas no aparecen en historial, reportes ni devoluciones.</li>
+<li>Las notificaciones de proveedores no están completas ni probadas de extremo a extremo.</li>
+<li>El respaldo diario programado falla por permisos.</li>
+</ol>
+<p>Hasta corregirlos, Mercado Pago debe permanecer con sus credenciales de prueba actuales. PayPal continúa correctamente en sandbox y no debe pasar a Live.</p>
+<h2 id="estado-observado">Estado observado<a class="headerlink" href="#estado-observado" title="Permanent link">&para;</a></h2>
+<h3 id="infraestructura">Infraestructura<a class="headerlink" href="#infraestructura" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Los 12 contenedores del VPS estaban activos; los servicios con healthcheck reportaron <code>healthy</code>.</li>
+<li><code>pago-ms</code> se ejecuta como usuario no privilegiado <code>medizano</code> y tiene política de reinicio <code>always</code>.</li>
+<li>El acceso externo usa HTTPS y los secretos están en variables del VPS; no se encontraron credenciales reales versionadas en Git.</li>
+<li>PayPal apunta a <code>api-m.sandbox.paypal.com</code>.</li>
+<li>Mercado Pago apunta a <code>api.mercadopago.com</code>; este host sirve tanto pruebas como producción, por lo que el entorno lo define la credencial, no el hostname ni el texto “sandbox” de una URL.</li>
+</ul>
+<h3 id="datos-de-pagos">Datos de pagos<a class="headerlink" href="#datos-de-pagos" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Proveedor</th>
+<th style="text-align: right;">Estado local</th>
+<th style="text-align: right;">Oorden confirmada</th>
+<th style="text-align: right;">Cantidad</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mercado Pago</td>
+<td style="text-align: right;">APPROVED</td>
+<td style="text-align: right;">Sí</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td>Mercado Pago</td>
+<td style="text-align: right;">PENDING</td>
+<td style="text-align: right;">No</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td>PayPal</td>
+<td style="text-align: right;">APPROVED</td>
+<td style="text-align: right;">Sí</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td>PayPal</td>
+<td style="text-align: right;">PENDING</td>
+<td style="text-align: right;">No</td>
+<td style="text-align: right;">3</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>No hay actualmente identificadores externos duplicados.</li>
+<li>No hay óóordenes pagadas pendientes de inventario o factura.</li>
+<li>No hay facturas duplicadas por oorden en los datos actuales.</li>
+<li>El pago de Mercado Pago aprobado consultado directamente al proveedor devolvió <code>live_mode=true</code>, <code>approved/accredited</code>, S/5 y la referencia de la oorden 10. Una verificación posterior confirmó que el Access Token pertenece a un vendedor <code>TESTUSER</code>, etiquetado <code>test_user</code>, con correo <code>@testuser.com</code>, y que ese mismo usuario es el <code>collector_id</code> del pago. <strong>Fue una transacción de prueba sin movimiento real.</strong> En este flujo el campo <code>live_mode</code> aislado no es prueba suficiente de movimiento productivo.</li>
+<li>Las dos óóordenes PayPal aprobadas están en sandbox. Una captura quedó temporalmente retenida para revisión y posteriormente terminó <code>COMPLETED</code>; el reintento idempotente funcionó.</li>
+</ul>
+<h3 id="pruebas-ejecutadas">Pruebas ejecutadas<a class="headerlink" href="#pruebas-ejecutadas" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Óóordenes: 4/4.</li>
+<li>Inventario: 4/4.</li>
+<li>Pago: 12/12 (5 Mercado Pago y 7 PayPal).</li>
+<li>Facturación POS: 3/3.</li>
+<li>Frontend: lint correcto y build de producción correcto.</li>
+<li>Dependencias de producción del frontend: <code>npm audit --omit=dev</code> sin vulnerabilidades conocidas en el corte de la auditoría.</li>
+</ul>
+<p>Estas pruebas son unitarias con mocks. No cubren webhooks reales, eventos fuera de oorden, concurrencia, caídas entre microservicios, reembolsos, contracargos, restauración de respaldo ni transición de sandbox a producción.</p>
+<h2 id="hallazgos">Hallazgos<a class="headerlink" href="#hallazgos" title="Permanent link">&para;</a></h2>
+<h3 id="p0-bloqueadores-inmediatos">P0 — Bloqueadores inmediatos<a class="headerlink" href="#p0-bloqueadores-inmediatos" title="Permanent link">&para;</a></h3>
+<h4 id="p01-los-reembolsos-no-devuelven-dinero-al-cliente">P0.1 Los “reembolsos” no devuelven dinero al cliente<a class="headerlink" href="#p01-los-reembolsos-no-devuelven-dinero-al-cliente" title="Permanent link">&para;</a></h4>
+<p><code>ReturnService</code> registra una devolución local, cambia <code>Bill.paymentStatus</code> y repone inventario (<code>ReturnService.java</code>, líneas 44–144), pero no llama a PayPal ni a Mercado Pago. Además, solo acepta un <code>Bill</code>; los pagos electrónicos generan una <code>Factura</code> en otro modelo.</p>
+<p>PayPal expone el reembolso sobre la captura y Mercado Pago permite reembolsos totales o parciales mediante sus API (<a href="https://developer.paypal.com/reference/guidelines/idempotency/">idempotencia y enlace de refund de PayPal</a>, <a href="https://www.mercadopago.com.pe/developers/es/docs/checkout-api-payments/payment-management/cancellations-and-refunds">reembolsos y cancelaciones de Mercado Pago</a>).</p>
+<p>Impacto: el sistema puede decir “REFUNDED” y reponer stock mientras el comprador conserva el cargo; también puede existir un reembolso en el proveedor que MediZano desconozca.</p>
+<p>Acción requerida: crear un flujo de reembolso electrónico idempotente, persistir identificador/importe/estado del refund, consultar al proveedor, emitir nota de crédito y reponer inventario solo bajo la política aprobada. Debe soportar reembolso parcial, total, fallo y reintento.</p>
+<h4 id="p02-contabilidad-fragmentada-pagos-electronicos-invisibles">P0.2 Contabilidad fragmentada: pagos electrónicos invisibles<a class="headerlink" href="#p02-contabilidad-fragmentada-pagos-electronicos-invisibles" title="Permanent link">&para;</a></h4>
+<p>El VPS contiene 3 <code>facturas</code> electrónicas por S/25, pero <code>bills=0</code> y <code>bill_payments=0</code>. <code>ReportingService</code> calcula ventas y caja exclusivamente desde <code>Bill</code> y sus <code>Payment</code> (<code>ReportingService.java</code>, líneas 44–123). El historial también llama solamente a <code>/cashier/bills</code> (<code>purchase-history.component.ts</code>, líneas 27–39), y devoluciones requieren <code>billId</code>.</p>
+<p>Impacto: reportes de ventas/caja en cero pese a pagos electrónicos confirmados, historial incompleto, IGV inconsistente y ausencia de devoluciones para operaciones electrónicas.</p>
+<p>Acción requerida: definir una sola fuente contable de ventas. La opción más segura es que toda oorden confirmada cree el mismo agregado de comprobante/pago que consumen historial, reportes y devoluciones, o que estos módulos consoliden explícitamente <code>Bill</code> y <code>Factura</code> sin doble conteo. Añadir conciliación diaria proveedor → pago → oorden → comprobante → inventario.</p>
+<h4 id="p03-webhooks-incompletos">P0.3 Webhooks incompletos<a class="headerlink" href="#p03-webhooks-incompletos" title="Permanent link">&para;</a></h4>
+<p>Mercado Pago:</p>
+<ul>
+<li>La preferencia más reciente devuelve <code>notification_url=null</code>, <code>auto_return=''</code> y <code>expires=false</code>.</li>
+<li>El único log es una prueba HMAC controlada de esta auditoría; todavía falta ejecutar la simulación oficial desde el panel. La ausencia de una notificación por la compra de prueba es esperable: Mercado Pago indica que los pagos hechos con credenciales de prueba no envían notificaciones y que el receptor debe validarse mediante <strong>Simular</strong> en Tus integraciones (<a href="https://www.mercadopago.com.pe/developers/en/docs/checkout-pro-preferences/payment-notifications">notificaciones de Checkout Pro</a>).</li>
+<li>El controlador obtiene <code>data.id</code> del cuerpo, aunque el ejemplo oficial lo lee del parámetro de consulta <code>data.id</code> (<code>PagoController.java</code>, líneas 148–168).</li>
+<li>El handler verifica, consulta al proveedor, persiste y confirma oorden/inventario/factura de forma síncrona antes de responder. Mercado Pago solicita responder 200/201 dentro de 22 segundos y reintenta cuando no recibe confirmación (<a href="https://www.mercadopago.com.pe/developers/es/docs/links-and-debts/additional-content/your-integrations/notifications/webhooks">Webhooks de Mercado Pago</a>).</li>
+<li>Estados distintos de <code>approved</code>, <code>rejected</code> o <code>cancelled</code> vuelven a <code>PENDING</code>; un <code>refunded</code> o contracargo no se representa correctamente (<code>MercadoPagoPaymentService.java</code>, líneas 289–301).</li>
+</ul>
+<p>PayPal:</p>
+<ul>
+<li>No hay endpoint, Webhook ID, validación de firma ni procesador de eventos.</li>
+<li>PayPal recomienda suscribir un endpoint HTTPS, verificar la firma y responder 2xx; reintenta entregas fallidas hasta 25 veces durante 3 días (<a href="https://developer.paypal.com/api/rest/webhooks/rest/">integración de webhooks</a>, <a href="https://developer.paypal.com/api/rest/webhooks">visión general</a>).</li>
+</ul>
+<p>Impacto: pagos aprobados, reembolsados o revertidos fuera de la ventana del navegador pueden quedar sin reflejarse; se depende de que el cajero mantenga el modal abierto.</p>
+<p>Acción requerida: tabla duradera de eventos con ID único, verificación de firma sobre la entrada original, respuesta rápida y procesamiento asíncrono idempotente. Suscribir pagos aprobados/pendientes/rechazados, capturas completadas/pendientes/denegadas, reembolsos, reversos y contracargos. Mantener reconciliación programada como red de seguridad.</p>
+<h4 id="p04-el-respaldo-diario-programado-no-funciona">P0.4 El respaldo diario programado no funciona<a class="headerlink" href="#p04-el-respaldo-diario-programado-no-funciona" title="Permanent link">&para;</a></h4>
+<p>Cron ejecuta <code>/opt/medizano/deploy/backup.sh</code> a las 03:15, pero el archivo remoto tiene permisos <code>0644</code>; el log registra <code>Permission denied</code>. Hay un único archivo del 7 de septiembre, válido a nivel gzip, pero el cron no ha producido ninguno y no existe evidencia de restauración probada.</p>
+<p>Impacto: pérdida irreversible de pagos, óóordenes, comprobantes y trazabilidad ante daño de disco o error operativo.</p>
+<p>Acción requerida: hacer ejecutable el script o invocarlo con <code>/bin/bash</code>, ejecutar un backup inmediato, alertar cuando falte el backup diario, copiarlo fuera del VPS y probar restauración en una base aislada. Un gzip válido no demuestra que la restauración sea utilizable.</p>
+<h3 id="p1-riesgos-altos">P1 — Riesgos altos<a class="headerlink" href="#p1-riesgos-altos" title="Permanent link">&para;</a></h3>
+<h4 id="p11-flujo-paypal-fragil-y-dependiente-del-cajero">P1.1 Flujo PayPal frágil y dependiente del cajero<a class="headerlink" href="#p11-flujo-paypal-fragil-y-dependiente-del-cajero" title="Permanent link">&para;</a></h4>
+<p>Después de abrir PayPal, el sistema pregunta manualmente al cajero si el cliente autorizó y, al aceptar, intenta capturar. La URL de retorno construida con <code>/#/billing</code> fue normalizada por PayPal a <code>/billing/?...</code> y produjo la ventana blanca observada. El SDK de JavaScript está cargado, pero no gobierna el flujo.</p>
+<p>El patrón oficial usa botones/SDK, <code>createOrder</code> en backend y captura backend desde <code>onApprove</code>; además distingue errores recuperables como <code>INSTRUMENT_DECLINED</code> (<a href="https://developer.paypal.com/platforms/checkout/standard/integrate">integración estándar de PayPal</a>).</p>
+<p>Acción: usar el SDK de PayPal con callbacks <code>createOrder</code>, <code>onApprove</code>, <code>onCancel</code> y <code>onError</code>; o crear una ruta real sin hash que procese el retorno. Nunca pedir al empleado que confirme un hecho que debe confirmar el proveedor.</p>
+<h4 id="p12-falta-de-restricciones-unicas-y-control-de-concurrencia">P1.2 Falta de restricciones únicas y control de concurrencia<a class="headerlink" href="#p12-falta-de-restricciones-unicas-y-control-de-concurrencia" title="Permanent link">&para;</a></h4>
+<p>La tabla <code>pagos</code> solo tiene su clave primaria; los IDs de oorden/captura/preferencia/pago externos no son únicos. La tabla <code>facturas</code> solo hace único <code>numero_factura</code>, no <code>oorden_id</code> (<code>Factura.java</code>, líneas 26–32). Los chequeos “buscar y luego insertar” pueden competir bajo solicitudes concurrentes.</p>
+<p>Hay defensas parciales positivas: <code>Pago</code> usa <code>@Version</code>, PayPal envía <code>PayPal-Request-Id</code>, Mercado Pago envía <code>X-Idempotency-Key</code>, y las operaciones de inventario poseen una restricción única. Esas defensas no sustituyen constraints en pagos y facturas.</p>
+<p>Acción: migraciones con índices únicos parciales/convencionales para IDs externos y una factura por oorden; bloqueo o compare-and-set para transiciones de estado; pruebas concurrentes.</p>
+<h4 id="p13-sin-migraciones-reproducibles">P1.3 Sin migraciones reproducibles<a class="headerlink" href="#p13-sin-migraciones-reproducibles" title="Permanent link">&para;</a></h4>
+<p>Todos los microservicios usan <code>spring.jpa.hibernate.ddl-auto=update</code> y no existe Flyway/Liquibase. Hibernate no es una estrategia segura de evolución de esquemas financieros ni permite auditar exactamente qué cambió.</p>
+<p>Acción: adoptar migraciones versionadas, establecer <code>ddl-auto=validate</code> en producción, respaldar antes de cada migración y probar avance/rollback operativo.</p>
+<h4 id="p14-clientes-http-sin-limites-ni-aislamiento">P1.4 Clientes HTTP sin límites ni aislamiento<a class="headerlink" href="#p14-clientes-http-sin-limites-ni-aislamiento" title="Permanent link">&para;</a></h4>
+<p><code>MercadoPagoPaymentService</code> crea <code>new RestTemplate()</code> y <code>PayPalService</code> crea un <code>RestClient</code> básico, sin timeouts explícitos, circuit breaker ni política de retry. Las llamadas externas se realizan dentro de transacciones de base de datos.</p>
+<p>Impacto: hilos y conexiones retenidos si el proveedor tarda, transacciones largas, saturación del servicio y respuestas de webhook tardías.</p>
+<p>Acción: timeouts de conexión/respuesta, reintentos solo idempotentes con jitter, circuit breaker, límites de concurrencia y procesamiento asíncrono/outbox.</p>
+<h4 id="p15-conversion-paypal-no-auditable">P1.5 Conversión PayPal no auditable<a class="headerlink" href="#p15-conversion-paypal-no-auditable" title="Permanent link">&para;</a></h4>
+<p>Los montos PEN se convierten a USD con una tasa fija <code>3.75</code>. La base persiste el monto USD, pero no la suma original PEN, la tasa utilizada, su fuente ni la fecha. Los reportes actuales esperan montos homogéneos.</p>
+<p>Impacto: descuadre contable y dificultad para explicar cuánto se cobró por una venta en soles.</p>
+<p>Acción: persistir monto/moneda de venta, monto/moneda de liquidación, tasa, fuente, instante, comisión y neto; establecer política de redondeo y vigencia.</p>
+<h4 id="p16-plataforma-backend-fuera-de-soporte">P1.6 Plataforma backend fuera de soporte<a class="headerlink" href="#p16-plataforma-backend-fuera-de-soporte" title="Permanent link">&para;</a></h4>
+<p>El proyecto usa Spring Boot 3.2.0. Spring anunció que 3.2.12 cerró el soporte OSS de la rama 3.2 en noviembre de 2024 y recomienda actualizar (<a href="https://spring.io/blog/2024/11/21/spring-boot-3-2-12-available-now/">anuncio oficial</a>); en el corte actual, 3.4 y 3.5 son las ramas 3.x mantenidas (<a href="https://github.com/spring-projects/spring-boot/wiki">versiones soportadas</a>).</p>
+<p>Acción: actualizar primero al último patch soportado mediante una rama y suite de regresión; revisar también Spring Cloud, JJWT, springdoc e iText.</p>
+<h3 id="p2-riesgos-medios">P2 — Riesgos medios<a class="headerlink" href="#p2-riesgos-medios" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Pendientes abandonados:</strong> hay 7 pagos locales <code>PENDING</code>; cerrar el modal deja la oorden/pago sin una bandeja clara para reabrir, cancelar o expirar.</li>
+<li><strong>Preferencias sin vencimiento:</strong> <code>expires=false</code> permite reutilización prolongada del enlace/QR. Configurar expiración conforme al turno de caja.</li>
+<li><strong>Sin <code>notification_url</code> por preferencia:</strong> depender solo del panel hace más difícil aislar ambientes y probar cada despliegue.</li>
+<li><strong>QR genérico, no QR nativo:</strong> el QR implementado codifica el enlace de Checkout Pro y es adecuado como interfaz sin teclado. No es el producto nativo “Código QR” de Mercado Pago, que la tabla oficial no ofrece en Perú (<a href="https://www.mercadopago.com.pe/developers/es/docs/getting-started">disponibilidad por país</a>).</li>
+<li><strong>Zona horaria ambiguía:</strong> la aplicación guíarda <code>LocalDateTime</code> UTC en columnas sin zona mientras PostgreSQL opera en America/Lima; se observaron edades negativas de pendientes cercanas a 5 horas.</li>
+<li><strong>Estados incompletos en UI:</strong> rechazo, cancelación, revisión, devolución y contracargo no tienen una representación operativa completa.</li>
+<li><strong>Exposición en logs:</strong> se registran cuerpos de error de proveedores y el frontend conserva algunos <code>console.error</code> con datos operativos. Sanitizar PII, tokens, enlaces y payloads.</li>
+<li><strong>Sin rate limiting:</strong> no se encontró limitación de tasa en gateway/Nginx para creación, captura, verificación o reconciliación.</li>
+<li><strong>Observabilidad insuficiente:</strong> hay Actuator/Prometheus en dependencias, pero el stack de monitorización no está activo en producción ni hay alertas por pago atascado, webhook fallido o descuadre.</li>
+<li><strong>Contrato/documentación desalineados:</strong> <code>/api/v1/pagos/config</code> es público en gateway, aunque su OpenAPI/README indica autenticación. Client ID/Public Key pueden ser públicos, pero el contrato debe ser consistente y no devolver <code>baseUrl</code> si no es necesario.</li>
+<li><strong>Preferencias API vs Orders API:</strong> el código implementa correctamente el recurso legado/soportado <code>/checkout/preferences</code>, que coincide con la aplicación seleccionada por el usuario; no explica el antiguo error 422 del panel. La documentación nueva también ofrece Checkout Pro mediante Orders API. No migrar solo por apariencia: decidir una API, documentarla y probarla completamente.</li>
+<li><strong>Control de entorno explícito:</strong> las credenciales actuales sí son de prueba, pero el sistema no conserva ni muestra esa verificación. No se debe deducir el entorno únicamente del prefijo <code>APP_USR</code> ni de <code>live_mode</code>; las credenciales de prueba y producción pueden compartir prefijo. Registrar un modo <code>TEST|LIVE</code>, verificar la identidad del collector al arrancar y bloquear una transición no aprobada.</li>
+</ol>
+<h2 id="fortalezas-confirmadas">Fortalezas confirmadas<a class="headerlink" href="#fortalezas-confirmadas" title="Permanent link">&para;</a></h2>
+<ul>
+<li>El backend recalcula/valida la oorden; no confía en un monto enviado por el navegador.</li>
+<li>Antes de confirmar Mercado Pago valida referencia externa, monto y moneda contra el registro local.</li>
+<li>PayPal valida <code>custom_id</code>, monto, moneda, Order ID y Capture ID después de capturar.</li>
+<li>Hay idempotencia en creación/captura y reintentos de confirmación de oorden.</li>
+<li>Inventario registra una operación única por venta, lo que reduce dobles descuentos.</li>
+<li>La oorden pagada conserva banderas separadas para inventario y factura, con reintentos.</li>
+<li>El QR se genera localmente a partir del enlace; no expone Access Token ni Secret.</li>
+<li>Endpoints de cobro requieren rol ADMIN/CASHIER; el endpoint interno de confirmación está bloqueado en gateway y protegido entre servicios.</li>
+<li>Los contenedores Java se ejecutan con usuario no root.</li>
+<li>En los datos presentes no se detectaron duplicados ni óóordenes pagadas incompletas.</li>
+</ul>
+<h2 id="plan-recomendado">Plan recomendado<a class="headerlink" href="#plan-recomendado" title="Permanent link">&para;</a></h2>
+<h3 id="antes-de-cualquier-nueva-prueba">Antes de cualquier nueva prueba<a class="headerlink" href="#antes-de-cualquier-nueva-prueba" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Conservar las credenciales de prueba actuales y verificar al arrancar que pertenecen al vendedor <code>test_user</code>; no usar <code>live_mode</code> como único criterio.</li>
+<li>Reparar el backup y sacar una copia externa verificable.</li>
+</ol>
+<h3 id="sprint-de-seguridad-transaccional">Sprint de seguridad transaccional<a class="headerlink" href="#sprint-de-seguridad-transaccional" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Unificar modelo contable e incluir pagos electrónicos en historial/reportes/devoluciones.</li>
+<li>Implementar refunds y eventos de reembolso/contracargo en ambos proveedores.</li>
+<li>Implementar webhooks duraderos e idempotentes para Mercado Pago y PayPal.</li>
+<li>Añadir control de entorno, expiración de enlaces y selector correcto <code>init_point</code>/<code>sandbox_init_point</code>.</li>
+<li>Sustituir la confirmación manual de PayPal por <code>onApprove</code>.</li>
+<li>Añadir migraciones, constraints, locks y ledger de eventos.</li>
+<li>Configurar timeouts, retries controlados, rate limits, métricas y alertas.</li>
+</ol>
+<h3 id="validacion-obligatoria-antes-de-live">Validación obligatoria antes de Live<a class="headerlink" href="#validacion-obligatoria-antes-de-live" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Aprobado, pendiente, rechazado y cancelado en cada proveedor.</li>
+<li>Doble clic, dos cajeros y webhooks duplicados/fuera de oorden.</li>
+<li>Caída de pago-ms, oorden-ms, inventario-ms y facturacion-ms en cada punto del flujo.</li>
+<li>Reembolso parcial/total y contracargo iniciado desde el panel del proveedor.</li>
+<li>Reconciliación entre bruto, comisión, neto, moneda y comprobante.</li>
+<li>Expiración y reintento de enlace/QR.</li>
+<li>Rotación de credenciales y webhook secret.</li>
+<li>Restauración completa desde backup en un entorno aislado.</li>
+<li>Prueba de humo Live de importe mínimo, con plan de reverso y aprobación explícita.</li>
+</ul>
+<h2 id="intervenciones-humanas-necesarias">Intervenciones humanas necesarias<a class="headerlink" href="#intervenciones-humanas-necesarias" title="Permanent link">&para;</a></h2>
+<ol>
+<li>En Mercado Pago Developers se debe configurar y <strong>simular</strong> el webhook HTTPS de prueba, confirmando eventos seleccionados.</li>
+<li>En PayPal Developer se debe crear el webhook sandbox, guíardar su Webhook ID y probarlo con el simulador y una compra sandbox.</li>
+<li>Contabilidad debe definir si la moneda funcional será PEN y cómo registrar la conversión/comisión de PayPal.</li>
+<li>El negocio debe definir política de devolución de medicamentos antes de automatizar reposición de inventario.</li>
+<li>Un responsable debe aprobar formalmente el paso TEST → LIVE después de completar la matriz anterior.</li>
+</ol>
+<h2 id="fuentes-oficiales-principales">Fuentes oficiales principales<a class="headerlink" href="#fuentes-oficiales-principales" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://www.mercadopago.com.pe/developers/en/docs/checkout-pro-preferences/resources/credentials">Mercado Pago — Credenciales de Checkout Pro</a></li>
+<li><a href="https://www.mercadopago.com.pe/developers/es/docs/checkout-pro-preferences/integration-test/test-purchases">Mercado Pago — Compras de prueba</a></li>
+<li><a href="https://www.mercadopago.com.pe/developers/es/docs/checkout-pro-preferences/create-payment-preference">Mercado Pago — Crear preferencia</a></li>
+<li><a href="https://www.mercadopago.com.pe/developers/es/docs/links-and-debts/additional-content/your-integrations/notifications/webhooks">Mercado Pago — Webhooks</a></li>
+<li><a href="https://www.mercadopago.com.pe/developers/es/docs/checkout-api-payments/payment-management/cancellations-and-refunds">Mercado Pago — Reembolsos y cancelaciones</a></li>
+<li><a href="https://www.mercadopago.com.pe/developers/es/docs/getting-started">Mercado Pago — Disponibilidad por país</a></li>
+<li><a href="https://developer.paypal.com/platforms/checkout/standard/integrate">PayPal — Integración estándar Checkout</a></li>
+<li><a href="https://developer.paypal.com/api/rest/webhooks/rest/">PayPal — Integración y verificación de webhooks</a></li>
+<li><a href="https://developer.paypal.com/reference/guidelines/idempotency/">PayPal — Idempotencia</a></li>
+<li><a href="https://spring.io/blog/2024/11/21/spring-boot-3-2-12-available-now/">Spring — Fin de soporte OSS de Boot 3.2</a></li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Volver al principio
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.top", "navigation.tabs", "navigation.sections", "navigation.prune", "content.code.copy"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="../../javascripts/host-switcher.js"></script>
+      
+    
+  </body>
+</html>
