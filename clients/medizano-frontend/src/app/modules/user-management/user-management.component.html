@@ -62,6 +62,7 @@
               <th>Nombre completo</th>
               <th>Email</th>
               <th>Rol</th>
+              <th>Tipo</th>
               <th>Estado</th>
               <th>Creado</th>
               <th>Acciones</th>
@@ -69,13 +70,13 @@
           </thead>
           <tbody>
             <tr *ngIf="isLoading">
-              <td colspan="7" class="loading-cell">
+              <td colspan="8" class="loading-cell">
                 <div class="loading-spinner"></div>
                 <span>Cargando usuarios...</span>
               </td>
             </tr>
             <tr *ngIf="!isLoading && filteredUsers.length === 0">
-              <td colspan="7" class="empty-cell">
+              <td colspan="8" class="empty-cell">
                 <svg-icon name="user" class="empty-icon" [size]="48"></svg-icon>
                 <p>No se encontraron usuarios</p>
               </td>
@@ -89,6 +90,7 @@
                   {{ getRoleLabel(user.role) }}
                 </span>
               </td>
+              <td>{{ getAccountTypeLabel(user.accountType) }}</td>
               <td>
                 <span class="status-badge" [ngClass]="user.active ? 'badge-active' : 'badge-inactive'">
                   {{ user.active ? 'Activo' : 'Inactivo' }}
@@ -99,6 +101,7 @@
                 <button 
                   class="btn-action btn-change-password"
                   (click)="openPasswordModal(user)"
+                  [disabled]="user.accountType === 'technical' || user.accountType === 'portal'"
                   title="Cambiar contraseña"
                 >
                   <svg-icon name="user" class="action-icon" [size]="16"></svg-icon>
@@ -108,6 +111,7 @@
                   class="btn-action btn-toggle-status"
                   [ngClass]="user.active ? 'btn-deactivate' : 'btn-activate'"
                   (click)="toggleUserStatus(user)"
+                  [disabled]="user.accountType === 'technical' || user.accountType === 'portal'"
                   [title]="user.active ? 'Desactivar usuario' : 'Activar usuario'"
                 >
                   <svg-icon name="user" class="action-icon" [size]="16"></svg-icon>

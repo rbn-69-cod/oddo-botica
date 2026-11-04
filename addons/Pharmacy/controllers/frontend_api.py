@@ -119,7 +119,7 @@ class PharmacyFrontendApi(http.Controller):
         return roles or ["CASHIER"]
 
     def _users(self):
-        users = request.env["res.users"].sudo().search([("share", "=", False)])
+        users = request.env["res.users"].sudo().search([])
         records = [
             {
                 "id": user.id,
@@ -134,6 +134,14 @@ class PharmacyFrontendApi(http.Controller):
                     if group.name
                 ],
                 "active": user.active,
+                "share": user.share,
+                "accountType": (
+                    "portal"
+                    if user.share
+                    else "technical"
+                    if user.login in ("__system__", "default", "public", "portaltemplate")
+                    else "internal"
+                ),
                 "createdAt": user.create_date.isoformat() if user.create_date else "",
                 "updatedAt": user.write_date.isoformat() if user.write_date else "",
             }

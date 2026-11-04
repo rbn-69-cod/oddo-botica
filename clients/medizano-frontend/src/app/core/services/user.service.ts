@@ -9,6 +9,8 @@ export interface UserResponse {
   fullName: string;
   role: string;
   active: boolean;
+  share?: boolean;
+  accountType?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,7 +41,6 @@ export class UserService {
     return this.apiService.put<UserResponse>(`/admin/users/${userId}/status?active=${active}`, {});
   }
 }
-
 
 
 

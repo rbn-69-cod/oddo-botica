@@ -181,6 +181,15 @@ export class UserManagementComponent implements OnInit {
     return labels[role] || role;
   }
 
+  getAccountTypeLabel(accountType?: string): string {
+    const labels: Record<string, string> = {
+      internal: 'Interno',
+      portal: 'Portal',
+      technical: 'Técnico'
+    };
+    return labels[accountType || ''] || 'No definido';
+  }
+
   formatDate(dateString: string): string {
     return formatDateTime(dateString);
   }
