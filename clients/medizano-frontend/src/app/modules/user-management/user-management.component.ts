@@ -175,7 +175,7 @@ export class UserManagementComponent implements OnInit {
   getRoleLabel(role: string): string {
     const labels: Record<string, string> = {
       ADMIN: 'Administrador', CASHIER: 'Cajero', STOCK_MONITOR: 'Supervisor de inventario',
-      STOCK_KEEPER: 'Encargado de almacén', CUSTOMER_SUPPORT: 'Atención al cliente',
+      STOCK_KEEPER: 'Encargado de inventario', WAREHOUSE: 'Almacén', CUSTOMER_SUPPORT: 'Atención al cliente',
       ANALYST: 'Analista', MANAGER: 'Gerente'
     };
     return labels[role] || role;

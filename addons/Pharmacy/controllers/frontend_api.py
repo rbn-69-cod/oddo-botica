@@ -43,6 +43,8 @@ class PharmacyFrontendApi(http.Controller):
                 return self._report(resource)
             if resource == "admin/users":
                 return self._users()
+            if resource.startswith("admin/users/"):
+                return self._user_action(resource, payload, query)
             if resource in ("v1/clientes", "v1/proveedores"):
                 return self._partners(resource, query, payload)
             if resource == "v1/compras":
@@ -93,6 +95,8 @@ class PharmacyFrontendApi(http.Controller):
             return "ADMIN"
         if user.has_group("Pharmacy.group_pharmacy_manager"):
             return "MANAGER"
+        if user.has_group("Pharmacy.group_pharmacy_warehouse"):
+            return "WAREHOUSE"
         if user.has_group("Pharmacy.group_pharmacy_storekeeper"):
             return "STOCK_KEEPER"
         if user.has_group("Pharmacy.group_pharmacy_pharmacist"):
@@ -107,6 +111,7 @@ class PharmacyFrontendApi(http.Controller):
         for role, group in (
             ("ADMIN", "Pharmacy.group_pharmacy_admin"),
             ("MANAGER", "Pharmacy.group_pharmacy_manager"),
+            ("WAREHOUSE", "Pharmacy.group_pharmacy_warehouse"),
             ("STOCK_KEEPER", "Pharmacy.group_pharmacy_storekeeper"),
             ("CUSTOMER_SUPPORT", "Pharmacy.group_pharmacy_pharmacist"),
             ("ANALYST", "Pharmacy.group_pharmacy_accounts"),
@@ -148,6 +153,50 @@ class PharmacyFrontendApi(http.Controller):
             for user in users
         ]
         return self._json(records)
+
+    def _user_action(self, resource, payload, query):
+        if not request.env.user.has_group("Pharmacy.group_pharmacy_admin"):
+            return self._json({"message": "Administrator role required"}, 403)
+        parts = resource.split("/")
+        if len(parts) != 4 or not parts[2].isdigit():
+            return self._json({"message": "Invalid user endpoint"}, 400)
+        user = request.env["res.users"].sudo().browse(int(parts[2])).exists()
+        if not user:
+            return self._json({"message": "User not found"}, 404)
+        if user.login in ("__system__", "default", "public", "portaltemplate") or user.share:
+            return self._json({"message": "Technical and portal accounts cannot be changed here"}, 400)
+        action = parts[3]
+        if action == "password" and request.httprequest.method in ("PUT", "PATCH"):
+            password = payload.get("newPassword") or payload.get("password")
+            if not isinstance(password, str) or len(password) < 8:
+                return self._json({"message": "Password must contain at least 8 characters"}, 400)
+            user.write({"password": password})
+            return self._json(self._user_record(user))
+        if action == "status" and request.httprequest.method in ("PUT", "PATCH"):
+            active = query.get("active")
+            if active is None:
+                active = payload.get("active")
+            if isinstance(active, str):
+                active = active.lower() in ("1", "true", "yes", "on")
+            user.write({"active": bool(active)})
+            return self._json(self._user_record(user))
+        return self._json({"message": "Unsupported user action"}, 404)
+
+    def _user_record(self, user):
+        return {
+            "id": user.id,
+            "username": user.login,
+            "email": user.email or "",
+            "fullName": user.name,
+            "role": self._frontend_role(user),
+            "roles": self._frontend_roles(user),
+            "groups": [self._group_label(group) for group in user.groups_id if group.name],
+            "active": user.active,
+            "share": user.share,
+            "accountType": "portal" if user.share else "internal",
+            "createdAt": user.create_date.isoformat() if user.create_date else "",
+            "updatedAt": user.write_date.isoformat() if user.write_date else "",
+        }
 
     @staticmethod
     def _group_label(group):

@@ -12,6 +12,7 @@ export enum UserRole {
   CASHIER = 'CASHIER',                // Billing
   STOCK_MONITOR = 'STOCK_MONITOR',    // Inventory
   STOCK_KEEPER = 'STOCK_KEEPER',      // Medicines
+  WAREHOUSE = 'WAREHOUSE',            // Purchasing and receiving
   CUSTOMER_SUPPORT = 'CUSTOMER_SUPPORT', // Returns
   ANALYST = 'ANALYST',                // Reports
   MANAGER = 'MANAGER'                 // Reports + Purchase History
@@ -31,6 +32,5 @@ export interface AuthResponse {
   email: string;
   role: string;
 }
-
 
 

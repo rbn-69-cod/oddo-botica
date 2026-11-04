@@ -39,7 +39,7 @@ export class AppShellComponent implements OnInit {
       label: 'Dashboard',
       route: '/dashboard',
       icon: 'reports',
-      roles: [UserRole.CASHIER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.CUSTOMER_SUPPORT, UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN]
+      roles: [UserRole.CASHIER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.CUSTOMER_SUPPORT, UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN]
     },
     {
       label: 'Ventas / POS',
@@ -51,7 +51,7 @@ export class AppShellComponent implements OnInit {
       label: 'Inventario',
       route: '/inventory',
       icon: 'inventory',
-      roles: [UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.MANAGER, UserRole.ADMIN]
+      roles: [UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.MANAGER, UserRole.ADMIN]
     },
     {
       label: 'Devoluciones',
@@ -63,7 +63,7 @@ export class AppShellComponent implements OnInit {
       label: 'Proveedores',
       route: '/suppliers',
       icon: 'suppliers',
-      roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.ADMIN]
+      roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.ADMIN]
     },
     {
       label: 'Compras',
@@ -74,17 +74,17 @@ export class AppShellComponent implements OnInit {
         {
           label: 'Órdenes de Compra',
           route: '/purchases',
-          roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.ADMIN]
+          roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.ADMIN]
         },
         {
           label: 'Estado de Pedidos',
           route: '/purchases/tracking',
-          roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.ADMIN]
+          roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.ADMIN]
         },
         {
           label: 'Escanear Productos',
           route: '/purchases/scanner',
-          roles: [UserRole.STOCK_KEEPER, UserRole.STOCK_MONITOR, UserRole.ADMIN]
+          roles: [UserRole.STOCK_KEEPER, UserRole.STOCK_MONITOR, UserRole.WAREHOUSE, UserRole.ADMIN]
         }
       ]
     },

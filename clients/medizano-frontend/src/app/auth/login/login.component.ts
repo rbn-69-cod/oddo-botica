@@ -82,6 +82,8 @@ export class LoginComponent implements OnInit {
         return '/inventory';
       case UserRole.STOCK_KEEPER:
         return '/medicines';
+      case UserRole.WAREHOUSE:
+        return '/purchases';
       case UserRole.CUSTOMER_SUPPORT:
         return '/returns';
       case UserRole.ANALYST:
@@ -108,6 +110,7 @@ export class LoginComponent implements OnInit {
       [UserRole.CASHIER]: ['/billing'],
       [UserRole.STOCK_MONITOR]: ['/inventory'],
       [UserRole.STOCK_KEEPER]: ['/medicines'],
+      [UserRole.WAREHOUSE]: ['/purchases', '/suppliers'],
       [UserRole.CUSTOMER_SUPPORT]: ['/returns'],
       [UserRole.ANALYST]: ['/reports'],
       [UserRole.MANAGER]: ['/reports', '/purchase-history']

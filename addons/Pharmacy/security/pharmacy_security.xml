@@ -28,6 +28,12 @@
             <field name="category_id" ref="module_category_pharmacy"/>
             <field name="comment">Can manage inventory, stock transfers, and expiry tracking</field>
         </record>
+
+        <record id="group_pharmacy_warehouse" model="res.groups">
+            <field name="name">Pharmacy: Warehouse</field>
+            <field name="category_id" ref="module_category_pharmacy"/>
+            <field name="comment">Can manage purchasing, receiving, and warehouse operations</field>
+        </record>
         
         <record id="group_pharmacy_accounts" model="res.groups">
             <field name="name">Pharmacy: Accounts</field>
@@ -40,6 +46,7 @@
             <field name="category_id" ref="module_category_pharmacy"/>
             <field name="implied_ids" eval="[(4, ref('group_pharmacy_pharmacist')), 
                                           (4, ref('group_pharmacy_storekeeper')),
+                                          (4, ref('group_pharmacy_warehouse')),
                                           (4, ref('group_pharmacy_accounts'))]"/>
             <field name="comment">Can manage all pharmacy operations, reports, and configurations</field>
         </record>
