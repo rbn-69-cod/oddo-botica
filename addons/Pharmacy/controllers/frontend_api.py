@@ -129,7 +129,7 @@ class PharmacyFrontendApi(http.Controller):
                 "role": self._frontend_role(user),
                 "roles": self._frontend_roles(user),
                 "groups": [
-                    group.name.get("es_PE") or group.name.get("en_US")
+                    self._group_label(group)
                     for group in user.groups_id
                     if group.name
                 ],
@@ -140,6 +140,13 @@ class PharmacyFrontendApi(http.Controller):
             for user in users
         ]
         return self._json(records)
+
+    @staticmethod
+    def _group_label(group):
+        name = group.name
+        if isinstance(name, dict):
+            return name.get("es_PE") or name.get("en_US") or next(iter(name.values()), "")
+        return name
 
     def _medicines(self, query, payload):
         model = request.env["product.product"]
