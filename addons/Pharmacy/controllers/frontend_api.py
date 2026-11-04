@@ -60,12 +60,13 @@ class PharmacyFrontendApi(http.Controller):
             return self._json({"message": "Username and password are required"}, 400)
         try:
             database = request.db or request.session.db or request.env.cr.dbname
-            uid = request.session.authenticate(
+            auth_result = request.session.authenticate(
                 database,
                 {"login": login, "password": password, "type": "password"},
             )
         except Exception:
             return self._json({"message": "Invalid username or password"}, 401)
+        uid = auth_result.get("uid") if isinstance(auth_result, dict) else auth_result
         if not uid:
             return self._json({"message": "Invalid username or password"}, 401)
         user = request.env["res.users"].sudo().browse(uid)
@@ -89,7 +90,7 @@ class PharmacyFrontendApi(http.Controller):
             domain += ["|", ("name", "ilike", search), ("default_code", "ilike", search)]
         records = model.search_read(
             domain,
-            ["name", "default_code", "list_price", "qty_available", "barcode"],
+            ["name", "default_code", "lst_price", "qty_available", "barcode"],
             limit=int(query.get("limit", 100)),
         )
         return self._json({"content": records, "data": records, "totalElements": len(records)})
