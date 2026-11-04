@@ -41,6 +41,8 @@ class PharmacyFrontendApi(http.Controller):
                 return self._batches(query, payload)
             if resource in ("admin/reports/stock", "admin/reports/sales"):
                 return self._report(resource)
+            if resource == "admin/users":
+                return self._users()
             if resource in ("v1/clientes", "v1/proveedores"):
                 return self._partners(resource, query, payload)
             if resource == "v1/compras":
@@ -70,6 +72,7 @@ class PharmacyFrontendApi(http.Controller):
         if not uid:
             return self._json({"message": "Invalid username or password"}, 401)
         user = request.env["res.users"].sudo().browse(uid)
+        role = self._frontend_role(user)
         return self._json(
             {
                 "authenticated": True,
@@ -78,9 +81,40 @@ class PharmacyFrontendApi(http.Controller):
                 "username": user.login,
                 "email": user.email or "",
                 "fullName": user.name,
-                "role": "ADMIN" if user.has_group("Pharmacy.group_pharmacy_manager") else "CASHIER",
+                "role": role,
             }
         )
+
+    @staticmethod
+    def _frontend_role(user):
+        if user.has_group("Pharmacy.group_pharmacy_admin") or user.has_group("base.group_system"):
+            return "ADMIN"
+        if user.has_group("Pharmacy.group_pharmacy_manager"):
+            return "MANAGER"
+        if user.has_group("Pharmacy.group_pharmacy_storekeeper"):
+            return "STOCK_KEEPER"
+        if user.has_group("Pharmacy.group_pharmacy_pharmacist"):
+            return "CUSTOMER_SUPPORT"
+        if user.has_group("Pharmacy.group_pharmacy_accounts"):
+            return "ANALYST"
+        return "CASHIER"
+
+    def _users(self):
+        users = request.env["res.users"].sudo().search([("share", "=", False)])
+        records = [
+            {
+                "id": user.id,
+                "username": user.login,
+                "email": user.email or "",
+                "fullName": user.name,
+                "role": self._frontend_role(user),
+                "active": user.active,
+                "createdAt": user.create_date.isoformat() if user.create_date else "",
+                "updatedAt": user.write_date.isoformat() if user.write_date else "",
+            }
+            for user in users
+        ]
+        return self._json(records)
 
     def _medicines(self, query, payload):
         model = request.env["product.product"]
