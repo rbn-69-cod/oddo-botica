@@ -44,7 +44,8 @@ El frontend Angular original de MediZano se encuentra en
 docker compose up -d --build
 ```
 
-La interfaz visual queda disponible en <http://localhost:8080> y consume
+La interfaz visual queda disponible en <http://localhost:8080> (o en
+`/medizano/` cuando se publica detrás de Nginx) y consume
 `/api` del módulo `Pharmacy`, que autentica la sesión en Odoo y consulta sus
 modelos ORM para inventario, lotes, proveedores, compras, órdenes y reportes.
 El backend de Odoo continúa disponible en <http://localhost:8069>.

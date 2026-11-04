@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  apiUrl: '/api',
+  apiUrl: '/medizano/api',
   apiPeru: {
     baseUrl: 'https://api.apiperu.pe/api',
     token: ''
