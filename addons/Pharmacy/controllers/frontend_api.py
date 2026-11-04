@@ -215,9 +215,18 @@ class PharmacyFrontendApi(http.Controller):
 
     def _medicines(self, resource, query, payload):
         model = request.env["product.product"].sudo()
-        domain = [("active", "=", True)]
         search = query.get("name") or payload.get("name") or query.get("search")
         parts = resource.split("/")
+        if request.httprequest.method == "DELETE":
+            if len(parts) != 3 or not parts[2].isdigit():
+                return self._json({"message": "Medicine id is required"}, 400)
+            product = model.browse(int(parts[2])).exists()
+            if not product:
+                return self._json({"message": "Medicine not found"}, 404)
+            product.write({"active": False})
+            return self._json({"success": True, "id": product.id, "active": False})
+
+        domain = [("active", "=", True)]
         if len(parts) == 3 and parts[2].isdigit():
             domain.append(("id", "=", int(parts[2])))
         elif len(parts) == 4 and parts[2] == "barcode":
