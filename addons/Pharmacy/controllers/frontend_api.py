@@ -35,22 +35,30 @@ class PharmacyFrontendApi(http.Controller):
             if not request.session.uid:
                 return self._json({"message": "Authentication required"}, 401)
 
-            if resource in ("pharmacist/medicines", "pharmacist/medicines/search"):
-                return self._medicines(query, payload)
+            if resource.startswith("pharmacist/medicines"):
+                return self._medicines(resource, query, payload)
             if resource.startswith("pharmacist/batches"):
-                return self._batches(query, payload)
+                return self._batches(resource, query, payload)
             if resource in ("admin/reports/stock", "admin/reports/sales"):
                 return self._report(resource)
             if resource == "admin/users":
                 return self._users()
             if resource.startswith("admin/users/"):
                 return self._user_action(resource, payload, query)
-            if resource in ("v1/clientes", "v1/proveedores"):
+            if resource.startswith(("v1/clientes", "v1/proveedores")):
                 return self._partners(resource, query, payload)
-            if resource == "v1/compras":
+            if resource.startswith("v1/compras"):
                 return self._purchase_orders()
-            if resource == "v1/ordenes":
+            if resource.startswith("v1/ordenes"):
                 return self._orders()
+            if resource.startswith("admin/audit/"):
+                return self._audit(resource)
+            if resource.startswith("cashier/bills"):
+                return self._bills(resource)
+            if resource.startswith("cashier/returns"):
+                return self._returns(resource)
+            if resource.startswith("v1/inventario/movimientos"):
+                return self._movements()
 
             return self._json({"message": "Unsupported MediZano endpoint: %s" % resource}, 404)
         except Exception:
@@ -205,10 +213,16 @@ class PharmacyFrontendApi(http.Controller):
             return name.get("es_PE") or name.get("en_US") or next(iter(name.values()), "")
         return name
 
-    def _medicines(self, query, payload):
-        model = request.env["product.product"]
+    def _medicines(self, resource, query, payload):
+        model = request.env["product.product"].sudo()
         domain = [("active", "=", True)]
         search = query.get("name") or payload.get("name") or query.get("search")
+        parts = resource.split("/")
+        if len(parts) == 3 and parts[2].isdigit():
+            domain.append(("id", "=", int(parts[2])))
+        elif len(parts) == 4 and parts[2] == "barcode":
+            barcode = parts[3]
+            domain.append(("barcode", "=", barcode))
         if search:
             domain += ["|", ("name", "ilike", search), ("default_code", "ilike", search)]
         records = model.search_read(
@@ -216,50 +230,86 @@ class PharmacyFrontendApi(http.Controller):
             ["name", "default_code", "lst_price", "qty_available", "barcode"],
             limit=int(query.get("limit", 100)),
         )
-        return self._json({"content": records, "data": records, "totalElements": len(records)})
+        if len(parts) == 3 and parts[2].isdigit() or len(parts) == 4 and parts[2] == "barcode":
+            return self._json(records[0] if records else {}, 200 if records else 404)
+        return self._json(records)
 
-    def _batches(self, query, payload):
-        model = request.env["stock.production.lot"]
+    def _batches(self, resource, query, payload):
+        model = request.env["stock.lot"].sudo()
         domain = []
-        if "expired" in query or "expired" in payload:
-            domain.append(("expiration_date", "<", fields.Date.today()))
+        path = resource.split("/")
+        if "expired" in path:
+            domain.append(("expiry_date", "<", fields.Date.today()))
+        if "low-stock" in path:
+            domain.append(("available_quantity", "<=", float(query.get("threshold", 10))))
+        if len(path) == 3 and path[2].isdigit():
+            domain.append(("id", "=", int(path[2])))
+        elif len(path) == 4 and path[2] == "medicine" and path[3].isdigit():
+            domain.append(("product_id", "=", int(path[3])))
+        elif len(path) == 4 and path[2] == "barcode":
+            domain.append(("name", "=", path[3]))
         records = model.search_read(
             domain,
-            ["name", "product_id", "expiration_date", "product_qty"],
+            ["name", "product_id", "expiry_date", "available_quantity", "total_quantity", "batch_number"],
             limit=100,
         )
-        return self._json({"content": records, "data": records, "totalElements": len(records)})
+        if len(path) == 3 and path[2].isdigit() or len(path) == 4 and path[2] == "barcode":
+            return self._json(records[0] if records else {}, 200 if records else 404)
+        return self._json(records)
 
     def _report(self, resource):
         if resource.endswith("stock"):
-            records = request.env["product.product"].search_read(
+            records = request.env["product.product"].sudo().search_read(
                 [("active", "=", True)], ["name", "qty_available"], limit=100
             )
         else:
-            records = request.env["pos.order"].search_read(
+            records = request.env["pos.order"].sudo().search_read(
                 [], ["name", "date_order", "amount_total", "state"], limit=100
             )
         return self._json({"content": records, "data": records, "totalElements": len(records)})
 
     def _partners(self, resource, query, payload):
-        model = request.env["res.partner"]
-        domain = [("is_company", "=", resource.endswith("proveedores"))]
+        model = request.env["res.partner"].sudo()
+        is_supplier = resource.startswith("v1/proveedores")
+        domain = [("is_company", "=", is_supplier)]
+        search = query.get("search") or query.get("filtro")
+        if search:
+            domain += ["|", ("name", "ilike", search), ("vat", "ilike", search)]
         records = model.search_read(
             domain, ["name", "vat", "email", "phone", "street"], limit=100
         )
+        if resource.count("/") >= 2 and resource.rsplit("/", 1)[-1].isdigit():
+            return self._json(records[0] if records else {}, 200 if records else 404)
         return self._json({"content": records, "data": records, "totalElements": len(records)})
 
     def _purchase_orders(self):
-        records = request.env["purchase.order"].search_read(
+        records = request.env["purchase.order"].sudo().search_read(
             [], ["name", "partner_id", "date_order", "state", "amount_total"], limit=100
         )
         return self._json({"content": records, "data": records, "totalElements": len(records)})
 
     def _orders(self):
-        records = request.env["pos.order"].search_read(
+        records = request.env["pos.order"].sudo().search_read(
             [], ["name", "partner_id", "date_order", "amount_total", "state"], limit=100
         )
         return self._json({"content": records, "data": records, "totalElements": len(records)})
+
+    def _audit(self, resource):
+        if resource.endswith("all") or resource.endswith("login-logout") or "/user/" in resource:
+            return self._json([])
+        return self._json({"message": "Unsupported audit endpoint"}, 404)
+
+    def _bills(self, resource):
+        orders = request.env["pos.order"].sudo().search_read(
+            [], ["name", "partner_id", "date_order", "amount_total", "state"], limit=100
+        )
+        return self._json(orders)
+
+    def _returns(self, resource):
+        return self._json([])
+
+    def _movements(self):
+        return self._json([])
 
     @staticmethod
     def _json(data, status=200):
