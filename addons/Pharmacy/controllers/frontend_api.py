@@ -282,15 +282,76 @@ class PharmacyFrontendApi(http.Controller):
         is_supplier = resource.startswith("v1/proveedores")
         rank_field = "supplier_rank" if is_supplier else "customer_rank"
         domain = [("active", "=", True), (rank_field, ">", 0)]
+        parts = resource.split("/")
+        if request.httprequest.method in ("POST", "PUT"):
+            values = {
+                "name": payload.get("razonSocial") or payload.get("name"),
+                "vat": payload.get("ruc") or payload.get("vat"),
+                "email": payload.get("email") or payload.get("emailContacto"),
+                "phone": payload.get("telefono") or payload.get("telefonoContacto"),
+                "street": payload.get("direccion") or payload.get("direccionFiscal"),
+                "supplier_rank": 1 if is_supplier else 0,
+                "customer_rank": 1 if not is_supplier else 0,
+                "is_company": True,
+                "active": payload.get("activo", True),
+            }
+            values = {key: value for key, value in values.items() if value is not None}
+            partner = model.browse(int(parts[2])).exists() if len(parts) > 2 and parts[2].isdigit() else model.browse()
+            if request.httprequest.method == "PUT":
+                if not partner:
+                    return self._json({"message": "Supplier not found"}, 404)
+                partner.write(values)
+            else:
+                partner = model.create(values)
+            return self._json(self._partner_record(partner))
+        if request.httprequest.method == "DELETE":
+            if len(parts) != 3 or not parts[2].isdigit():
+                return self._json({"message": "Supplier id is required"}, 400)
+            partner = model.browse(int(parts[2])).exists()
+            if not partner:
+                return self._json({"message": "Supplier not found"}, 404)
+            partner.write({"active": False})
+            return self._json({"success": True, "id": partner.id, "active": False})
         search = query.get("search") or query.get("filtro")
         if search:
             domain += ["|", ("name", "ilike", search), ("vat", "ilike", search)]
         records = model.search_read(
             domain, ["name", "vat", "email", "phone", "street"], limit=100
         )
-        if resource.count("/") >= 2 and resource.rsplit("/", 1)[-1].isdigit():
-            return self._json(records[0] if records else {}, 200 if records else 404)
-        return self._json({"content": records, "data": records, "totalElements": len(records)})
+        if len(parts) >= 3 and parts[2].isdigit():
+            partner = model.browse(int(parts[2])).exists()
+            return self._json(self._partner_record(partner), 200 if partner else 404)
+        mapped = [self._partner_record(model.browse(record["id"])) for record in records]
+        size = int(query.get("size", 10))
+        page = int(query.get("page", 0))
+        return self._json({
+            "content": mapped,
+            "totalElements": len(mapped),
+            "totalPages": (len(mapped) + size - 1) // size if size else 0,
+            "size": size,
+            "number": page,
+        })
+
+    @staticmethod
+    def _partner_record(partner):
+        return {
+            "id": partner.id,
+            "ruc": partner.vat or "",
+            "razonSocial": partner.name or "",
+            "nombreComercial": partner.name or "",
+            "contactoResponsable": "",
+            "telefono": partner.phone or "",
+            "telefonoContacto": partner.phone or "",
+            "email": partner.email or "",
+            "emailContacto": partner.email or "",
+            "direccion": partner.street or "",
+            "direccionFiscal": partner.street or "",
+            "activo": partner.active,
+            "observaciones": partner.comment or "",
+            "fechaRegistro": partner.create_date.isoformat() if partner.create_date else "",
+            "fechaCreacion": partner.create_date.isoformat() if partner.create_date else "",
+            "fechaActualizacion": partner.write_date.isoformat() if partner.write_date else "",
+        }
 
     def _purchase_orders(self):
         records = request.env["purchase.order"].sudo().search_read(
