@@ -53,4 +53,5 @@ from . import (
     
     # Reports
     pharmacy_reports,
+    pharmacy_bsc,
 )

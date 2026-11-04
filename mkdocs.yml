@@ -1,85 +1,27 @@
-﻿site_name: Oddo Botica - ERP Odoo 18
-site_url: http://localhost:8000/medizano/
+site_name: Oddo Botica - ERP Odoo 18
+site_url: http://localhost:8000/
 repo_url: https://github.com/rbn-69-cod/oddo-botica
 repo_name: rbn-69-cod/oddo-botica
 docs_dir: docs
 
 nav:
   - Inicio: index.md
-  - ERP Odoo 18: odoo.md
-  - Proyecto Sello:
-      - Guía del Proyecto: proyecto-sello/index.md
-      - Arquitectura y Relaciones: proyecto-sello/arquitectura-relaciones.md
-      - Exposición y Sustentación: proyecto-sello/guia-exposicion.md
-      - Construcción desde Cero: proyecto-sello/guia-construccion-paso-a-paso.md
-      - Brief Técnico: proyecto-sello/brief.md
-      - Alcance por Microservicio: proyecto-sello/alcance-microservicios.md
-      - Producto de Unidad 1 — Evidencias: proyecto-sello/u1-producto.md
-      - Producto de Unidad 2: proyecto-sello/u2-producto.md
-      - Matriz de Competencias (ICACIT): proyecto-sello/matriz-competencias.md
-  - I. Sistema Distribuido Base:
-      - S1 - Construcción del Servicio Base: sesiones/S01_Construccion_Servicio_Base.md
-      - S2 - Configuración Centralizada de Ambientes: sesiones/S02_Configuracion_Centralizada_Ambientes.md
-      - S3 - Registro y Descubrimiento (Eureka): sesiones/S03_Registro_Descubrimiento_Ejecucion_Concurrente.md
-      - S4 - API Gateway y Enrutamiento: sesiones/S04_Punto_Unico_Acceso_Distribucion_Trafico.md
-      - S5 - Producto de Unidad 1: sesiones/S05_Evaluacion_Unidad_1.md
-  - II. Sistema Distribuido Robusto:
-      - S6 - Comunicación Síncrona Resiliente (Feign + Resilience4j): sesiones/S06_Comunicacion_Sincrona_Resiliente.md
-      - S7 - Seguridad Distribuida (JWT / Keycloak): sesiones/S07_Seguridad_Distribuida_Control_Acceso.md
-      - S8 - Mensajería Asíncrona (Apache Kafka): sesiones/S08_Mensajeria_Asincrona_Entre_Servicios.md
-      - S9 - Consistencia Distribuida (Saga e Idempotencia): sesiones/S09_Consistencia_Distribuida_Procesos_Negocio.md
-      - S10 - Observabilidad Centralizada (Prometheus, Loki, Grafana): sesiones/S10_Observabilidad_Diagnostico_Sistemas_Distribuidos.md
-      - S11 - Integración Frontend Angular: sesiones/S11_Integracion_Cliente_Frontend_Angular_Keycloak.md
-      - S12 - Producto de Unidad 2: sesiones/S12_Evaluacion_Unidad_2.md
+  - Migración a Odoo: odoo.md
 
 theme:
   name: material
-  custom_dir: overrides
   language: es
-  palette:
-    - scheme: default
-      primary: teal
-      accent: deep orange
-      toggle:
-        icon: material/brightness-7
-        name: Cambiar a modo oscuro
-    - scheme: slate
-      primary: teal
-      accent: deep orange
-      toggle:
-        icon: material/brightness-4
-        name: Cambiar a modo claro
   features:
-    - navigation.instant
-    - navigation.tracking
     - navigation.top
-    - navigation.tabs
-    - navigation.sections
-    - navigation.prune
     - content.code.copy
 
 markdown_extensions:
   - admonition
-  - attr_list
-  - md_in_html
   - tables
-  - pymdownx.magiclink
   - pymdownx.details
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.superfences
   - toc:
       permalink: true
-
 plugins:
   - search:
       lang: es
-
-
-extra_javascript:
-  - javascripts/host-switcher.js
-
-extra_css:
-  - stylesheets/extra.css

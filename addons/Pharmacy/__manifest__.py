@@ -73,11 +73,13 @@ Sistema integral de gestión para boticas y farmacias en Perú:
         "views/pharmacy_assets.xml",
         "views/pharmacy_company_views.xml",
         "views/pharmacy_dashboard_views.xml",
+        "views/pharmacy_bsc_views.xml",
         "views/res_config_settings_views.xml",
         "views/res_partner_views.xml",
         "views/account_move_views.xml",
         # Reports
         "reports/pharmacy_report_views.xml",
+        "data/pharmacy_bsc_data.xml",
         # POS
         # Wizards
         "wizards/pharmacy_wizard_views.xml",

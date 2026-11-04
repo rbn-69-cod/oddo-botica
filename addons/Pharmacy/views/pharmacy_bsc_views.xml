@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="pharmacy_bsc_indicator_view_list" model="ir.ui.view">
+        <field name="name">pharmacy.bsc.indicator.list</field>
+        <field name="model">pharmacy.bsc.indicator</field>
+        <field name="arch" type="xml">
+            <list string="Indicadores BSC" decoration-danger="status == 'critical'" decoration-warning="status == 'warning'" decoration-success="status == 'on_track'">
+                <field name="sequence" widget="handle"/>
+                <field name="code"/>
+                <field name="name"/>
+                <field name="perspective"/>
+                <field name="objective"/>
+                <field name="actual"/>
+                <field name="target"/>
+                <field name="achievement"/>
+                <field name="status"/>
+                <field name="owner_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="pharmacy_bsc_indicator_view_form" model="ir.ui.view">
+        <field name="name">pharmacy.bsc.indicator.form</field>
+        <field name="model">pharmacy.bsc.indicator</field>
+        <field name="arch" type="xml">
+            <form string="Indicador BSC">
+                <header>
+                    <field name="status" widget="statusbar" statusbar_visible="critical,warning,on_track"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="perspective"/>
+                            <field name="objective"/>
+                            <field name="owner_id"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="unit"/>
+                            <field name="direction"/>
+                            <field name="period"/>
+                            <field name="actual"/>
+                            <field name="target"/>
+                            <field name="achievement"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description"/>
+                        <field name="notes"/>
+                    </group>
+                    <group string="Seguimiento">
+                        <field name="last_review"/>
+                        <field name="next_review"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="pharmacy_bsc_dashboard_view_form" model="ir.ui.view">
+        <field name="name">pharmacy.bsc.dashboard.form</field>
+        <field name="model">pharmacy.bsc.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Cuadro de Mando Integral" create="false" edit="false">
+                <sheet>
+                    <div class="oe_title"><h1>Cuadro de Mando Integral</h1></div>
+                    <group string="Estado de indicadores">
+                        <group>
+                            <field name="on_track_count"/>
+                            <field name="warning_count"/>
+                            <field name="critical_count"/>
+                            <field name="average_achievement"/>
+                        </group>
+                        <group>
+                            <field name="financial_count"/>
+                            <field name="customer_count"/>
+                            <field name="internal_count"/>
+                            <field name="learning_count"/>
+                        </group>
+                    </group>
+                    <separator string="Lectura ejecutiva"/>
+                    <field name="executive_message" nolabel="1"/>
+                    <footer>
+                        <button string="Ver indicadores" type="action" name="%(pharmacy_bsc_indicator_action)d" class="btn-primary"/>
+                        <button string="Cerrar" special="cancel" class="btn-secondary"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="pharmacy_bsc_indicator_action" model="ir.actions.act_window">
+        <field name="name">Indicadores BSC</field>
+        <field name="res_model">pharmacy.bsc.indicator</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="pharmacy_bsc_dashboard_action" model="ir.actions.server">
+        <field name="name">Cuadro de Mando Integral</field>
+        <field name="model_id" ref="model_pharmacy_bsc_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_dashboard()</field>
+    </record>
+
+    <menuitem id="menu_pharmacy_bsc" name="Cuadro de Mando Integral (BSC)" parent="menu_pharmacy_root" sequence="75" groups="group_pharmacy_manager"/>
+    <menuitem id="menu_pharmacy_bsc_dashboard" name="Tablero ejecutivo" parent="menu_pharmacy_bsc" action="pharmacy_bsc_dashboard_action" sequence="10"/>
+    <menuitem id="menu_pharmacy_bsc_indicators" name="Indicadores y metas" parent="menu_pharmacy_bsc" action="pharmacy_bsc_indicator_action" sequence="20"/>
+</odoo>

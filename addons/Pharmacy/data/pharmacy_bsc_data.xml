@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="bsc_sales_growth" model="pharmacy.bsc.indicator">
+            <field name="name">Crecimiento de ventas</field>
+            <field name="code">FIN-001</field>
+            <field name="perspective">financial</field>
+            <field name="objective">Incrementar los ingresos sostenibles de la botica</field>
+            <field name="unit">percent</field>
+            <field name="target">10</field>
+        </record>
+        <record id="bsc_stock_margin" model="pharmacy.bsc.indicator">
+            <field name="name">Margen de productos</field>
+            <field name="code">FIN-002</field>
+            <field name="perspective">financial</field>
+            <field name="objective">Proteger la rentabilidad del portafolio</field>
+            <field name="unit">percent</field>
+            <field name="target">25</field>
+        </record>
+        <record id="bsc_customer_satisfaction" model="pharmacy.bsc.indicator">
+            <field name="name">Satisfacción del cliente</field>
+            <field name="code">CLI-001</field>
+            <field name="perspective">customer</field>
+            <field name="objective">Mejorar la experiencia de atención y dispensación</field>
+            <field name="unit">percent</field>
+            <field name="target">90</field>
+        </record>
+        <record id="bsc_repeat_customers" model="pharmacy.bsc.indicator">
+            <field name="name">Clientes recurrentes</field>
+            <field name="code">CLI-002</field>
+            <field name="perspective">customer</field>
+            <field name="objective">Fortalecer la fidelización de pacientes</field>
+            <field name="unit">percent</field>
+            <field name="target">60</field>
+        </record>
+        <record id="bsc_fefo_compliance" model="pharmacy.bsc.indicator">
+            <field name="name">Cumplimiento FEFO</field>
+            <field name="code">PRO-001</field>
+            <field name="perspective">internal</field>
+            <field name="objective">Reducir pérdidas por vencimiento de medicamentos</field>
+            <field name="unit">percent</field>
+            <field name="target">98</field>
+        </record>
+        <record id="bsc_purchase_cycle" model="pharmacy.bsc.indicator">
+            <field name="name">Ciclo de reposición</field>
+            <field name="code">PRO-002</field>
+            <field name="perspective">internal</field>
+            <field name="objective">Asegurar disponibilidad de productos críticos</field>
+            <field name="unit">days</field>
+            <field name="direction">down</field>
+            <field name="target">5</field>
+        </record>
+        <record id="bsc_training" model="pharmacy.bsc.indicator">
+            <field name="name">Capacitación del equipo</field>
+            <field name="code">APR-001</field>
+            <field name="perspective">learning</field>
+            <field name="objective">Elevar las capacidades del personal farmacéutico</field>
+            <field name="unit">percent</field>
+            <field name="target">100</field>
+        </record>
+        <record id="bsc_audit_compliance" model="pharmacy.bsc.indicator">
+            <field name="name">Cumplimiento de auditoría</field>
+            <field name="code">APR-002</field>
+            <field name="perspective">learning</field>
+            <field name="objective">Mantener trazabilidad y cumplimiento operativo</field>
+            <field name="unit">percent</field>
+            <field name="target">95</field>
+        </record>
+    </data>
+</odoo>

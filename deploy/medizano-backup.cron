@@ -1,4 +1,0 @@
-SHELL=/bin/bash
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-15 3 * * * root /opt/medizano/deploy/backup.sh >> /var/log/medizano-backup.log 2>&1

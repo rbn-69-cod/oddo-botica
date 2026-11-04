@@ -1,8 +1,0 @@
--- Bases de datos independientes para los 8 microservicios de MediZano POS (4 Integrantes x 2 MS)
-CREATE DATABASE medizano_ordenes_db;      -- Aldo (Transaccional)
-CREATE DATABASE medizano_clientes_db;     -- Aldo (No transaccional)
-CREATE DATABASE medizano_inventario_db;   -- Kenyi (Transaccional: productos, stock y lotes)
-CREATE DATABASE medizano_usuarios_db;     -- Kenyi (No transaccional)
-CREATE DATABASE medizano_proveedores_db;  -- Igarlos (Transaccional)
-CREATE DATABASE medizano_facturacion_db;  -- Igarlos (No transaccional)
-CREATE DATABASE medizano_pagos_db;        -- Diego (Transaccional)

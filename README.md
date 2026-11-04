@@ -57,7 +57,6 @@ addons/Pharmacy/                 # Módulo Odoo personalizado
 config/odoo.conf                 # Configuración sin secretos
 docker-compose.yml               # Entorno Odoo 18 + PostgreSQL
 .env.example                     # Variables requeridas
-docker-compose.microservices.yml # Arquitectura Java anterior, archivada
 ```
 
 ## Desarrollo del módulo

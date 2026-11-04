@@ -4,6 +4,9 @@ access_report_pharmacy_expiry_user,report.pharmacy.expiry.user,model_report_phar
 access_report_pharmacy_stock_movement_user,report.pharmacy.stock.movement.user,model_report_pharmacy_stock_movement,base.group_user,1,0,0,0
 access_report_pharmacy_claims_summary_user,report.pharmacy.claims.summary.user,model_report_pharmacy_claims_summary,base.group_user,1,0,0,0
 access_report_pharmacy_branch_pnl_user,report.pharmacy.branch.pnl.user,model_report_pharmacy_branch_pnl,base.group_user,1,0,0,0
+access_pharmacy_bsc_indicator_user,pharmacy.bsc.indicator.user,model_pharmacy_bsc_indicator,base.group_user,1,0,0,0
+access_pharmacy_bsc_indicator_manager,pharmacy.bsc.indicator.manager,model_pharmacy_bsc_indicator,group_pharmacy_manager,1,1,1,1
+access_pharmacy_bsc_dashboard_manager,pharmacy.bsc.dashboard.manager,model_pharmacy_bsc_dashboard,group_pharmacy_manager,1,1,1,1
 access_report_pharmacy_rejection_reasons_user,report.pharmacy.rejection.reasons.user,model_report_pharmacy_rejection_reasons,base.group_user,1,0,0,0
 access_pharmacy_dashboard_manager,pharmacy.dashboard.manager,model_pharmacy_dashboard,group_pharmacy_manager,1,0,0,0
 access_mpesa_unmatched_transaction_manager,mpesa.unmatched.transaction.manager,model_mpesa_unmatched_transaction,group_pharmacy_manager,1,1,1,1
