@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 import { ReportService } from '../../core/services/report.service';
 import { DialogService } from '../../core/services/dialog.service';
 import { CashRegisterReportResponse, SalesReportResponse, GstReportResponse, StockReportResponse } from '../../core/models/report.model';
@@ -20,11 +23,13 @@ export class ReportsComponent implements OnInit {
   stockReport: StockReportResponse | null = null;
   isLoading = false;
   activeTab: ReportTab = 'sales';
+  lastSyncAt: Date | null = null;
 
   constructor(
     private fb: FormBuilder,
     private reportService: ReportService,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private route: ActivatedRoute
   ) {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -57,15 +62,92 @@ export class ReportsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.activeTab === 'stock') {
-      this.loadStockReport();
-    } else {
-      this.loadSalesReport();
-    }
+    this.route.data.subscribe(data => {
+      this.activeTab = data['tab'] === 'cash' ? 'cash' : 'sales';
+      if (this.activeTab === 'cash') {
+        const today = this.formatDate(new Date());
+        this.reportForm.patchValue({ startDate: today, endDate: today });
+      }
+      this.syncAllReports();
+    });
   }
 
   formatDate(date: Date): string {
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  setQuickRange(range: 'today' | 'week' | 'month'): void {
+    const end = new Date();
+    const start = new Date(end);
+    if (range === 'week') {
+      start.setDate(end.getDate() - 6);
+    } else if (range === 'month') {
+      start.setDate(1);
+    }
+    this.reportForm.patchValue({
+      startDate: this.formatDate(start),
+      endDate: this.formatDate(end)
+    });
+    this.syncAllReports();
+  }
+
+  setCashDate(offsetDays = 0): void {
+    const date = new Date();
+    date.setDate(date.getDate() + offsetDays);
+    const value = this.formatDate(date);
+    this.reportForm.patchValue({ startDate: value, endDate: value });
+    this.syncAllReports();
+  }
+
+  onCashDateChange(): void {
+    const date = this.reportForm.get('startDate')?.value;
+    if (!date) return;
+    this.reportForm.patchValue({ endDate: date }, { emitEvent: false });
+  }
+
+  syncAllReports(): void {
+    if (this.reportForm.invalid || this.isLoading) return;
+    const { startDate, endDate } = this.reportForm.value;
+    if (startDate > endDate) {
+      this.dialogService.warning('La fecha inicial no puede ser posterior a la fecha final.');
+      return;
+    }
+
+    this.isLoading = true;
+    forkJoin({
+      sales: this.reportService.getDailySalesReport(startDate, endDate).pipe(catchError(error => {
+        console.error('Error sincronizando ventas:', error);
+        return of(null);
+      })),
+      cash: this.reportService.getCashRegisterReport(startDate, endDate).pipe(catchError(error => {
+        console.error('Error sincronizando caja:', error);
+        return of(null);
+      }))
+    }).pipe(finalize(() => this.isLoading = false)).subscribe(result => {
+      if (result.sales) this.salesReport = result.sales;
+      if (result.cash) this.cashRegisterReport = result.cash;
+      this.lastSyncAt = new Date();
+
+      if (!result.sales && !result.cash) {
+        this.dialogService.error('No se pudo sincronizar la información con Odoo. Intenta nuevamente.');
+      }
+    });
+  }
+
+  get activeReportTitle(): string {
+    return ({ sales: 'Ventas', cash: 'Caja diaria', gst: 'Impuestos', stock: 'Inventario' } as Record<ReportTab, string>)[this.activeTab];
+  }
+
+  get activeReportHint(): string {
+    return ({
+      sales: 'Rendimiento comercial y comprobantes emitidos',
+      cash: 'Ingresos por método de pago y responsable',
+      gst: 'Base imponible e IGV del periodo',
+      stock: 'Existencias, valorización y alertas de inventario'
+    } as Record<ReportTab, string>)[this.activeTab];
   }
 
   loadSalesReport(): void {
@@ -90,15 +172,7 @@ export class ReportsComponent implements OnInit {
   }
 
   loadActiveReport(): void {
-    if (this.activeTab === 'sales') {
-      this.loadSalesReport();
-    } else if (this.activeTab === 'cash') {
-      this.loadCashRegisterReport();
-    } else if (this.activeTab === 'gst') {
-      this.loadGstReport();
-    } else {
-      this.loadStockReport();
-    }
+    this.syncAllReports();
   }
 
   loadGstReport(): void {
@@ -139,15 +213,6 @@ export class ReportsComponent implements OnInit {
 
   onTabChange(tab: ReportTab): void {
     this.activeTab = tab;
-    if (tab === 'sales') {
-      this.loadSalesReport();
-    } else if (tab === 'cash') {
-      this.loadCashRegisterReport();
-    } else if (tab === 'gst') {
-      this.loadGstReport();
-    } else if (tab === 'stock') {
-      this.loadStockReport();
-    }
   }
 
   trackByDate(index: number, daily: any): any {

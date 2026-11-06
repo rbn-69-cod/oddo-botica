@@ -3,11 +3,12 @@
   <div class="purchase-history-header">
     <div class="header-content">
       <div class="header-title">
+        <span class="header-eyebrow">Facturación · Control comercial</span>
         <h1 class="screen-title">
           <svg-icon name="purchase-history" class="title-icon" [size]="28"></svg-icon>
           Historial de ventas
         </h1>
-        <p class="screen-subtitle">Consulta ventas, clientes y comprobantes</p>
+        <p class="screen-subtitle">Consulta comprobantes, clientes y movimientos de venta en un solo lugar.</p>
       </div>
       <button 
         class="btn-refresh" 
@@ -17,7 +18,7 @@
       >
         <svg-icon name="refresh" class="refresh-icon" [size]="18" *ngIf="!isLoading"></svg-icon>
         <span class="spinner-mini" *ngIf="isLoading"></span>
-        <span>Actualizar</span>
+        <span>{{ isLoading ? 'Actualizando' : 'Actualizar' }}</span>
       </button>
     </div>
   </div>
@@ -25,14 +26,19 @@
   <!-- Search and Summary -->
   <div class="search-summary-section">
     <div class="search-card">
+      <div class="search-copy">
+        <span class="search-label">Buscar en el historial</span>
+        <span class="search-hint">Los resultados y totales se actualizan mientras escribes</span>
+      </div>
       <div class="search-input-wrapper">
         <svg-icon name="search" class="search-icon" [size]="20"></svg-icon>
         <input
           type="text"
           class="search-input"
-          placeholder="Buscar por comprobante, cliente, celular o medicamento..."
+          placeholder="Comprobante, cliente, celular o medicamento..."
           [(ngModel)]="searchTerm"
         />
+        <button *ngIf="searchTerm" type="button" class="clear-search" (click)="searchTerm = ''" aria-label="Limpiar búsqueda">×</button>
       </div>
     </div>
 
@@ -71,9 +77,11 @@
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="isLoading && bills.length === 0" class="empty-state">
-    <div class="spinner"></div>
-    <p class="empty-state-text">Cargando historial de ventas...</p>
+  <div *ngIf="isLoading && bills.length === 0" class="loading-panel">
+    <div class="loading-orb"><div class="spinner"></div></div>
+    <h3>Preparando tu historial</h3>
+    <p>Estamos organizando comprobantes, clientes y totales.</p>
+    <div class="skeleton-lines"><span></span><span></span><span></span></div>
   </div>
 
   <!-- Empty State -->
@@ -90,88 +98,74 @@
         <thead>
           <tr>
             <th>Comprobante</th>
-            <th>Fecha y hora</th>
             <th>Cliente</th>
-            <th>Celular</th>
-            <th>Productos</th>
-            <th>Subtotal</th>
-            <th>IGV</th>
+            <th>Resumen de compra</th>
             <th>Total</th>
-            <th>Estado de pago</th>
-            <th>Cajero</th>
+            <th>Estado</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let bill of filteredBills; trackBy: trackByBillId"
-              [class.row-cancelled]="bill.cancelled">
-            <td class="cell-bill-number">
-              <span class="bill-number">{{ bill.billNumber }}</span>
-            </td>
-            <td class="cell-date">
-              <span class="date-value">{{ formatDateTime(bill.billDate) }}</span>
-            </td>
-            <td class="cell-customer">
-              <span class="customer-name">{{ bill.customerName || '-' }}</span>
-            </td>
-            <td class="cell-phone">
-              <span class="phone-value">{{ bill.customerPhone || '-' }}</span>
-            </td>
-            <td class="cell-items">
-              <div class="items-list">
-                <span class="items-count">{{ bill.items.length }} producto(s)</span>
-                <div class="items-details" *ngIf="bill.items.length > 0">
-                  <div *ngFor="let item of bill.items.slice(0, 2)" class="item-detail">
-                    {{ item.medicineName }} ({{ item.quantity }})
+          <ng-container *ngFor="let bill of filteredBills; trackBy: trackByBillId">
+            <tr class="sale-row" [class.row-cancelled]="bill.cancelled" [class.row-expanded]="expandedBillId === bill.id">
+              <td class="cell-bill-number">
+                <span class="bill-number">{{ bill.billNumber }}</span>
+                <span class="date-value">{{ formatDateTime(bill.billDate) }}</span>
+              </td>
+              <td class="cell-customer">
+                <span class="customer-name">{{ bill.customerName || 'Cliente general' }}</span>
+                <span class="customer-contact">{{ bill.customerEmail || bill.customerPhone || 'Sin datos de contacto' }}</span>
+              </td>
+              <td class="cell-items">
+                <span class="items-count">{{ bill.items.length === 1 ? '1 producto' : bill.items.length + ' productos' }}</span>
+                <span class="item-preview">{{ bill.items[0]?.medicineName || 'Sin detalle' }}<ng-container *ngIf="bill.items.length > 1"> y {{ bill.items.length - 1 }} más</ng-container></span>
+              </td>
+              <td class="cell-value">
+                <span class="value-amount">S/ {{ bill.totalAmount | number:'1.2-2' }}</span>
+                <span class="tax-copy">Incluye IGV S/ {{ bill.totalGst | number:'1.2-2' }}</span>
+              </td>
+              <td class="cell-status">
+                <span class="badge" [class]="getPaymentStatusClass(bill.paymentStatus)">{{ getPaymentStatusLabel(bill.paymentStatus) }}</span>
+                <span class="cashier-name">{{ bill.cashierName }}</span>
+              </td>
+              <td class="cell-actions">
+                <div class="actions-grid">
+                  <button type="button" class="btn-action action-detail" (click)="toggleDetails(bill)" title="Ver detalle">
+                    <span>{{ expandedBillId === bill.id ? 'Cerrar' : 'Detalle' }}</span>
+                  </button>
+                  <button type="button" class="btn-action action-download" (click)="downloadBillPdf(bill)" title="Descargar PDF"><span>↓ PDF</span></button>
+                  <button type="button" class="btn-action action-print" (click)="printBill(bill)" title="Reimprimir"><span>Imprimir</span></button>
+                  <button type="button" class="btn-action action-email" (click)="toggleDetails(bill)" title="Reenviar al cliente"><span>Reenviar</span></button>
+                </div>
+              </td>
+            </tr>
+            <tr class="detail-row" *ngIf="expandedBillId === bill.id">
+              <td colspan="6">
+                <div class="detail-panel">
+                  <div class="detail-products">
+                    <div class="detail-heading"><span>Detalle del comprobante</span><small>{{ bill.items.length }} producto(s)</small></div>
+                    <div class="product-line" *ngFor="let item of bill.items">
+                      <div><strong>{{ item.medicineName }}</strong><small *ngIf="item.batchNumber">Lote {{ item.batchNumber }}</small></div>
+                      <span>{{ item.quantity }} × S/ {{ item.unitPrice | number:'1.2-2' }}</span>
+                      <strong>S/ {{ item.totalAmount | number:'1.2-2' }}</strong>
+                    </div>
+                    <div class="totals-line"><span>Subtotal S/ {{ bill.subtotal | number:'1.2-2' }} · IGV S/ {{ bill.totalGst | number:'1.2-2' }}</span><strong>Total S/ {{ bill.totalAmount | number:'1.2-2' }}</strong></div>
                   </div>
-                  <div *ngIf="bill.items.length > 2" class="item-detail-more">
-                    +{{ bill.items.length - 2 }} mas
+                  <div class="resend-card">
+                    <span class="resend-kicker">Recibo digital</span>
+                    <h3>Reenviar al cliente</h3>
+                    <p>Actualiza el correo si es necesario y envía una copia del comprobante.</p>
+                    <div class="resend-form">
+                      <input type="email" [(ngModel)]="emailDrafts[bill.id]" placeholder="cliente@correo.com" [disabled]="emailingBillId === bill.id" />
+                      <button type="button" (click)="resendBill(bill)" [disabled]="emailingBillId === bill.id">
+                        {{ emailingBillId === bill.id ? 'Enviando…' : 'Enviar comprobante' }}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </td>
-            <td class="cell-amount">
-              <span class="amount-value">S/ {{ bill.subtotal | number:'1.2-2' }}</span>
-            </td>
-            <td class="cell-amount">
-              <span class="amount-value">S/ {{ bill.totalGst | number:'1.2-2' }}</span>
-            </td>
-            <td class="cell-value">
-              <span class="value-amount">S/ {{ bill.totalAmount | number:'1.2-2' }}</span>
-              <div *ngIf="bill.paymentStatus === 'PARTIALLY_PAID' || bill.paymentStatus === 'PAID'" class="partial-payment-info">
-                <span class="paid-amount">Pagado: S/ {{ getTotalPaid(bill) | number:'1.2-2' }}</span>
-                <span *ngIf="!isOverpaid(bill) && bill.paymentStatus === 'PARTIALLY_PAID'" class="remaining-amount">
-                  Pendiente: S/ {{ getRemainingBalance(bill) | number:'1.2-2' }}
-                </span>
-                <span *ngIf="isOverpaid(bill)" class="overpayment-amount">
-                  Excedente: S/ {{ getOverpaymentAmount(bill) | number:'1.2-2' }}
-                </span>
-              </div>
-            </td>
-            <td class="cell-status">
-              <span 
-                class="badge" 
-                [class]="getPaymentStatusClass(bill.paymentStatus)">
-                {{ getPaymentStatusLabel(bill.paymentStatus) }}
-              </span>
-            </td>
-            <td class="cell-cashier">
-              <span class="cashier-name">{{ bill.cashierName }}</span>
-            </td>
-            <td class="cell-actions">
-              <button
-                type="button"
-                class="btn-action btn-print"
-                (click)="reprintBillPdf(bill)"
-                [disabled]="isLoading"
-                title="Reimprimir PDF"
-                aria-label="Reimprimir PDF"
-              >
-                <svg-icon name="billing" [size]="16"></svg-icon>
-                <span>PDF</span>
-              </button>
-            </td>
-          </tr>
+              </td>
+            </tr>
+          </ng-container>
         </tbody>
       </table>
     </div>

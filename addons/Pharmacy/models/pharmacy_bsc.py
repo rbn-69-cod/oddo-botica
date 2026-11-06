@@ -13,10 +13,10 @@ class PharmacyBscIndicator(models.Model):
     active = fields.Boolean(default=True)
     perspective = fields.Selection(
         [
-            ("financial", "Financiera"),
+            ("financial", "Finanzas"),
             ("customer", "Clientes"),
-            ("internal", "Procesos internos"),
-            ("learning", "Aprendizaje y crecimiento"),
+            ("internal", "Operación y abastecimiento"),
+            ("learning", "Control y trazabilidad"),
         ],
         string="Perspectiva",
         required=True,
@@ -72,12 +72,18 @@ class PharmacyBscIndicator(models.Model):
 
     _sql_constraints = [
         ("bsc_code_unique", "unique(code)", "El código del indicador debe ser único."),
-        ("bsc_target_positive", "check(target > 0)", "La meta debe ser mayor que cero."),
+        ("bsc_target_non_negative", "check(target >= 0)", "La meta no puede ser negativa."),
     ]
 
     @api.depends("target", "actual", "direction")
     def _compute_status(self):
         for record in self:
+            # Cero es una meta válida cuando se busca eliminar quiebres de
+            # stock o valor vencido. Para esos KPI, 0 real = 100% cumplido.
+            if not record.target and record.direction == "down":
+                record.achievement = 100.0 if not record.actual else 0.0
+                record.status = "on_track" if not record.actual else "critical"
+                continue
             if not record.target:
                 record.achievement = 0
                 record.status = "critical"

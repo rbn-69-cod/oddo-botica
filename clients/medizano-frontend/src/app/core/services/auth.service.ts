@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { LoginRequest, AuthResponse, User, UserRole } from '../models/user.model';
 
@@ -16,9 +16,15 @@ export class AuthService {
   constructor(private apiService: ApiService) {}
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.apiService.post<AuthResponse>('/auth/login', credentials)
-      .pipe(
-        tap(response => {
+    return this.apiService.post<AuthResponse>('/auth/login', credentials);
+  }
+
+  verifyCode(challengeId: string, code: string): Observable<AuthResponse> {
+    return this.apiService.post<AuthResponse>('/auth/verify-code', { challengeId, code })
+      .pipe(tap(response => {
+          if (!response.token || !response.userId || !response.username || !response.role) {
+            throw new Error('La verificación no devolvió una sesión válida.');
+          }
           this.setToken(response.token);
           const user: User = {
             id: response.userId,
@@ -30,8 +36,50 @@ export class AuthService {
           };
           this.setUser(user);
           this.currentUserSubject.next(user);
-        })
-      );
+      }));
+  }
+
+  resendCode(challengeId: string): Observable<AuthResponse> {
+    return this.apiService.post<AuthResponse>('/auth/resend-code', { challengeId });
+  }
+
+  getSsoStatus(): Observable<AuthResponse> {
+    return this.apiService.get<AuthResponse>('/auth/sso-status');
+  }
+
+  restoreSsoSession(): Observable<boolean> {
+    return this.getSsoStatus().pipe(
+      map(response => {
+        if (!response.authenticated || !response.userId || !response.username || !response.role) {
+          this.clearStoredSession();
+          this.currentUserSubject.next(null);
+          return false;
+        }
+        const user: User = {
+          id: response.userId,
+          username: response.username,
+          email: response.email || '',
+          fullName: response.fullName || response.username,
+          role: response.role as UserRole,
+          active: true
+        };
+        this.setToken('odoo-session-mfa');
+        this.setUser(user);
+        this.currentUserSubject.next(user);
+        return true;
+      }),
+      catchError(() => {
+        // Odoo owns the real session.  Never keep a stale frontend session
+        // when Odoo has logged out, expired or has not completed MFA.
+        this.clearStoredSession();
+        this.currentUserSubject.next(null);
+        return of(false);
+      })
+    );
+  }
+
+  openOdoo(): void {
+    window.location.assign('/sso/odoo');
   }
 
   logout(): void {
@@ -113,7 +161,7 @@ export class AuthService {
   }
 
   private isStoredSessionValid(token: string, user: User): boolean {
-    if (token === 'odoo-session') {
+    if (token === 'odoo-session-mfa') {
       return true;
     }
     const payload = this.decodeJwtPayload(token);

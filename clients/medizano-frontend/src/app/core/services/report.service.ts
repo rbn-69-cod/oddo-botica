@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { CashRegisterReportResponse, SalesReportResponse, GstReportResponse, StockReportResponse } from '../models/report.model';
+import { BscReportResponse } from '../models/bsc.model';
 
 @Injectable({
   providedIn: 'root'
@@ -40,6 +41,12 @@ export class ReportService {
 
   getStockReport(): Observable<StockReportResponse> {
     return this.apiService.get<StockReportResponse>('/admin/reports/stock');
+  }
+
+  getBscReport(startDate: string, endDate: string): Observable<BscReportResponse> {
+    return this.apiService.get<BscReportResponse>(
+      `/admin/reports/bsc?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+    );
   }
 
   private buildCashRegisterFallback(report: SalesReportResponse): CashRegisterReportResponse {

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Navegación MediZano: una sola aplicación, enfocada en la operación real. -->
+        <record id="menu_pharmacy_root" model="ir.ui.menu">
+            <field name="name">MediZano Botica</field>
+            <field name="sequence">10</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="menu_pharmacy_operations" model="ir.ui.menu">
+            <field name="name">Inicio y Caja</field>
+            <field name="sequence">10</field>
+            <field name="active" eval="True"/>
+        </record>
+        <record id="pharmacy_dashboard_menu" model="ir.ui.menu">
+            <field name="name">Panel principal</field>
+            <field name="parent_id" ref="menu_pharmacy_operations"/>
+            <field name="action" ref="pharmacy_dashboard_action"/>
+            <field name="sequence">1</field>
+            <field name="active" eval="True"/>
+        </record>
+        <record id="menu_pharmacy_inventory" model="ir.ui.menu">
+            <field name="name">Inventario</field>
+            <field name="sequence">20</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <menuitem id="menu_pharmacy_products" name="Medicamentos y productos"
+                  parent="menu_pharmacy_inventory" action="product.product_template_action_all" sequence="10"/>
+        <menuitem id="menu_pharmacy_stock_operations" name="Movimientos de inventario"
+                  parent="menu_pharmacy_inventory" action="stock.action_picking_tree_all" sequence="30"/>
+
+        <menuitem id="menu_pharmacy_sales" name="Ventas"
+                  parent="menu_pharmacy_root" sequence="30"/>
+        <menuitem id="menu_pharmacy_pos_orders" name="Comprobantes y ventas POS"
+                  parent="menu_pharmacy_sales" action="point_of_sale.action_pos_pos_form" sequence="10"/>
+
+        <record id="menu_pharmacy_accounting" model="ir.ui.menu">
+            <field name="name">Compras</field>
+            <field name="sequence">40</field>
+            <field name="active" eval="True"/>
+        </record>
+        <record id="action_medizano_suppliers" model="ir.actions.act_window">
+            <field name="name">Proveedores farmacéuticos</field>
+            <field name="res_model">res.partner</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('supplier_rank', '&gt;', 0), ('active', '=', True)]</field>
+            <field name="context">{'res_partner_search_mode': 'supplier', 'default_supplier_rank': 1, 'default_is_company': True}</field>
+        </record>
+        <!-- Odoo exposes vendors through these standard actions as well.  Keep
+             them constrained so the supplier screen never becomes the full
+             contacts directory. -->
+        <record id="base.action_partner_supplier_form" model="ir.actions.act_window">
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('supplier_rank', '&gt;', 0), ('active', '=', True)]</field>
+            <field name="context">{'res_partner_search_mode': 'supplier', 'default_supplier_rank': 1, 'default_is_company': True}</field>
+        </record>
+        <record id="account.res_partner_action_supplier" model="ir.actions.act_window">
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('supplier_rank', '&gt;', 0), ('active', '=', True)]</field>
+            <field name="context">{'res_partner_search_mode': 'supplier', 'default_supplier_rank': 1, 'default_is_company': True}</field>
+        </record>
+        <menuitem id="menu_pharmacy_suppliers" name="Proveedores"
+                  parent="menu_pharmacy_accounting" action="action_medizano_suppliers" sequence="10"/>
+        <menuitem id="menu_pharmacy_purchase_orders" name="Órdenes de compra"
+                  parent="menu_pharmacy_accounting" action="purchase.purchase_form_action" sequence="20"/>
+        <menuitem id="menu_pharmacy_receipts" name="Recepciones de mercadería"
+                  parent="menu_pharmacy_accounting" action="stock.action_picking_tree_incoming" sequence="30"/>
+
+        <record id="menu_pharmacy_reports" model="ir.ui.menu">
+            <field name="name">Reportes</field>
+            <field name="sequence">50</field>
+            <field name="active" eval="True"/>
+        </record>
+        <record id="menu_pharmacy_acct_financial_reports" model="ir.ui.menu">
+            <field name="name">Reportes de gestión</field>
+            <field name="parent_id" ref="menu_pharmacy_reports"/>
+            <field name="sequence">10</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <record id="menu_pharmacy_compliance" model="ir.ui.menu">
+            <field name="parent_id" ref="menu_pharmacy_inventory"/>
+            <field name="sequence">40</field>
+            <field name="active" eval="True"/>
+        </record>
+        <record id="action_pharmacy_lot" model="ir.actions.act_window">
+            <field name="name">Lotes activos y vencimientos</field>
+            <field name="domain">[('product_id.is_pharma_product', '=', True), ('product_qty', '&gt;', 0)]</field>
+        </record>
+        <record id="menu_pharmacy_config" model="ir.ui.menu">
+            <field name="name">Configuración</field>
+            <field name="sequence">70</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Opciones que MediZano no utiliza actualmente. -->
+        <record id="menu_pharmacy_patients" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_patient_list" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_insurance" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_insurers" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_insurer_list" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_insurer_plan_list" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_coverage_rule" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_insurance_reports" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_bsc" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_bsc_dashboard" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_bsc_indicators" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_fin_insurance_reports" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_fin_claims_summary" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_fin_rejection_reasons" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_cashup_management" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_price_change" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_dosage_form" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_discount_rule" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_promotion" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="menu_pharmacy_pricelist" model="ir.ui.menu"><field name="active" eval="False"/></record>
+
+        <!-- Ocultar aplicaciones estándar; sus acciones siguen disponibles desde MediZano. -->
+        <record id="mail.menu_root_discuss" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="contacts.menu_contacts" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="point_of_sale.menu_point_root" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="account.menu_finance" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="purchase.menu_purchase_root" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="stock.menu_stock_root" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="base.menu_management" model="ir.ui.menu"><field name="active" eval="False"/></record>
+        <record id="base.menu_administration" model="ir.ui.menu"><field name="active" eval="False"/></record>
+    </data>
+</odoo>

@@ -6,7 +6,7 @@
         <menuitem id="menu_pharmacy_root" name="Farmacia y Botica" sequence="10" web_icon="Pharmacy,static/description/icon.png"/>
         
         <!-- Menú de Pacientes -->
-        <menuitem id="menu_pharmacy_patients" name="Pacientes" parent="menu_pharmacy_root" sequence="20"/>
+        <menuitem id="menu_pharmacy_patients" name="Pacientes" parent="menu_pharmacy_root" sequence="20" active="False"/>
         <menuitem id="menu_pharmacy_patient_list" name="Pacientes" parent="menu_pharmacy_patients" action="action_pharmacy_patient" sequence="10"/>
         
         <!-- Menú de Inventario y Lotes -->
@@ -25,7 +25,7 @@
         <menuitem id="menu_pharmacy_controlled_substance_summary" name="Resumen de Psicotrópicos" parent="menu_pharmacy_controlled_substance_register" action="action_pharmacy_controlled_substance_summary" sequence="20"/>
         
         <!-- Menú de Seguros y Convenios -->
-        <menuitem id="menu_pharmacy_insurance" name="Aseguradoras y Convenios" parent="menu_pharmacy_root" sequence="60"/>
+        <menuitem id="menu_pharmacy_insurance" name="Aseguradoras y Convenios" parent="menu_pharmacy_root" sequence="60" active="False"/>
         <menuitem id="menu_pharmacy_insurers" name="Compañías Aseguradoras" parent="menu_pharmacy_insurance" sequence="10"/>
         <menuitem id="menu_pharmacy_insurer_list" name="Aseguradoras" parent="menu_pharmacy_insurers" action="action_pharmacy_insurer" sequence="10"/>
         <menuitem id="menu_pharmacy_insurer_plan_list" name="Planes de Cobertura" parent="menu_pharmacy_insurers" action="action_pharmacy_insurer_plan" sequence="20"/>
@@ -35,7 +35,7 @@
         <menuitem id="menu_pharmacy_reports" name="Reportes" parent="menu_pharmacy_root" sequence="70"/>
         <menuitem id="menu_pharmacy_sales_reports" name="Reportes de Ventas" parent="menu_pharmacy_reports" sequence="10"/>
         <menuitem id="menu_pharmacy_inventory_reports" name="Reportes de Lotes y FEFO" parent="menu_pharmacy_reports" sequence="20"/>
-        <menuitem id="menu_pharmacy_insurance_reports" name="Reportes de Convenios" parent="menu_pharmacy_reports" sequence="30"/>
+        <menuitem id="menu_pharmacy_insurance_reports" name="Reportes de Convenios" parent="menu_pharmacy_reports" sequence="30" active="False"/>
         <menuitem id="menu_pharmacy_financial_reports" name="Reportes Financieros" parent="menu_pharmacy_reports" sequence="40"/>
         
         <!-- Menú de Contabilidad Farmacéutica -->

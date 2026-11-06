@@ -74,6 +74,12 @@ const routes: Routes = [
     data: { roles: [UserRole.ADMIN] }
   },
   {
+    path: 'bsc',
+    loadChildren: () => import('./modules/bsc/bsc.module').then(m => m.BscModule),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: [UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN] }
+  },
+  {
     path: 'login-history',
     loadChildren: () => import('./modules/login-history/login-history.module').then(m => m.LoginHistoryModule),
     canActivate: [AuthGuard, RoleGuard],

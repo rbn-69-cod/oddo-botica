@@ -192,6 +192,7 @@ export interface EmailReceiptItemDTO {
 }
 
 export interface EmailReceiptRequest {
+  billId?: number;
   to: string;
   seriesNumber: string;
   customerName?: string;

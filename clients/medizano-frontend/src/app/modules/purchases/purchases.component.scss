@@ -2096,6 +2096,9 @@
     animation: fadeIn 0.25s ease;
 
     .modal-dialog {
+      // Bootstrap disables pointer events on .modal-dialog when used inside
+      // .modal-content; these custom dialogs are the interactive surface.
+      pointer-events: auto;
       background: #ffffff;
       border-radius: 24px;
       width: 100%;
@@ -2369,6 +2372,91 @@
   .text-right { text-align: right; }
   .text-center { text-align: center; }
 }
+
+.selected-offer-card {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 2px solid #34d399;
+  border-radius: 14px;
+  background: #ecfdf5;
+  scroll-margin-top: 16px;
+}
+
+.selected-offer-check {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #059669;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.selected-offer-main, .selected-offer-total {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.selected-offer-main span, .selected-offer-total span { color: #64748b; font-size: 12px; }
+.selected-offer-label { color: #047857 !important; font-weight: 800; letter-spacing: .06em; }
+.selected-offer-total strong { color: #047857; font-size: 20px; }
+.offer-table-wrap { max-height: 360px; overflow: auto; }
+.medicine-picker { border: 1px solid #bae6fd; border-radius: 18px; background: linear-gradient(145deg, #f0f9ff, #fff 55%); padding: 20px; }
+.medicine-picker-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+.medicine-picker-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: #dbeafe; font-size: 22px; }
+.medicine-picker-heading h4 { margin: 0; color: #0f172a; font-size: 19px; font-weight: 800; }
+.medicine-picker-heading p { margin: 2px 0 0; color: #64748b; font-size: 13px; }
+.medicine-picker-count { margin-left: auto; padding: 7px 11px; border-radius: 999px; background: #dcfce7; color: #047857; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.medicine-picker-search { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid #bfdbfe; border-radius: 12px; padding: 0 14px; }
+.medicine-picker-search:focus-within { border-color: #0284c7; box-shadow: 0 0 0 3px #0284c722; }
+.medicine-picker-search > span:first-child { font-size: 25px; color: #0284c7; }
+.medicine-picker-search input { min-width: 0; width: 100%; height: 50px; border: 0; outline: 0; background: transparent; color: #0f172a; }
+.medicine-picker-results { margin-top: 12px; max-height: 330px; overflow: auto; border: 1px solid #dbe4ee; border-radius: 12px; background: #fff; }
+.medicine-picker-result { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-bottom: 1px solid #edf2f7; }
+.medicine-picker-result:last-child { border-bottom: 0; }
+.medicine-picker-result-name { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.medicine-picker-result-name > span { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 9px; background: #eff6ff; }
+.medicine-picker-result-name strong, .medicine-picker-result-name small { display: block; }
+.medicine-picker-result-name strong { color: #0f172a; }
+.medicine-picker-result-name small { color: #64748b; }
+.medicine-picker-quantity { display: flex; align-items: center; gap: 8px; color: #475569; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.medicine-picker-quantity input { width: 74px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; text-align: center; }
+.medicine-picker-add { padding: 9px 13px; border: 0; border-radius: 9px; background: #047857; color: #fff; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.medicine-picker-add:hover { background: #065f46; }
+.medicine-picker-empty { margin: 12px 0 0; color: #64748b; font-size: 13px; }
+.medicine-picker-error { margin: 12px 0 0; color: #b91c1c; font-size: 13px; }
+.medicine-picker-error button { border: 0; background: transparent; color: #0369a1; font-weight: 800; text-decoration: underline; cursor: pointer; }
+@media (max-width: 650px) { .medicine-picker-result { flex-wrap: wrap; } .medicine-picker-result-name { flex-basis: 100%; } .medicine-picker-count { display: none; } }
+
+@media (max-width: 800px) {
+  .selected-offer-card { grid-template-columns: auto 1fr; }
+  .selected-offer-total, .selected-offer-card button { grid-column: 2; }
+}
+
+.purchase-flow-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #dbe4ee;
+  border-radius: 14px;
+}
+.flow-step { display: flex; align-items: center; gap: 9px; opacity: .55; }
+.flow-step.active { opacity: 1; color: #047857; }
+.flow-step b { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #e2e8f0; }
+.flow-step.active b { color: #fff; background: #059669; }
+.flow-step span { display: flex; flex-direction: column; }
+.flow-step small { color: #64748b; font-size: 11px; }
+.flow-arrow { color: #94a3b8; font-size: 20px; }
+@media (max-width: 700px) { .purchase-flow-steps { align-items: stretch; flex-direction: column; } .flow-arrow { display: none; } }
 
   .btn-pill-warning {
     background: #fffbeb;

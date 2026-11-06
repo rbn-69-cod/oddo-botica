@@ -7,6 +7,7 @@ import { BillResponse, BillItemResponse } from '../../core/models/billing.model'
 import { ReturnRequest, ReturnItemRequest, ReturnResponse } from '../../core/models/return.model';
 import { formatDateTime } from '../../core/utils/date-time.util';
 import { AuditLogService } from '../../core/services/audit-log.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-returns',
@@ -31,14 +32,17 @@ export class ReturnsComponent implements OnInit {
     private billingService: BillingService,
     private returnService: ReturnService,
     private dialogService: DialogService,
-    private auditLogService: AuditLogService
+    private auditLogService: AuditLogService,
+    private router: Router
   ) {
     this.searchForm = this.fb.group({
       billNumber: ['', Validators.required]
     });
 
     this.returnForm = this.fb.group({
-      reason: ['', Validators.required]
+      reason: ['', Validators.required],
+      operationType: ['REFUND', Validators.required],
+      disposition: ['RESTOCK', Validators.required]
     });
   }
 
@@ -75,12 +79,18 @@ export class ReturnsComponent implements OnInit {
         if (bill.cancelled) {
           this.dialogService.warning('Esta venta fue anulada');
           this.bill = null;
+          this.isLoading = false;
           return;
         }
 
         if (bill.paymentStatus !== 'PAID') {
-          this.dialogService.warning('Solo se pueden procesar devoluciones de ventas pagadas');
+          this.dialogService.warning(
+            bill.paymentStatus === 'REFUNDED'
+              ? 'Este comprobante ya fue devuelto completamente'
+              : 'Solo se pueden procesar devoluciones de ventas pagadas'
+          );
           this.bill = null;
+          this.isLoading = false;
           return;
         }
 
@@ -103,6 +113,31 @@ export class ReturnsComponent implements OnInit {
     } else {
       this.selectedItems.push({ item, returnQuantity: item.quantity });
     }
+  }
+
+  selectAllItems(): void {
+    if (!this.bill) return;
+    this.selectedItems = this.bill.items.map(item => ({ item, returnQuantity: item.quantity }));
+  }
+
+  clearItems(): void {
+    this.selectedItems = [];
+  }
+
+  setReason(reason: string): void {
+    this.returnForm.patchValue({ reason });
+    this.returnForm.get('reason')?.markAsTouched();
+  }
+
+  get currentStep(): number {
+    if (this.processedReturn) return 4;
+    if (this.selectedItems.length > 0) return 3;
+    if (this.bill) return 2;
+    return 1;
+  }
+
+  get totalUnits(): number {
+    return this.selectedItems.reduce((sum, selected) => sum + Number(selected.returnQuantity || 0), 0);
   }
 
   isItemSelected(itemId: number): boolean {
@@ -159,6 +194,8 @@ export class ReturnsComponent implements OnInit {
     const request: ReturnRequest = {
       billId: this.bill.id,
       reason: this.returnForm.get('reason')?.value,
+      operationType: this.returnForm.get('operationType')?.value,
+      disposition: this.returnForm.get('disposition')?.value,
       items
     };
 
@@ -185,12 +222,22 @@ export class ReturnsComponent implements OnInit {
     this.selectedItems = [];
     this.processedReturn = null;
     this.searchForm.reset();
-    this.returnForm.reset();
+    this.returnForm.reset({ operationType: 'REFUND', disposition: 'RESTOCK', reason: '' });
   }
 
   clearProcessedReturn(): void {
     this.processedReturn = null;
     this.resetForm();
+  }
+
+  startExchangeSale(): void {
+    if (!this.processedReturn) return;
+    sessionStorage.setItem('medizano_exchange_credit', JSON.stringify({
+      returnId: this.processedReturn.id,
+      returnNumber: this.processedReturn.returnNumber,
+      amount: this.processedReturn.refundAmount
+    }));
+    this.router.navigate(['/billing']);
   }
 
   toggleHistoryView(): void {

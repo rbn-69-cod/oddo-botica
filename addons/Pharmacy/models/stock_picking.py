@@ -226,18 +226,20 @@ class StockMove(models.Model):
     
     def _action_assign(self):
         """Override to enforce FEFO for pharmacy products"""
-        # For pharmacy products, use FEFO logic
-        if self.is_pharmacy_move and self.picking_id.branch_id:
-            # Get FEFO lot suggestion
-            product = self.product_id
-            location = self.location_id
-            
-            fefo_lot = product.get_fefo_lot(location.id, self.product_uom_qty)
-            if fefo_lot:
-                # Try to assign this specific lot
-                for move_line in self.move_line_ids:
-                    if not move_line.lot_id:
-                        move_line.lot_id = fefo_lot.id
+        # Odoo calls this method with all moves in a picking. Inspect each move
+        # separately because relational fields require a singleton record.
+        for move in self:
+            if move.is_pharmacy_move and move.picking_id.branch_id:
+                product = move.product_id
+                location = move.location_id
+
+                fefo_lot = product.get_fefo_lot(
+                    location.id, move.product_uom_qty
+                )
+                if fefo_lot:
+                    for move_line in move.move_line_ids:
+                        if not move_line.lot_id:
+                            move_line.lot_id = fefo_lot.id
         
         return super()._action_assign()
 

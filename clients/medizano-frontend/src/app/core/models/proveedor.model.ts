@@ -19,6 +19,7 @@ export interface Proveedor {
 
 export interface ProveedorFiltro {
   filtro?: string;
+  estado?: 'TODOS' | 'ACTIVOS' | 'INACTIVOS';
   page?: number;
   size?: number;
   sort?: string;

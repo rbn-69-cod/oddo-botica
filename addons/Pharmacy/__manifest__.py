@@ -80,6 +80,7 @@ Sistema integral de gestión para boticas y farmacias en Perú:
         "views/account_move_views.xml",
         # Reports
         "reports/pharmacy_report_views.xml",
+        "views/pharmacy_clean_menus.xml",
         "data/pharmacy_bsc_data.xml",
         # POS
         # Wizards

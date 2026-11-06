@@ -176,6 +176,10 @@ export class MedicinesComponent implements OnInit, OnDestroy {
       };
       this.inventoryService.updateMedicine(this.editingMedicine.id, request).subscribe({
         next: () => {
+          this.auditLogService.recordActivity({
+            action: 'MEDICINE_UPDATED', entityType: 'MEDICINE', entityId: String(this.editingMedicine!.id),
+            description: `Medicamento actualizado: ${request.name}`
+          }).subscribe({ error: () => undefined });
           this.loadMedicines();
           this.closeForm();
           this.isLoading = false;
@@ -257,6 +261,10 @@ export class MedicinesComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.inventoryService.deleteMedicine(medicine.id).subscribe({
       next: () => {
+        this.auditLogService.recordActivity({
+          action: 'MEDICINE_DELETED', entityType: 'MEDICINE', entityId: String(medicine.id),
+          description: `Medicamento eliminado: ${medicine.name}`
+        }).subscribe({ error: () => undefined });
         this.dialogService.success('Medicamento eliminado correctamente.');
         this.loadMedicines();
         this.isLoading = false;
@@ -354,6 +362,10 @@ export class MedicinesComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.inventoryService.updateBatch(this.editingBatch.id, request).subscribe({
       next: () => {
+        this.auditLogService.recordActivity({
+          action: 'BATCH_UPDATED', entityType: 'BATCH', entityId: String(this.editingBatch!.id),
+          description: `Lote y existencias actualizados: ${this.editingBatch!.batchNumber}`
+        }).subscribe({ error: () => undefined });
         if (this.managingMedicine) {
           this.loadBatches(this.managingMedicine.id);
           this.loadMedicines(); // Refresh medicines to update stock display
@@ -405,7 +417,11 @@ export class MedicinesComponent implements OnInit, OnDestroy {
     };
 
     this.inventoryService.createBatch(request).subscribe({
-      next: () => {
+      next: (createdBatch) => {
+        this.auditLogService.recordActivity({
+          action: 'BATCH_ADDED', entityType: 'BATCH', entityId: String(createdBatch.id),
+          description: `Lote agregado: ${request.batchNumber} (${request.quantityAvailable} unidades)`
+        }).subscribe({ error: () => undefined });
         if (this.managingMedicine) {
           this.loadBatches(this.managingMedicine.id);
           this.loadMedicines(); // Refresh medicines to update stock display
@@ -426,6 +442,10 @@ export class MedicinesComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.inventoryService.deleteBatch(batch.id).subscribe({
       next: () => {
+        this.auditLogService.recordActivity({
+          action: 'BATCH_DELETED', entityType: 'BATCH', entityId: String(batch.id),
+          description: `Lote eliminado: ${batch.batchNumber}`
+        }).subscribe({ error: () => undefined });
         if (this.managingMedicine) {
           this.loadBatches(this.managingMedicine.id);
           this.loadMedicines(); // Refresh medicines to update stock display

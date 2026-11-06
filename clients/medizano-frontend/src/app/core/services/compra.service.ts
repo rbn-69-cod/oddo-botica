@@ -54,5 +54,17 @@ export class CompraService {
     }
     return this.apiService.patch<Compra>(url, {});
   }
+
+  guardarCodigoRecepcion(compraId: number, detalleId: number, codigoBarra: string, reemplazar = false): Observable<{detalleId: number; codigoBarra: string}> {
+    return this.apiService.patch<{detalleId: number; codigoBarra: string}>(`/v1/compras/${compraId}/codigo`, { detalleId, codigoBarra, reemplazar });
+  }
+
+  compararOfertas(detalles: any[]): Observable<any> {
+    return this.apiService.post<any>('/v1/catalogo-proveedores/comparar', { detalles });
+  }
+
+  buscarProductosProveedor(termino: string): Observable<any> {
+    return this.apiService.get<any>(`/v1/catalogo-proveedores/productos?q=${encodeURIComponent(termino)}`);
+  }
 }
 

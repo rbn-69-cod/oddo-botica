@@ -7,16 +7,15 @@
         <field name="name">report.pharmacy.sales.branch.list</field>
         <field name="model">report.pharmacy.sales.branch</field>
         <field name="arch" type="xml">
-            <list string="Ventas por Sucursal">
-                <field name="date"/>
-                <field name="branch_id"/>
-                <field name="cashier_id"/>
-                <field name="total_sales" widget="monetary"/>
-                <field name="cash_sales" widget="monetary"/>
+            <list string="Resumen de Ventas" create="false" delete="false">
+                <field name="date" string="Fecha"/>
+                <field name="branch_id" string="Botica" optional="hide"/>
+                <field name="cashier_id" string="Cajero"/>
+                <field name="total_sales" string="Total vendido" widget="monetary"/>
+                <field name="cash_sales" string="Efectivo" widget="monetary"/>
                 <field name="mpesa_sales" string="Ventas Yape / Plin" widget="monetary"/>
-                <field name="card_sales" widget="monetary"/>
-                <field name="insurance_sales" widget="monetary"/>
-                <field name="total_orders"/>
+                <field name="card_sales" string="Tarjeta" widget="monetary"/>
+                <field name="total_orders" string="Comprobantes"/>
             </list>
         </field>
     </record>
@@ -39,7 +38,6 @@
         <field name="arch" type="xml">
             <pivot string="Ventas por Sucursal">
                 <field name="total_sales" type="measure"/>
-                <field name="insurance_sales" type="measure"/>
                 <field name="date" type="row"/>
                 <field name="branch_id" type="col"/>
             </pivot>
@@ -327,6 +325,7 @@
     <menuitem id="menu_pharmacy_fin_insurance_reports"
               name="Informes de Aseguradoras"
               parent="menu_pharmacy_acct_financial_reports"
+              active="False"
               sequence="30"/>
 
     <menuitem id="menu_pharmacy_fin_claims_summary"

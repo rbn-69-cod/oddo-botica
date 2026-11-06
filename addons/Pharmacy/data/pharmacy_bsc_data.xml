@@ -66,5 +66,42 @@
             <field name="unit">percent</field>
             <field name="target">95</field>
         </record>
+
+        <!-- Metas de MediZano usadas por el BSC del frontend. Los resultados
+             reales se calculan desde ventas, devoluciones, compras, lotes y
+             auditoría; estos registros solo permiten ajustar la meta. -->
+        <record id="bsc_medizano_net_sales" model="pharmacy.bsc.indicator">
+            <field name="sequence">101</field><field name="name">Ventas netas</field><field name="code">FIN-NET-SALES</field><field name="perspective">financial</field><field name="objective">Incrementar ingresos netos del período</field><field name="unit">currency</field><field name="target">1000</field>
+        </record>
+        <record id="bsc_medizano_gross_margin" model="pharmacy.bsc.indicator">
+            <field name="sequence">102</field><field name="name">Margen bruto</field><field name="code">FIN-GROSS-MARGIN</field><field name="perspective">financial</field><field name="objective">Mantener una venta rentable</field><field name="unit">percent</field><field name="target">25</field>
+        </record>
+        <record id="bsc_medizano_refund_rate" model="pharmacy.bsc.indicator">
+            <field name="sequence">103</field><field name="name">Tasa de devoluciones</field><field name="code">FIN-REFUND-RATE</field><field name="perspective">financial</field><field name="objective">Reducir devoluciones sobre ventas</field><field name="unit">percent</field><field name="direction">down</field><field name="target">3</field>
+        </record>
+        <record id="bsc_medizano_identified_sales" model="pharmacy.bsc.indicator">
+            <field name="sequence">201</field><field name="name">Ventas con cliente identificado</field><field name="code">CUS-IDENTIFIED</field><field name="perspective">customer</field><field name="objective">Mejorar la trazabilidad de atención</field><field name="unit">percent</field><field name="target">50</field>
+        </record>
+        <record id="bsc_medizano_repeat_customers" model="pharmacy.bsc.indicator">
+            <field name="sequence">202</field><field name="name">Clientes recurrentes</field><field name="code">CUS-REPEAT</field><field name="perspective">customer</field><field name="objective">Fidelizar clientes de la botica</field><field name="unit">percent</field><field name="target">20</field>
+        </record>
+        <record id="bsc_medizano_stockouts" model="pharmacy.bsc.indicator">
+            <field name="sequence">301</field><field name="name">Productos sin stock</field><field name="code">OPS-STOCKOUT</field><field name="perspective">internal</field><field name="objective">Evitar quiebres de stock</field><field name="unit">number</field><field name="direction">down</field><field name="target">0</field>
+        </record>
+        <record id="bsc_medizano_low_stock" model="pharmacy.bsc.indicator">
+            <field name="sequence">302</field><field name="name">Productos con stock bajo</field><field name="code">OPS-LOW-STOCK</field><field name="perspective">internal</field><field name="objective">Anticipar compras de reposición</field><field name="unit">number</field><field name="direction">down</field><field name="target">2</field>
+        </record>
+        <record id="bsc_medizano_expiring" model="pharmacy.bsc.indicator">
+            <field name="sequence">303</field><field name="name">Lotes próximos a vencer</field><field name="code">OPS-EXPIRING</field><field name="perspective">internal</field><field name="objective">Aplicar FEFO antes del vencimiento</field><field name="unit">number</field><field name="direction">down</field><field name="target">2</field>
+        </record>
+        <record id="bsc_medizano_expired_value" model="pharmacy.bsc.indicator">
+            <field name="sequence">304</field><field name="name">Valor de stock vencido</field><field name="code">OPS-EXPIRED-VALUE</field><field name="perspective">internal</field><field name="objective">Evitar pérdidas por vencimiento</field><field name="unit">currency</field><field name="direction">down</field><field name="target">0</field>
+        </record>
+        <record id="bsc_medizano_receipts" model="pharmacy.bsc.indicator">
+            <field name="sequence">305</field><field name="name">Recepciones completadas</field><field name="code">OPS-RECEIPTS</field><field name="perspective">internal</field><field name="objective">Completar recepciones de compra</field><field name="unit">percent</field><field name="target">90</field>
+        </record>
+        <record id="bsc_medizano_audit" model="pharmacy.bsc.indicator">
+            <field name="sequence">401</field><field name="name">Eventos auditados</field><field name="code">CTL-AUDIT</field><field name="perspective">learning</field><field name="objective">Mantener trazabilidad de las operaciones</field><field name="unit">number</field><field name="target">1</field>
+        </record>
     </data>
 </odoo>

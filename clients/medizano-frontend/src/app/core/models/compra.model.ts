@@ -1,4 +1,4 @@
-export type TipoDocumentoCompra = 'FACTURA' | 'BOLETA' | 'GUIA_REMISION' | 'ORDEN_COMPRA';
+export type TipoDocumentoCompra = 'SOLICITUD_COTIZACION' | 'FACTURA' | 'BOLETA' | 'GUIA_REMISION' | 'ORDEN_COMPRA';
 export type EstadoCompra = 
   | 'BORRADOR' 
   | 'PENDIENTE' 
@@ -26,6 +26,7 @@ export interface DetalleCompra {
   subtotal?: number;
   loteSugerido?: string;
   fechaVencimiento?: string;
+  loteDeEjemplo?: boolean;
 }
 
 export interface Compra {
@@ -51,6 +52,7 @@ export interface Compra {
   usuarioRecepcion?: string;
   totalItems?: number;
   guiaRemision?: string;
+  providerPortalUrl?: string;
   tiempoEstimadoDias?: number;
   detalles: DetalleCompra[];
 }

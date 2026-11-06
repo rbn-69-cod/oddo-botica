@@ -1,177 +1,34 @@
-<div class="dashboard-screen">
-  <!-- Header -->
-  <div class="dashboard-header">
-    <div class="header-content">
-      <div class="header-title">
-        <h1 class="screen-title">
-          <svg-icon name="reports" class="title-icon" [size]="28"></svg-icon>
-          Panel de Control - Botica MediZano
-        </h1>
-        <p class="screen-subtitle">{{ todayFormatted | titlecase }} · Vista general en vivo</p>
-      </div>
-      <div class="header-actions">
-        <button class="btn-refresh" (click)="loadDashboardData()" [disabled]="isLoading">
-          <svg-icon name="refresh" class="btn-icon" [size]="16"></svg-icon>
-          <span>Actualizar</span>
-        </button>
-        <button class="btn-primary" (click)="navigate('/billing')">
-          <svg-icon name="billing" class="btn-icon" [size]="16"></svg-icon>
-          <span>Nueva Venta (POS)</span>
-        </button>
-      </div>
-    </div>
-  </div>
+<div class="dashboard-screen dashboard-v2">
+  <header class="dash-hero">
+    <div><span class="eyebrow">RESUMEN OPERATIVO</span><h1>Buenos días, {{ authService.getCurrentUser()?.fullName || 'equipo MediZano' }}</h1><p>{{ todayFormatted | titlecase }} · Información sincronizada con Odoo</p></div>
+    <div class="hero-actions"><button class="refresh" (click)="loadDashboardData()" [disabled]="isLoading"><svg-icon name="refresh" [size]="17"></svg-icon>Actualizar</button><button class="new-sale" (click)="navigate('/billing')"><svg-icon name="billing" [size]="18"></svg-icon>Nueva venta</button></div>
+  </header>
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Sincronizando indicadores con microservicios...</p>
-  </div>
+  <div *ngIf="isLoading" class="loading-state"><div class="spinner"></div><strong>Preparando el resumen de la botica…</strong><p>Consultando ventas, caja e inventario.</p></div>
 
-  <!-- Content -->
-  <div *ngIf="!isLoading" class="dashboard-content">
-    <!-- Top KPI Cards Grid -->
-    <div class="kpi-grid">
-      <!-- KPI 1: Ventas Hoy -->
-      <div class="kpi-card kpi-card-success">
-        <div class="kpi-icon-wrapper">
-          <svg-icon name="cash" [size]="32"></svg-icon>
-        </div>
-        <div class="kpi-data">
-          <span class="kpi-label">Ventas del Día</span>
-          <span class="kpi-value">S/ {{ totalSalesToday | number:'1.2-2' }}</span>
-          <span class="kpi-subtext">{{ totalBillsToday }} comprobante(s) emitido(s)</span>
-        </div>
-      </div>
+  <main *ngIf="!isLoading" class="dashboard-content">
+    <section class="day-overview">
+      <div class="main-kpi"><div class="kpi-heading"><span class="kpi-icon sales"><svg-icon name="cash" [size]="26"></svg-icon></span><div><small>VENTAS DE HOY</small><strong>S/ {{ totalSalesToday | number:'1.2-2' }}</strong></div></div><div class="kpi-footer"><span>{{ totalBillsToday }} comprobante{{ totalBillsToday === 1 ? '' : 's' }}</span><button (click)="navigate('/reports/ventas')">Ver reporte →</button></div></div>
+      <div class="main-kpi"><div class="kpi-heading"><span class="kpi-icon cash"><svg-icon name="billing" [size]="26"></svg-icon></span><div><small>CAJA NETA</small><strong>S/ {{ netCashToday | number:'1.2-2' }}</strong></div></div><div class="kpi-footer"><span *ngIf="refundsToday === 0">Sin devoluciones hoy</span><span *ngIf="refundsToday > 0">Devoluciones: S/ {{ refundsToday | number:'1.2-2' }}</span><button (click)="navigate('/reports/caja')">Ver caja →</button></div></div>
+      <div class="main-kpi inventory-kpi" (click)="navigate('/inventory')"><div class="kpi-heading"><span class="kpi-icon inventory"><svg-icon name="medicines" [size]="26"></svg-icon></span><div><small>INVENTARIO ACTUAL</small><strong>{{ totalUnitsInStock }} <em>unidades</em></strong></div></div><div class="kpi-footer"><span>{{ catalogProductsCount }} productos · {{ totalBatchesCount }} lotes vigentes</span><button>Ver inventario →</button></div></div>
+      <div class="health-card"><span class="status-icon"><svg-icon name="inventory" [size]="23"></svg-icon></span><div><small>CONTROL DE INVENTARIO</small><strong>{{ inventoryStatusLabel }}</strong><span>{{ catalogProductsCount }} productos reales · {{ expiringSoonBatches.length }} vencimiento{{ expiringSoonBatches.length === 1 ? '' : 's' }} próximo{{ expiringSoonBatches.length === 1 ? '' : 's' }}</span></div></div>
+    </section>
 
-      <!-- KPI 2: Caja Diaria -->
-      <div class="kpi-card kpi-card-primary">
-        <div class="kpi-icon-wrapper">
-          <svg-icon name="billing" [size]="32"></svg-icon>
+    <section class="operations-grid inventory-only">
+      <article class="panel stock-panel"><header><div><span class="section-kicker">INVENTARIO VIGENTE</span><h2>Productos y próximos vencimientos</h2><p>Solo se muestran productos con existencia física.</p></div><div class="panel-count">{{ inventoryOverviewBatches.length }} productos</div></header>
+        <div class="stock-empty" *ngIf="!inventoryOverviewBatches.length"><span>✓</span><div><strong>Sin existencias registradas</strong><p>Registra una recepción para comenzar a controlar el inventario.</p></div></div>
+        <div class="inventory-list" *ngIf="inventoryOverviewBatches.length">
+          <button class="inventory-row" *ngFor="let batch of inventoryOverviewBatches" (click)="navigate('/inventory')">
+            <span class="product-mark" [class.warning]="isExpiringSoon(batch)" [class.critical]="isLowStock(batch)"><svg-icon name="medicines" [size]="18"></svg-icon></span>
+            <span class="product-copy"><strong>{{ batch.medicineName }}</strong><small>Lote {{ batch.batchNumber }}</small></span>
+            <span class="expiry-copy"><small>VENCIMIENTO</small><strong>{{ batch.expiryDate | date:'dd/MM/yyyy' }}</strong><em *ngIf="isExpiringSoon(batch)">{{ daysUntilExpiry(batch.expiryDate) }} días</em><em class="safe" *ngIf="!isExpiringSoon(batch)">Vigente</em></span>
+            <span class="stock-copy"><small>STOCK</small><strong>{{ batch.quantityAvailable }} <em>uds.</em></strong></span>
+            <span class="row-arrow">→</span>
+          </button>
         </div>
-        <div class="kpi-data">
-          <span class="kpi-label">Efectivo en Caja</span>
-          <span class="kpi-value">S/ {{ cashInRegisterToday | number:'1.2-2' }}</span>
-          <span class="kpi-subtext">Arqueo neto verificado</span>
-        </div>
-      </div>
+        <footer class="stock-footer"><span><i></i>Datos sincronizados con el almacén</span><button (click)="navigate('/inventory')">Administrar inventario →</button></footer>
+      </article>
 
-      <!-- KPI 3: Catálogo y Stock (Unificado con Inventario) -->
-      <div class="kpi-card kpi-card-info" (click)="navigate('/inventory')" style="cursor: pointer;" title="Ir a Lotes e Inventario">
-        <div class="kpi-icon-wrapper">
-          <svg-icon name="medicines" [size]="32"></svg-icon>
-        </div>
-        <div class="kpi-data">
-          <span class="kpi-label">Medicamentos en Catálogo</span>
-          <span class="kpi-value">{{ activeMedicinesCount }}</span>
-          <span class="kpi-subtext" [class.text-danger]="outOfStockMedicinesCount > 0" [class.text-success]="outOfStockMedicinesCount === 0">
-            <span *ngIf="totalUnitsInStock === 0">0 uds en almacén · {{ outOfStockMedicinesCount }} por abastecer</span>
-            <span *ngIf="totalUnitsInStock > 0 && outOfStockMedicinesCount > 0">{{ inStockMedicinesCount }} con stock ({{ totalUnitsInStock }} uds) · {{ outOfStockMedicinesCount }} por abastecer</span>
-            <span *ngIf="totalUnitsInStock > 0 && outOfStockMedicinesCount === 0">Todos con stock ({{ totalUnitsInStock }} uds en almacén)</span>
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quick Navigation Shortcuts -->
-    <div class="quick-nav-section">
-      <h3 class="section-heading">Accesos Rápidos del Sistema</h3>
-      <div class="quick-nav-grid">
-        <button class="quick-nav-btn" (click)="navigate('/billing')">
-          <svg-icon name="billing" [size]="20"></svg-icon>
-          <span>Punto de Venta (POS)</span>
-        </button>
-        <button class="quick-nav-btn" (click)="navigate('/medicines')">
-          <svg-icon name="medicines" [size]="20"></svg-icon>
-          <span>Medicamentos</span>
-        </button>
-        <button class="quick-nav-btn" (click)="navigate('/inventory')">
-          <svg-icon name="inventory" [size]="20"></svg-icon>
-          <span>Lotes e Inventario</span>
-        </button>
-        <button class="quick-nav-btn" (click)="navigate('/returns')">
-          <svg-icon name="returns" [size]="20"></svg-icon>
-          <span>Devoluciones</span>
-        </button>
-        <button class="quick-nav-btn" (click)="navigate('/purchase-history')">
-          <svg-icon name="purchase-history" [size]="20"></svg-icon>
-          <span>Facturación</span>
-        </button>
-        <button class="quick-nav-btn" (click)="navigate('/reports')">
-          <svg-icon name="reports" [size]="20"></svg-icon>
-          <span>Reportes Contables</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Two-column detail view -->
-    <div class="dashboard-details-row">
-      <!-- Column 1: Inventory Alerts -->
-      <div class="detail-card">
-        <div class="card-header">
-          <div class="header-badge">
-            <svg-icon name="warning" [size]="18"></svg-icon>
-            <h3>Alertas de Inventario</h3>
-          </div>
-          <button class="link-btn" (click)="navigate('/inventory')">Ver todo</button>
-        </div>
-        <div class="card-body">
-          <!-- CASO 1: Catálogo sin existencias en almacén (0 lotes ingresados) -->
-          <div *ngIf="totalBatchesCount === 0 && activeMedicinesCount > 0" class="empty-notice text-center p-3">
-            <div style="font-size: 32px; margin-bottom: 8px;">📦</div>
-            <strong class="d-block text-dark font-bold mb-1">Sin existencias en almacén</strong>
-            <p class="text-muted text-xs mb-3">Hay {{ activeMedicinesCount }} medicamentos en catálogo pero no cuentan con lotes registrados (0 uds).</p>
-            <button type="button" class="btn btn-sm btn-primary" (click)="navigate('/purchases')">
-              ➕ Emitir Orden de Abastecimiento
-            </button>
-          </div>
-
-          <!-- CASO 2: Hay lotes con stock bajo (crítico <= 10 uds) -->
-          <div *ngIf="lowStockBatches.length > 0" class="alerts-list">
-            <div *ngFor="let b of lowStockBatches.slice(0, 4)" class="alert-item">
-              <div class="alert-info">
-                <strong>{{ b.medicineName }}</strong>
-                <span class="text-muted">Lote: {{ b.batchNumber }} · Vence: {{ b.expiryDate }}</span>
-              </div>
-              <span class="badge badge-warning">{{ b.quantityAvailable }} unid.</span>
-            </div>
-          </div>
-
-          <!-- CASO 3: Todo en orden (hay lotes y ninguno está bajo) -->
-          <div *ngIf="totalBatchesCount > 0 && lowStockBatches.length === 0" class="empty-notice">
-            <svg-icon name="success" [size]="36"></svg-icon>
-            <p>Existencias óptimas. Todos los lotes en almacén tienen stock suficiente.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Column 2: Recent Audit Activity -->
-      <div class="detail-card">
-        <div class="card-header">
-          <div class="header-badge">
-            <svg-icon name="user-activity" [size]="18"></svg-icon>
-            <h3>Actividad Reciente</h3>
-          </div>
-          <button class="link-btn" (click)="navigate('/user-activity')">Bitácora completa</button>
-        </div>
-        <div class="card-body">
-          <div *ngIf="recentActivities.length === 0" class="empty-notice">
-            <p>No se encontraron registros recientes de auditoría.</p>
-          </div>
-          <div *ngIf="recentActivities.length > 0" class="activity-list">
-            <div *ngFor="let act of recentActivities" class="activity-item">
-              <div class="activity-icon">
-                <svg-icon name="user" [size]="14"></svg-icon>
-              </div>
-              <div class="activity-details">
-                <span class="activity-desc"><strong>{{ act.username }}</strong> · {{ act.description }}</span>
-                <span class="activity-time text-muted">{{ formatDate(act.timestamp) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    </section>
+  </main>
 </div>
-

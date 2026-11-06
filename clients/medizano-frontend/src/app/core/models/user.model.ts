@@ -24,13 +24,23 @@ export interface LoginRequest {
 }
 
 export interface AuthResponse {
-  token: string;
-  type: string;
-  userId: number;
-  username: string;
-  fullName: string;
-  email: string;
-  role: string;
+  authenticated?: boolean;
+  token?: string;
+  type?: string;
+  userId?: number;
+  username?: string;
+  fullName?: string;
+  email?: string;
+  role?: string;
+  mfaRequired?: boolean;
+  challengeId?: string;
+  maskedEmail?: string;
+  expiresIn?: number;
+  attemptsRemaining?: number;
+  resendsRemaining?: number;
+  resendAfter?: number;
+  odooUrl?: string;
+  frontendUrl?: string;
 }
 
 

@@ -42,12 +42,13 @@
 
     <div class="access-card">
       <header class="access-header">
-        <p class="access-header__eyebrow">Bienvenido</p>
-        <h2>Inicia sesión</h2>
-        <p>Ingresa tus datos para acceder a tu botica.</p>
+        <p class="access-header__eyebrow">{{ verificationStep ? 'Verificación segura' : 'Bienvenido' }}</p>
+        <h2>{{ verificationStep ? 'Revisa tu correo' : 'Inicia sesión' }}</h2>
+        <p *ngIf="!verificationStep">Ingresa tus datos para acceder a tu botica.</p>
+        <p *ngIf="verificationStep">Enviamos un código de 6 dígitos a <strong>{{ maskedEmail }}</strong>.</p>
       </header>
 
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" novalidate>
+      <form *ngIf="!verificationStep" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" novalidate>
         <div class="form-field">
           <label for="username">Usuario</label>
           <div class="input-control" [class.input-control--invalid]="username?.invalid && username?.touched">
@@ -101,6 +102,50 @@
           <span>{{ isLoading ? 'Validando acceso...' : 'Ingresar a MediZano' }}</span>
           <span *ngIf="!isLoading" class="submit-button__arrow" aria-hidden="true">→</span>
         </button>
+      </form>
+
+      <form *ngIf="verificationStep" (ngSubmit)="verifyCode()" class="login-form verification-form" novalidate>
+        <div class="verification-hero">
+          <div class="verification-hero__shield"><span>✓</span></div>
+          <div>
+            <strong>Protegemos tu cuenta</strong>
+            <span>Confirma que realmente eres tú</span>
+          </div>
+          <span class="verification-hero__timer">{{ expiryLabel }}</span>
+        </div>
+
+        <div class="form-field">
+          <label for="access-code">Código de acceso</label>
+          <div class="otp-control">
+            <div class="otp-digits" aria-hidden="true">
+              <span *ngFor="let index of [0,1,2,3,4,5]" [class.filled]="digitAt(index)">{{ digitAt(index) || '·' }}</span>
+            </div>
+            <input id="access-code" class="code-input" type="text" inputmode="numeric"
+              autocomplete="one-time-code" maxlength="6" [value]="code"
+              (input)="onCodeInput($any($event.target).value)" aria-label="Código de acceso de 6 dígitos" autofocus />
+          </div>
+          <div class="verification-meta">
+            <span><b>{{ attemptsRemaining }}</b> intento(s)</span>
+            <span><b>{{ resendsRemaining }}</b> reenvío(s)</span>
+          </div>
+        </div>
+
+        <div class="error-alert" *ngIf="errorMessage" role="alert">
+          <svg-icon name="error" [size]="18"></svg-icon><span>{{ errorMessage }}</span>
+        </div>
+
+        <button type="submit" class="submit-button" [disabled]="isLoading || expiresIn === 0">
+          <span *ngIf="isLoading" class="button-spinner" aria-hidden="true"></span>
+          <span>{{ isLoading ? 'Comprobando código...' : 'Confirmar acceso seguro' }}</span>
+          <span *ngIf="!isLoading" class="submit-button__arrow" aria-hidden="true">→</span>
+        </button>
+
+        <div class="verification-actions">
+          <button type="button" (click)="resendCode()" [disabled]="resendIn > 0 || resendsRemaining === 0 || isLoading">
+            {{ resendIn > 0 ? 'Reenviar en ' + resendIn + ' s' : 'Reenviar código' }}
+          </button>
+          <button type="button" (click)="cancelVerification()">Cambiar usuario</button>
+        </div>
       </form>
 
       <p class="access-help">Si tienes problemas para ingresar, comunícate con el administrador.</p>

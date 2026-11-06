@@ -6,20 +6,18 @@
       <div class="header-titles">
         <div class="badge-tag">MediZano Botica · Control Farmacéutico Integral</div>
         <h1 class="screen-title m-0 font-bold d-flex align-items-center gap-2">
-          <span>📦</span> Inventario General & Control FEFO
+          <span>💊</span> Medicamentos e Inventario
         </h1>
         <p class="screen-subtitle m-0 text-muted">
-          Existencias en estantería, control de lotes y vencimientos (DIGEMID), validación de recetas médicas y registro manual
+          Catálogo de medicamentos, existencias, lotes, vencimientos FEFO y control de recetas en una sola pantalla
         </p>
       </div>
-
       <div class="header-actions d-flex gap-2">
         <button type="button" class="btn btn-outline font-bold" (click)="refreshAll()" [disabled]="isLoading" title="Actualizar datos">
           <span *ngIf="!isLoading">🔄 Actualizar</span>
           <span *ngIf="isLoading" class="spinner-border spinner-border-sm"></span>
         </button>
 
-        <button type="button" class="btn btn-outline-info font-bold" (click)="openKardexModal()" title="Consultar bitácora de movimientos (Kardex)"><span>📜</span> Kardex</button>
         <button type="button" class="btn btn-primary font-bold" (click)="openAddMedicineModal()">
           <span>➕</span> Agregar Medicamento
         </button>
@@ -126,12 +124,12 @@
   <div class="inventory-table-card card-glass p-0 mb-4 overflow-hidden">
     <div *ngIf="isLoading && allBatches.length === 0" class="p-5 text-center">
       <div class="spinner-border text-primary"></div>
-      <p class="mt-2 text-muted">Cargando existencias de inventario...</p>
+        <p class="mt-2 text-muted">Cargando medicamentos e inventario...</p>
     </div>
 
     <div *ngIf="!isLoading && batches.length === 0" class="p-5 text-center empty-inv-box">
       <div style="font-size: 54px; margin-bottom: 12px;">📦</div>
-      <h3 class="font-bold text-dark m-0" style="font-size: 20px;">No se encontraron registros de inventario</h3>
+      <h3 class="font-bold text-dark m-0" style="font-size: 20px;">No se encontraron medicamentos ni existencias</h3>
       <p class="text-muted mt-1 mb-4" style="font-size: 14px; max-width: 480px; margin: 6px auto 20px auto;">
         {{ searchTerm || filtroTipo !== 'TODOS' ? 'Prueba cambiando los filtros o el término de búsqueda.' : 'Aún no hay medicamentos con lotes registrados. Puedes agregar uno nuevo con el botón de abajo.' }}
       </p>
@@ -139,7 +137,6 @@
         <button *ngIf="searchTerm || filtroTipo !== 'TODOS'" type="button" class="btn btn-outline" (click)="limpiarFiltro()">
           Restablecer Filtros
         </button>
-        <button type="button" class="btn btn-outline-info font-bold" (click)="openKardexModal()" title="Consultar bitácora de movimientos (Kardex)"><span>📜</span> Kardex</button>
         <button type="button" class="btn btn-primary font-bold" (click)="openAddMedicineModal()">
           <span>➕</span> Agregar Medicamento a Inventario
         </button>
@@ -152,7 +149,7 @@
           <tr>
             <th class="th-med-info">Medicamento & Fabricante</th>
             <th class="th-prescription text-center">Control Receta</th>
-            <th class="th-batch text-center">Lote N°</th>
+            <th class="th-batch text-center">Lote / Estado</th>
             <th class="th-fefo text-center">Vencimiento (FEFO)</th>
             <th class="th-stock text-center">Stock Actual</th>
             <th class="th-prices text-right">Costo / PVP</th>
@@ -189,7 +186,7 @@
 
             <!-- Vencimiento & FEFO -->
             <td class="cell-fefo text-center">
-              <div class="fefo-date font-mono font-semibold">{{ b.expiryDate }}</div>
+              <div class="fefo-date font-mono font-semibold">{{ b.hasRealBatch ? b.expiryDate : 'Sin vencimiento registrado' }}</div>
               <span class="badge-fefo-pill mt-1" [ngClass]="b.fefoBadgeClass">
                 {{ b.fefoLabel }}
               </span>
@@ -214,15 +211,18 @@
             <!-- Acciones -->
             <td class="cell-actions text-right">
               <div class="d-flex justify-content-end gap-1">
-                <button type="button" class="btn btn-xs btn-outline-primary" (click)="openStockModal(b)" title="Ajustar cantidad de stock">
+                <button *ngIf="b.hasRealBatch" type="button" class="btn btn-xs btn-outline-primary" (click)="openStockModal(b)" title="Ajustar cantidad de stock">
                   ⚡ Stock
                 </button>
-                <button type="button" class="btn btn-xs btn-outline-secondary" (click)="openBatchModal(b)" title="Editar datos del lote">
+                <button *ngIf="b.hasRealBatch" type="button" class="btn btn-xs btn-outline-secondary" (click)="openBatchModal(b)" title="Editar datos del lote">
                   ✏️
                 </button>
-                <button type="button" class="btn btn-xs btn-outline-danger" (click)="deleteBatch(b)" title="Eliminar este lote">
+                <button *ngIf="b.hasRealBatch" type="button" class="btn btn-xs btn-outline-danger" (click)="deleteBatch(b)" title="Eliminar este lote">
                   🗑️
                 </button>
+                <a *ngIf="!b.hasRealBatch" class="btn btn-xs btn-outline-primary" routerLink="/purchases" title="Crear una orden para abastecer este medicamento">
+                  🛒 Abastecer
+                </a>
               </div>
             </td>
 
@@ -544,65 +544,3 @@
   </div>
 
 </div>
-
-
-  <!-- =============================================================== -->
-  <!-- MODAL: KARDEX Y AUDITORÍA DE MOVIMIENTOS                        -->
-  <!-- =============================================================== -->
-  <div class="modal-backdrop" *ngIf="showKardexModal">
-    <div class="modal-dialog modal-lg card-glass">
-      <div class="modal-header d-flex justify-content-between align-items-center">
-        <div>
-          <h3 class="font-bold m-0 d-flex align-items-center gap-2">
-            <span>📜</span> Bitácora Kardex — Trazabilidad de Movimientos
-          </h3>
-          <span class="text-xs text-muted">Historial auditable de entradas por compras, salidas por ventas y ajustes físicos</span>
-        </div>
-        <button class="close-btn" (click)="closeKardexModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div *ngIf="loadingKardex" class="text-center p-4">
-          <div class="spinner-border text-primary" role="status"></div>
-          <div class="mt-2 text-muted">Cargando bitácora de transacciones...</div>
-        </div>
-
-        <div *ngIf="!loadingKardex && kardexList.length === 0" class="empty-state text-center p-4">
-          <div style="font-size: 32px;">📋</div>
-          <h5 class="font-bold mt-2">No se registran movimientos aún</h5>
-          <p class="text-muted text-xs">Las entradas y salidas se registrarán automáticamente con compras y ventas.</p>
-        </div>
-
-        <div *ngIf="!loadingKardex && kardexList.length > 0" class="table-responsive" style="max-height: 420px; overflow-y: auto;">
-          <table class="table inv-modern-table m-0">
-            <thead>
-              <tr>
-                <th>Fecha & Hora</th>
-                <th class="text-center">Tipo</th>
-                <th>Medicamento</th>
-                <th class="text-center">Cantidad</th>
-                <th>Referencia / Motivo</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let k of kardexList">
-                <td class="font-mono text-xs">{{ k.fecha | date:'yyyy-MM-dd HH:mm' }}</td>
-                <td class="text-center">
-                  <span class="badge" [ngClass]="k.tipo === 'ENTRADA' ? 'badge-success' : 'badge-danger-soft'">
-                    {{ k.tipo }}
-                  </span>
-                </td>
-                <td class="font-bold text-sm">{{ getMedicineNameById(k.productoId) }}</td>
-                <td class="text-center font-mono font-bold" [class.text-teal]="k.tipo === 'ENTRADA'" [class.text-danger]="k.tipo === 'SALIDA'">
-                  {{ k.tipo === 'ENTRADA' ? '+' : '-' }}{{ k.cantidad }} uds
-                </td>
-                <td class="text-xs text-muted">{{ k.referencia }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" (click)="closeKardexModal()">Cerrar</button>
-      </div>
-    </div>
-  </div>

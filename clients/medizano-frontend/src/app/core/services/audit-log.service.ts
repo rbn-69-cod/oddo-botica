@@ -16,6 +16,7 @@ export interface AuditLogResponse {
   newValue: string | null;
   timestamp: string;
   ipAddress: string | null;
+  success?: boolean;
 }
 
 export interface AuditEventRequest {

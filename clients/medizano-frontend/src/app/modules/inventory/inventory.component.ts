@@ -43,9 +43,6 @@ export class InventoryComponent implements OnInit {
   showStockModal = false;
   showBatchModal = false;
   showAddMedicineModal = false;
-  showKardexModal = false;
-  kardexList: any[] = [];
-  loadingKardex = false;
   editingBatch: Batch | null = null;
   stockForm: FormGroup;
   batchForm: FormGroup;
@@ -123,13 +120,16 @@ export class InventoryComponent implements OnInit {
         });
 
         // 1. Enriquecer lotes físicos existentes
-        const physicalBatches = (res.batches || []).map(b => {
+        const physicalBatches = Array.from(
+          new Map((res.batches || []).map(batch => [Number(batch.id), batch])).values()
+        ).map(b => {
           const enriched = this.enrichBatch(b);
           enriched.hasRealBatch = true;
           return enriched;
         });
 
-        // Mostrar solo lotes fisicos realmente registrados en inventario
+        // Esta pantalla muestra existencias físicas. El catálogo sin stock
+        // se gestiona al crear una compra y no debe generar filas "SIN LOTE".
         this.allBatches = physicalBatches;
         this.aplicarFiltro();
         this.isLoading = false;
@@ -408,6 +408,10 @@ export class InventoryComponent implements OnInit {
 
     this.inventoryService.updateStock(this.editingBatch.id, request).subscribe({
       next: () => {
+        this.auditLogService.recordActivity({
+          action: 'STOCK_ADJUSTED', entityType: 'STOCK', entityId: String(this.editingBatch!.id),
+          description: `Stock ajustado del lote ${this.editingBatch!.batchNumber}: ${request.quantityAvailable} unidades. Motivo: ${this.stockForm.value.motivo || 'ajuste manual'}`
+        }).subscribe({ error: () => undefined });
         this.dialogService.success('Stock actualizado exitosamente');
         this.refreshAll();
         this.closeStockModal();
@@ -453,6 +457,10 @@ export class InventoryComponent implements OnInit {
 
     this.inventoryService.updateBatch(this.editingBatch.id, request).subscribe({
       next: () => {
+        this.auditLogService.recordActivity({
+          action: 'BATCH_UPDATED', entityType: 'BATCH', entityId: String(this.editingBatch!.id),
+          description: `Lote actualizado: ${request.batchNumber}`
+        }).subscribe({ error: () => undefined });
         this.dialogService.success('Lote actualizado exitosamente');
         this.refreshAll();
         this.closeBatchModal();
@@ -478,6 +486,10 @@ export class InventoryComponent implements OnInit {
     this.isLoading = true;
     this.inventoryService.deleteBatch(batch.id).subscribe({
       next: () => {
+        this.auditLogService.recordActivity({
+          action: 'BATCH_DELETED', entityType: 'BATCH', entityId: String(batch.id),
+          description: `Lote retirado: ${batch.batchNumber || batch.id}`
+        }).subscribe({ error: () => undefined });
         this.dialogService.success('Lote retirado correctamente');
         this.refreshAll();
       },
@@ -486,34 +498,6 @@ export class InventoryComponent implements OnInit {
         this.isLoading = false;
       }
     });
-  }
-
-  // ==========================================
-  // KARDEX / AUDITORÍA DE MOVIMIENTOS
-  // ==========================================
-  openKardexModal(productoId?: number): void {
-    this.loadingKardex = true;
-    this.showKardexModal = true;
-    this.inventoryService.getMovimientos(productoId).subscribe({
-      next: (movs) => {
-        this.kardexList = movs || [];
-        this.loadingKardex = false;
-      },
-      error: () => {
-        this.kardexList = [];
-        this.loadingKardex = false;
-      }
-    });
-  }
-
-  closeKardexModal(): void {
-    this.showKardexModal = false;
-    this.kardexList = [];
-  }
-
-  getMedicineNameById(prodId: number): string {
-    const med = this.medicinesMap.get(prodId);
-    return med ? med.name : ('Medicamento #' + prodId);
   }
 
   trackByBatchId(index: number, batch: Batch): any {

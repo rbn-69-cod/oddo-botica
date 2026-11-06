@@ -14,7 +14,7 @@ export class LoginHistoryComponent implements OnInit {
   filteredLogs: AuditLogResponse[] = [];
   isLoading = false;
   searchTerm = '';
-  selectedType: string = 'ALL'; // ALL, LOGIN, LOGOUT
+  selectedType: string = 'ALL'; // ALL, LOGIN, LOGOUT, FAILED
 
   constructor(
     private auditLogService: AuditLogService,
@@ -49,27 +49,32 @@ export class LoginHistoryComponent implements OnInit {
       
       const matchesType = this.selectedType === 'ALL' || 
         (this.selectedType === 'LOGIN' && log.action === 'USER_LOGIN') ||
-        (this.selectedType === 'LOGOUT' && log.action === 'USER_LOGOUT');
+        (this.selectedType === 'LOGOUT' && log.action === 'USER_LOGOUT') ||
+        (this.selectedType === 'FAILED' && log.action === 'USER_LOGIN_FAILED');
       
       return matchesSearch && matchesType;
     });
   }
 
   getActionType(action: string): string {
-    return action === 'USER_LOGIN' ? 'INGRESO' : 'SALIDA';
+    if (action === 'USER_LOGIN') return 'INGRESO';
+    if (action === 'USER_LOGIN_FAILED') return 'INTENTO FALLIDO';
+    return 'SALIDA';
   }
 
   getRoleLabel(role: string): string {
     const labels: Record<string, string> = {
       ADMIN: 'Administrador', CASHIER: 'Cajero', STOCK_MONITOR: 'Supervisor de inventario',
       STOCK_KEEPER: 'Encargado de almacén', CUSTOMER_SUPPORT: 'Atención al cliente',
-      ANALYST: 'Analista', MANAGER: 'Gerente'
+      ANALYST: 'Analista', MANAGER: 'Gerente', VISITANTE: 'No autenticado'
     };
     return labels[role] || role;
   }
 
   getActionBadgeClass(action: string): string {
-    return action === 'USER_LOGIN' ? 'badge-login' : 'badge-logout';
+    if (action === 'USER_LOGIN') return 'badge-login';
+    if (action === 'USER_LOGIN_FAILED') return 'badge-failed';
+    return 'badge-logout';
   }
 
   formatDate(dateString: string): string {

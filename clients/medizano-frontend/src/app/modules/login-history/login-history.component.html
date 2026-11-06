@@ -57,6 +57,7 @@
             <option value="ALL">Todos los tipos</option>
             <option value="LOGIN">Solo ingresos</option>
             <option value="LOGOUT">Solo cierres de sesión</option>
+            <option value="FAILED">Solo intentos fallidos</option>
           </select>
         </div>
       </div>
@@ -75,7 +76,7 @@
               <th>Usuario</th>
               <th>Rol</th>
               <th>Acción</th>
-              <th>Dirección IP</th>
+              <th>IP pública</th>
             </tr>
           </thead>
           <tbody>
@@ -106,7 +107,9 @@
                   {{ getActionType(log.action) }}
                 </span>
               </td>
-              <td class="ip-cell">{{ log.ipAddress || 'N/A' }}</td>
+              <td class="ip-cell" [title]="log.ipAddress ? 'IP pública de Internet registrada por el servidor' : 'El evento ocurrió antes de habilitar el registro de IP'">
+                {{ log.ipAddress || 'No registrada (histórico)' }}
+              </td>
             </tr>
           </tbody>
         </table>

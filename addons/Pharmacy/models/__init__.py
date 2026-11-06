@@ -10,6 +10,7 @@ from . import (
     
     # Product and inventory models
     product_template,
+    purchase_order,
     stock_location,
     stock_lot,
     stock_picking,
@@ -47,6 +48,7 @@ from . import (
     
     # Audit and compliance
     pharmacy_audit_log,
+    pharmacy_login_security,
     
     # Dashboard and analytics
     pharmacy_dashboard,

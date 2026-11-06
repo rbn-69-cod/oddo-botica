@@ -1,9 +1,10 @@
-# Oddo Botica — ERP farmacéutico con Odoo 18
+# Oddo Botica — MediZano ERP farmacéutico con Odoo 18
 
 Sistema ERP para una botica peruana construido sobre Odoo 18. El módulo
 personalizado `Pharmacy` integra ventas POS, productos farmacéuticos, lotes,
-vencimientos FEFO, pacientes, recetas, compras, inventario, contabilidad,
-auditoría y reportes en una sola plataforma ERP.
+vencimientos FEFO, compras, inventario, devoluciones, auditoría, usuarios y
+reportes en una sola plataforma ERP. El frontend Angular de MediZano consume
+las APIs del módulo y Odoo conserva la fuente de datos operativa.
 
 > El nombre del repositorio se conserva como `oddo-botica` para respetar el
 > proyecto solicitado. La plataforma y el módulo son Odoo 18.
@@ -14,9 +15,11 @@ auditoría y reportes en una sola plataforma ERP.
 - **Productos e inventario:** lotes, fechas de vencimiento, control de stock y FEFO.
 - **Compras:** proveedores, órdenes de compra y recepción de mercadería.
 - **Facturación y contabilidad:** facturas, impuestos IGV y diarios contables.
-- **Pacientes y contactos:** historial, seguros y datos del comprador.
-- **Farmacia:** dispensación, prescripciones, sustancias controladas y devoluciones.
-- **Reportes y auditoría:** dashboard, reportes financieros y trazabilidad de acciones.
+- **Devoluciones:** reembolsos y cambios trazables contra ventas pagadas.
+- **Usuarios y seguridad:** roles, alta, edición, activación/desactivación,
+  eliminación protegida y acceso con código temporal.
+- **Reportes y auditoría:** dashboard, caja diaria, reportes financieros,
+  trazabilidad de acciones y Balanced Scorecard (BSC) independiente.
 - **Perú:** dependencias `l10n_pe` y `l10n_pe_pos`, con estructura preparada para SUNAT.
 
 ## Requisitos
@@ -37,18 +40,30 @@ Abra <http://localhost:8069>, cree o seleccione una base de datos e instale
 
 ### Frontend visual MediZano
 
-El frontend Angular original de MediZano se encuentra en
-`clients/medizano-frontend`. Se ejecuta junto con Odoo mediante Compose:
+El frontend Angular de MediZano se encuentra en
+`clients/medizano-frontend`. Para desarrollo local:
 
 ```bash
-docker compose up -d --build
+cd clients/medizano-frontend
+npm install
+npm run start
 ```
 
-La interfaz visual queda disponible en <http://localhost:8080> (o en
-`/medizano/` cuando se publica detrás de Nginx) y consume
-`/api` del módulo `Pharmacy`, que autentica la sesión en Odoo y consulta sus
-modelos ORM para inventario, lotes, proveedores, compras, órdenes y reportes.
-El backend de Odoo continúa disponible en <http://localhost:8069>.
+En producción se publica bajo `/medizano/` mediante la configuración de
+referencia [`.medizano-nginx.conf`](.medizano-nginx.conf). El ingreso inicial
+se canaliza por SSO de Odoo y el código temporal de acceso; una sesión validada
+permite navegar entre Odoo y el frontend sin pedir credenciales nuevamente.
+
+Las rutas principales del frontend son:
+
+- `/medizano/#/dashboard`: operación diaria.
+- `/medizano/#/bsc`: Balanced Scorecard estratégico, separado de Reportes.
+- `/medizano/#/user-management`: administración de cuentas y permisos.
+
+El frontend consume `/medizano/api/` del módulo `Pharmacy`, que consulta los
+modelos ORM para inventario, lotes, proveedores, compras, ventas, devoluciones,
+usuarios, BSC y reportes. El backend de Odoo continúa disponible en
+<http://localhost:8069>.
 
 Para revisar los logs:
 
@@ -69,8 +84,10 @@ esos volúmenes si necesita conservar la base de datos.
 
 ```text
 addons/Pharmacy/                 # Módulo Odoo personalizado
+clients/medizano-frontend/        # Aplicación Angular MediZano
 config/odoo.conf                 # Configuración sin secretos
 docker-compose.yml               # Entorno Odoo 18 + PostgreSQL
+.medizano-nginx.conf             # Publicación /medizano/ y SSO de referencia
 .env.example                     # Variables requeridas
 ```
 

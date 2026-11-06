@@ -7,18 +7,15 @@
             <field name="name">report.pharmacy.sales.branch.tree</field>
             <field name="model">report.pharmacy.sales.branch</field>
             <field name="arch" type="xml">
-                <list string="Ventas por Sucursal" create="false" delete="false">
-                    <field name="date"/>
-                    <field name="branch_id"/>
-                    <field name="cashier_id"/>
-                    <field name="total_sales" widget="monetary" sum="Total Ventas"/>
-                    <field name="cash_sales" widget="monetary" sum="Ventas Efectivo"/>
+                <list string="Resumen de Ventas" create="false" delete="false">
+                    <field name="date" string="Fecha"/>
+                    <field name="branch_id" string="Botica" optional="hide"/>
+                    <field name="cashier_id" string="Cajero"/>
+                    <field name="total_sales" string="Total vendido" widget="monetary" sum="Total vendido"/>
+                    <field name="cash_sales" string="Efectivo" widget="monetary" sum="Efectivo"/>
                     <field name="mpesa_sales" string="Ventas Yape / Plin" widget="monetary" sum="Ventas Yape / Plin"/>
-                    <field name="card_sales" widget="monetary" sum="Ventas Tarjeta"/>
-                    <field name="insurance_sales" widget="monetary" sum="Ventas Aseguradora"/>
-                    <field name="total_orders" sum="Total Pedidos"/>
-                    <field name="total_customers" sum="Total Clientes"/>
-                    <field name="total_prescriptions" sum="Total Recetas"/>
+                    <field name="card_sales" string="Tarjeta" widget="monetary" sum="Tarjeta"/>
+                    <field name="total_orders" string="Comprobantes" sum="Comprobantes"/>
                 </list>
             </field>
         </record>

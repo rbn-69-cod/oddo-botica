@@ -2215,6 +2215,7 @@ export class BillingComponent implements OnInit, OnDestroy {
     }));
 
     return {
+      billId: this.lastReceiptData.billId,
       to: targetEmail,
       seriesNumber: this.lastReceiptData.seriesNumber || 'B001-00000001',
       customerName: this.lastReceiptData.customerName || 'Cliente General',

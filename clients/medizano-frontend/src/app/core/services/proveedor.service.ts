@@ -15,6 +15,9 @@ export class ProveedorService {
     if (params?.filtro) {
       query += `search=${encodeURIComponent(params.filtro)}&`;
     }
+    if (params?.estado) {
+      query += `status=${encodeURIComponent(params.estado)}&`;
+    }
     if (params?.page !== undefined) {
       query += `page=${params.page}&`;
     }
@@ -43,7 +46,11 @@ export class ProveedorService {
     return this.apiService.put<Proveedor>(`/v1/proveedores/${id}`, proveedor);
   }
 
-  desactivarProveedor(id: number): Observable<any> {
+  cambiarEstado(id: number, activo: boolean): Observable<Proveedor> {
+    return this.apiService.put<Proveedor>(`/v1/proveedores/${id}`, { activo });
+  }
+
+  eliminarProveedor(id: number): Observable<any> {
     return this.apiService.delete<any>(`/v1/proveedores/${id}`);
   }
 }

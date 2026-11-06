@@ -6,7 +6,8 @@ Provides business metrics and KPIs for pharmacy operations.
 """
 
 from odoo import models, fields, api
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
+import pytz
 from odoo.tools import float_round
 
 
@@ -28,6 +29,8 @@ class PharmacyDashboard(models.TransientModel):
     orders_week = fields.Integer('Orders This Week', readonly=True)
     orders_month = fields.Integer('Orders This Month', readonly=True)
     avg_order_value = fields.Float('Avg Order Value', readonly=True)
+    refunds_today = fields.Float('Refunds Today', readonly=True)
+    stock_units = fields.Float('Stock Units', readonly=True)
     
     # Patient Metrics
     total_patients = fields.Integer('Total Patients', readonly=True)
@@ -82,13 +85,16 @@ class PharmacyDashboard(models.TransientModel):
         Returns:
             Dictionary with dashboard metrics
         """
-        today = date.today()
+        business_tz = pytz.timezone('America/Lima')
+        today = datetime.now(pytz.UTC).astimezone(business_tz).date()
         week_start = today - timedelta(days=today.weekday())
         month_start = today.replace(day=1)
         last_month_start = (month_start - timedelta(days=1)).replace(day=1)
         
-        # Build domain based on branch
-        branch_domain = [('branch_id', '=', branch_id)] if branch_id else []
+        # POS is the source of truth used by both Odoo and the MediZano frontend.
+        # Date boundaries are converted from the user's timezone to UTC because
+        # pos.order.date_order is stored as UTC.
+        branch_domain = []
         
         # Sales Metrics
         sales_today = self._get_sales(today, today, branch_domain)
@@ -103,82 +109,14 @@ class PharmacyDashboard(models.TransientModel):
         orders_month = self._get_order_count(month_start, today, branch_domain)
         total_orders = self._get_order_count(None, None, branch_domain)
         avg_order_value = sales_month / orders_month if orders_month > 0 else 0
-        
-        # Patient Metrics
-        total_patients = self.env['pharmacy.patient'].search_count(branch_domain)
-        new_patients_today = self.env['pharmacy.patient'].search_count(
-            branch_domain + [('create_date', '>=', today)]
-        )
-        new_patients_week = self.env['pharmacy.patient'].search_count(
-            branch_domain + [('create_date', '>=', week_start)]
-        )
-        new_patients_month = self.env['pharmacy.patient'].search_count(
-            branch_domain + [('create_date', '>=', month_start)]
-        )
-        active_patients = self.env['pharmacy.patient'].search_count(
-            branch_domain + [('active', '=', True)]
-        )
-        
-        # Prescription Metrics
-        prescriptions_today = self.env['pharmacy.prescription'].search_count(
-            branch_domain + [('create_date', '>=', today)]
-        )
-        prescriptions_week = self.env['pharmacy.prescription'].search_count(
-            branch_domain + [('create_date', '>=', week_start)]
-        )
-        prescriptions_month = self.env['pharmacy.prescription'].search_count(
-            branch_domain + [('create_date', '>=', month_start)]
-        )
-        total_prescriptions = self.env['pharmacy.prescription'].search_count(branch_domain)
-        pending_prescriptions = self.env['pharmacy.prescription'].search_count(
-            branch_domain + [('status', '=', 'draft')]
-        )
-        
-        # Insurance Metrics
-        claims_submitted = self.env['pharmacy.claim'].search_count(
-            branch_domain + [('status', '=', 'submitted')]
-        )
-        claims_approved = self.env['pharmacy.claim'].search_count(
-            branch_domain + [('status', '=', 'approved')]
-        )
-        claims_rejected = self.env['pharmacy.claim'].search_count(
-            branch_domain + [('status', '=', 'rejected')]
-        )
-        claims_pending = self.env['pharmacy.claim'].search_count(
-            branch_domain + [('status', 'in', ['draft', 'submitted'])]
-        )
-        total_claims = self.env['pharmacy.claim'].search_count(branch_domain)
-        claim_approval_rate = (claims_approved / total_claims * 100) if total_claims > 0 else 0
-        
-        total_claimed_amount = sum(
-            self.env['pharmacy.claim'].search(branch_domain).mapped('total_claimed_amount')
-        )
-        total_paid_amount = sum(
-            self.env['pharmacy.claim'].search(branch_domain + [('status', '=', 'approved')]).mapped('insurance_amount')
-        )
+        refunds_today = abs(self._get_refunds(today, today))
         
         # Stock Metrics
-        total_products = self.env['product.product'].search_count([('is_pharma_product', '=', True)])
+        pharma_products = self.env['product.product'].search([('is_pharma_product', '=', True)])
+        total_products = len(pharma_products)
+        stock_units = sum(pharma_products.mapped('qty_available'))
         low_stock_products = self._get_low_stock_count()
         out_of_stock_products = self._get_out_of_stock_count()
-        expiring_soon_products = self._get_expiring_soon_count()
-        expired_products = self._get_expired_count()
-        total_stock_value = self._get_total_stock_value()
-        
-        # Dispensing Metrics
-        dispensing_today = self.env['pharmacy.dispensing'].search_count(
-            branch_domain + [('dispensed_date', '>=', today)]
-        )
-        dispensing_week = self.env['pharmacy.dispensing'].search_count(
-            branch_domain + [('dispensed_date', '>=', week_start)]
-        )
-        dispensing_month = self.env['pharmacy.dispensing'].search_count(
-            branch_domain + [('dispensed_date', '>=', month_start)]
-        )
-        total_dispensing = self.env['pharmacy.dispensing'].search_count(branch_domain)
-        
-        # Branch count
-        branch_count = self.env['pharmacy.branch'].search_count([])
         
         return {
             'total_sales': sales_month,
@@ -191,51 +129,50 @@ class PharmacyDashboard(models.TransientModel):
             'orders_week': orders_week,
             'orders_month': orders_month,
             'avg_order_value': avg_order_value,
-            'total_patients': total_patients,
-            'new_patients_today': new_patients_today,
-            'new_patients_week': new_patients_week,
-            'new_patients_month': new_patients_month,
-            'active_patients': active_patients,
-            'total_prescriptions': total_prescriptions,
-            'prescriptions_today': prescriptions_today,
-            'prescriptions_week': prescriptions_week,
-            'prescriptions_month': prescriptions_month,
-            'pending_prescriptions': pending_prescriptions,
-            'total_claims': total_claims,
-            'claims_submitted': claims_submitted,
-            'claims_approved': claims_approved,
-            'claims_rejected': claims_rejected,
-            'claims_pending': claims_pending,
-            'claim_approval_rate': claim_approval_rate,
-            'total_claimed_amount': total_claimed_amount,
-            'total_paid_amount': total_paid_amount,
+            'refunds_today': refunds_today,
+            'stock_units': stock_units,
             'total_products': total_products,
             'low_stock_products': low_stock_products,
             'out_of_stock_products': out_of_stock_products,
-            'expiring_soon_products': expiring_soon_products,
-            'expired_products': expired_products,
-            'total_stock_value': total_stock_value,
-            'total_dispensing': total_dispensing,
-            'dispensing_today': dispensing_today,
-            'dispensing_week': dispensing_week,
-            'dispensing_month': dispensing_month,
-            'branch_count': branch_count,
         }
     
     def _get_sales(self, date_from, date_to, domain):
         """Get sales amount for date range"""
-        if date_from and date_to:
-            domain += [('date_order', '>=', date_from), ('date_order', '<=', date_to)]
-        
+        domain = list(domain) + [('state', 'in', ['paid', 'done', 'invoiced'])]
+        domain += self._pos_date_domain(date_from, date_to)
         orders = self.env['pos.order'].search(domain)
         return sum(orders.mapped('amount_total'))
     
     def _get_order_count(self, date_from, date_to, domain):
         """Get order count for date range"""
-        if date_from and date_to:
-            domain += [('date_order', '>=', date_from), ('date_order', '<=', date_to)]
-        
+        domain = list(domain) + [
+            ('state', 'in', ['paid', 'done', 'invoiced']),
+            ('amount_total', '>=', 0),
+        ]
+        domain += self._pos_date_domain(date_from, date_to)
         return self.env['pos.order'].search_count(domain)
+
+    def _get_refunds(self, date_from, date_to):
+        domain = [
+            ('state', 'in', ['paid', 'done', 'invoiced']),
+            ('amount_total', '<', 0),
+        ] + self._pos_date_domain(date_from, date_to)
+        return sum(self.env['pos.order'].search(domain).mapped('amount_total'))
+
+    def _pos_date_domain(self, date_from, date_to):
+        if not date_from or not date_to:
+            return []
+        timezone = pytz.timezone('America/Lima')
+        start = timezone.localize(datetime.combine(date_from, time.min)).astimezone(pytz.UTC).replace(tzinfo=None)
+        end = timezone.localize(datetime.combine(date_to + timedelta(days=1), time.min)).astimezone(pytz.UTC).replace(tzinfo=None)
+        return [('date_order', '>=', fields.Datetime.to_string(start)),
+                ('date_order', '<', fields.Datetime.to_string(end))]
+
+    def action_open_sales(self):
+        return self.env.ref('point_of_sale.action_pos_pos_form').read()[0]
+
+    def action_open_inventory(self):
+        return self.env.ref('product.product_template_action_all').read()[0]
     
     def _calculate_growth(self, current, previous):
         """Calculate growth percentage"""

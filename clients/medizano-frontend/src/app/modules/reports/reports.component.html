@@ -3,25 +3,45 @@
   <div class="reports-header">
     <div class="header-content">
       <div class="header-title">
+        <span class="header-eyebrow">Reportes</span>
         <h1 class="screen-title">
           <svg-icon name="reports" class="title-icon" [size]="28"></svg-icon>
-          Reportes
+          {{ activeReportTitle }}
         </h1>
-        <p class="screen-subtitle">Consulta ventas, IGV e inventario</p>
+        <p class="screen-subtitle">{{ activeReportHint }}</p>
+      </div>
+      <div class="report-status">
+        <span class="status-dot"></span>
+        <div>
+          <strong>{{ isLoading ? 'Sincronizando con Odoo…' : 'Datos sincronizados' }}</strong>
+          <small *ngIf="lastSyncAt && !isLoading">Actualizado {{ lastSyncAt | date:'HH:mm' }}</small>
+          <small *ngIf="!lastSyncAt || isLoading">Ventas y caja diaria</small>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Date Range Form (Hidden for Stock Report) -->
-  <div class="date-range-section" *ngIf="activeTab !== 'stock'">
+  <section class="report-toolbar">
+    <div class="date-range-section">
     <div class="date-range-card">
-      <form [formGroup]="reportForm" (ngSubmit)="loadActiveReport()" class="date-form">
+      <div class="quick-ranges">
+        <ng-container *ngIf="activeTab === 'sales'">
+          <button type="button" (click)="setQuickRange('today')">Hoy</button>
+          <button type="button" (click)="setQuickRange('week')">7 días</button>
+          <button type="button" (click)="setQuickRange('month')">Este mes</button>
+        </ng-container>
+        <ng-container *ngIf="activeTab === 'cash'">
+          <button type="button" (click)="setCashDate(0)">Hoy</button>
+          <button type="button" (click)="setCashDate(-1)">Ayer</button>
+        </ng-container>
+      </div>
+      <form [formGroup]="reportForm" (ngSubmit)="loadActiveReport()" class="date-form" [class.cash-date-form]="activeTab === 'cash'">
         <div class="form-group">
-          <label class="form-label">Fecha inicial</label>
-          <input type="date" class="form-input" formControlName="startDate">
+          <label class="form-label">{{ activeTab === 'cash' ? 'Día de caja' : 'Desde' }}</label>
+          <input type="date" class="form-input" formControlName="startDate" (change)="activeTab === 'cash' && onCashDateChange()">
         </div>
-        <div class="form-group">
-          <label class="form-label">Fecha final</label>
+        <div class="form-group" *ngIf="activeTab === 'sales'">
+          <label class="form-label">Hasta</label>
           <input type="date" class="form-input" formControlName="endDate">
         </div>
         <button 
@@ -31,43 +51,12 @@
         >
           <span *ngIf="isLoading" class="spinner-mini"></span>
           <svg-icon name="reports" class="btn-icon" [size]="18" *ngIf="!isLoading"></svg-icon>
-          <span>Cargar reporte</span>
+          <span>{{ isLoading ? 'Actualizando…' : (activeTab === 'cash' ? 'Ver caja' : 'Actualizar') }}</span>
         </button>
       </form>
     </div>
-  </div>
-
-  <!-- Tabs -->
-  <div class="tabs-container">
-    <button
-      class="tab-button"
-      [class.tab-active]="activeTab === 'sales'"
-      (click)="onTabChange('sales')"
-    >
-      Ventas
-    </button>
-    <button
-      class="tab-button"
-      [class.tab-active]="activeTab === 'cash'"
-      (click)="onTabChange('cash')"
-    >
-      Caja diaria
-    </button>
-    <button
-      class="tab-button"
-      [class.tab-active]="activeTab === 'gst'"
-      (click)="onTabChange('gst')"
-    >
-      IGV
-    </button>
-    <button
-      class="tab-button"
-      [class.tab-active]="activeTab === 'stock'"
-      (click)="onTabChange('stock')"
-    >
-      Stock
-    </button>
-  </div>
+    </div>
+  </section>
 
   <!-- Sales Report -->
   <div class="report-section" *ngIf="activeTab === 'sales'">
@@ -177,7 +166,7 @@
         <svg-icon name="cash" class="section-icon" [size]="24"></svg-icon>
         <div>
           <h2 class="section-title">Caja diaria</h2>
-          <p class="section-subtitle">Resumen de cobros por metodo de pago</p>
+          <p class="section-subtitle">Cobros del día · Horario de atención 8:00 a. m. a 10:00 p. m.</p>
         </div>
       </div>
     </div>
@@ -194,13 +183,24 @@
     </div>
 
     <div *ngIf="cashRegisterReport" class="report-content">
-      <div class="summary-cards">
+      <div class="cash-overview">
+        <div class="cash-total-card">
+          <span class="cash-total-label">Total cobrado del día</span>
+          <strong>S/ {{ cashRegisterReport.netCollected | number:'1.2-2' }}</strong>
+          <small>{{ cashRegisterReport.totalBills }} venta(s) · {{ cashRegisterReport.totalPayments }} pago(s)</small>
+          <div class="refund-summary" [class.has-refunds]="cashRegisterReport.refundCount > 0">
+            <span>Devoluciones</span>
+            <b>S/ {{ cashRegisterReport.totalRefunds | number:'1.2-2' }}</b>
+            <em>{{ cashRegisterReport.refundCount }} operación(es)</em>
+          </div>
+        </div>
+        <div class="summary-cards cash-methods">
         <div class="summary-card">
           <div class="card-icon card-icon-primary">
             <svg-icon name="billing" class="icon" [size]="32"></svg-icon>
           </div>
           <div class="card-content">
-            <span class="card-label">Ventas cobradas</span>
+            <span class="card-label">Comprobantes</span>
             <span class="card-value">{{ cashRegisterReport.totalBills }}</span>
           </div>
         </div>
@@ -234,44 +234,6 @@
             <span class="card-value">S/ {{ cashRegisterReport.totalCard | number:'1.2-2' }}</span>
           </div>
         </div>
-      </div>
-
-      <div class="summary-cards">
-        <div class="summary-card">
-          <div class="card-content">
-            <span class="card-label">Ventas cobradas</span>
-            <span class="card-value">S/ {{ cashRegisterReport.totalCollected | number:'1.2-2' }}</span>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="card-content">
-            <span class="card-label">Subtotal</span>
-            <span class="card-value">S/ {{ cashRegisterReport.subtotal | number:'1.2-2' }}</span>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="card-content">
-            <span class="card-label">IGV</span>
-            <span class="card-value">S/ {{ cashRegisterReport.totalGst | number:'1.2-2' }}</span>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="card-content">
-            <span class="card-label">Redondeo</span>
-            <span class="card-value">S/ {{ cashRegisterReport.roundingAdjustment | number:'1.2-2' }}</span>
-          </div>
-        </div>
-        <div class="summary-card">
-          <div class="card-content">
-            <span class="card-label">Reembolsos del periodo ({{ cashRegisterReport.refundCount }})</span>
-            <span class="card-value">S/ {{ cashRegisterReport.totalRefunds | number:'1.2-2' }}</span>
-          </div>
-        </div>
-        <div class="summary-card card-net-total">
-          <div class="card-content">
-            <span class="card-label">Neto de caja</span>
-            <span class="card-value">S/ {{ cashRegisterReport.netCollected | number:'1.2-2' }}</span>
-          </div>
         </div>
       </div>
 
@@ -289,7 +251,7 @@
             <tbody>
               <tr *ngIf="cashRegisterReport.cashierBreakdown.length === 0">
                 <td colspan="3">
-                  <span class="medicine-name">Detalle por cajero disponible cuando Render termine de actualizar el backend.</span>
+                  <span class="medicine-name">No hay movimientos de caja para este día.</span>
                 </td>
               </tr>
               <tr *ngFor="let cashier of cashRegisterReport.cashierBreakdown; trackBy: trackByCashierId">

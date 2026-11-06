@@ -31,7 +31,8 @@ export class AppShellComponent implements OnInit {
   currentRoute = '';
   sidebarExpanded = false;
   openMenus: { [route: string]: boolean } = {
-    '/purchases': true
+    '/purchases': true,
+    '/reports': true
   };
 
   navItems: NavItem[] = [
@@ -42,13 +43,19 @@ export class AppShellComponent implements OnInit {
       roles: [UserRole.CASHIER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.CUSTOMER_SUPPORT, UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN]
     },
     {
+      label: 'BSC estratégico',
+      route: '/bsc',
+      icon: 'reports',
+      roles: [UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN]
+    },
+    {
       label: 'Ventas / POS',
       route: '/billing',
       icon: 'billing',
       roles: [UserRole.CASHIER, UserRole.ADMIN]
     },
     {
-      label: 'Inventario',
+      label: 'Medicamentos e Inventario',
       route: '/inventory',
       icon: 'inventory',
       roles: [UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.MANAGER, UserRole.ADMIN]
@@ -82,6 +89,11 @@ export class AppShellComponent implements OnInit {
           roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.ADMIN]
         },
         {
+          label: 'Recepciones completadas',
+          route: '/purchases/history',
+          roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.ADMIN]
+        },
+        {
           label: 'Escanear Productos',
           route: '/purchases/scanner',
           roles: [UserRole.STOCK_KEEPER, UserRole.STOCK_MONITOR, UserRole.WAREHOUSE, UserRole.ADMIN]
@@ -98,7 +110,19 @@ export class AppShellComponent implements OnInit {
       label: 'Reportes',
       route: '/reports',
       icon: 'reports',
-      roles: [UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN]
+      roles: [UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN],
+      subItems: [
+        {
+          label: 'Ventas',
+          route: '/reports/ventas',
+          roles: [UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN]
+        },
+        {
+          label: 'Caja diaria',
+          route: '/reports/caja',
+          roles: [UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN]
+        }
+      ]
     },
     {
       label: 'Actividad de usuarios',
@@ -140,6 +164,9 @@ export class AppShellComponent implements OnInit {
   autoOpenParentMenu(): void {
     if (this.currentRoute.startsWith('/purchases')) {
       this.openMenus['/purchases'] = true;
+    }
+    if (this.currentRoute.startsWith('/reports')) {
+      this.openMenus['/reports'] = true;
     }
     
   }

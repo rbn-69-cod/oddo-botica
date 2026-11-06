@@ -817,7 +817,7 @@
         </svg>
       </div>
       <div class="banner-text">
-        <h2 class="banner-title">Venta Registrada con Exito</h2>
+        <h2 class="banner-title">Venta registrada con éxito</h2>
         <span class="banner-subtitle">{{ lastReceiptData?.type }} • {{ lastReceiptData?.seriesNumber }}</span>
       </div>
       <button type="button" class="btn-close-receipt" (click)="closeReceiptModal()" aria-label="Cerrar modal">✕</button>
@@ -832,7 +832,8 @@
             <div class="ticket-logo-text">MEDIZANO</div>
             <div class="ticket-sub">BOTICA & FARMACIA ESPECIALIZADA</div>
             <div class="ticket-company-info">
-              <span>Comprobante de Venta Digital</span>
+              <span>Comprobante digital de venta</span>
+              <span>Atención farmacéutica y medicamentos</span>
             </div>
           </div>
 
@@ -876,9 +877,9 @@
           <table class="ticket-items-table">
             <thead>
               <tr>
-                <th class="th-cant">CANT</th>
-                <th class="th-desc">DESCRIPCION</th>
-                <th class="th-unit">P.UNIT</th>
+                <th class="th-cant">Cant.</th>
+                <th class="th-desc">Descripción</th>
+                <th class="th-unit">P. unit.</th>
                 <th class="th-tot">TOTAL</th>
               </tr>
             </thead>
@@ -936,7 +937,7 @@
           <!-- QR Code SUNAT -->
           <div class="ticket-qr-box" *ngIf="receiptQrCodeUrl">
             <img [src]="receiptQrCodeUrl" alt="Código QR SUNAT" class="ticket-qr-img" />
-            <p class="ticket-sunat-legend">Representacion impresa de la Boleta de Venta Electronica. Autorizado por SUNAT.</p>
+            <p class="ticket-sunat-legend">Representación digital del comprobante de venta.</p>
             <p class="ticket-hash-legend">Gracias por su compra en MediZano Botica</p>
           </div>
         </div>
@@ -948,7 +949,7 @@
         <div class="receipt-action-card email-delivery-card">
           <div class="card-section-title">
             <span class="icon-gmail"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></span>
-            <h4>Recibo Digital por Correo</h4>
+            <div><h4>Enviar comprobante</h4><p class="section-desc">Envío directo y seguro al correo del cliente.</p></div>
           </div>
 
           <!-- Caso 1: Comprobante enviado automáticamente a correo válido -->
@@ -1014,24 +1015,9 @@
               </button>
             </div>
 
-            <!-- Botón 1-Clic para Abrir Correo con el comprobante completo para cualquier cliente -->
-            <div class="email-direct-box">
-              <button
-                type="button"
-                class="btn-open-gmail-direct"
-                (click)="openUniversalEmail('auto')"
-                title="Abrir correo (Gmail, Outlook/Hotmail, Univer.lat) con el comprobante listo para enviar al cliente">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.272H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" fill="#EA4335"/>
-                </svg>
-                <span>✉️ Enviar Comprobante al Correo (1-Clic)</span>
-              </button>
-              <div class="provider-quick-links" style="display: flex; gap: 6px; margin-top: 6px; justify-content: center;">
-                <button type="button" class="btn-sub-provider" (click)="openUniversalEmail('gmail')" style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; border-radius:6px; font-size:11px; padding:3px 8px; cursor:pointer;" title="Abrir en Gmail Web">Gmail</button>
-                <button type="button" class="btn-sub-provider" (click)="openUniversalEmail('outlook')" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:6px; font-size:11px; padding:3px 8px; cursor:pointer;" title="Abrir en Hotmail / Outlook">Hotmail/Outlook</button>
-                <button type="button" class="btn-sub-provider" (click)="openUniversalEmail('mailto')" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:6px; font-size:11px; padding:3px 8px; cursor:pointer;" title="Abrir en Correo Institucional / Univer.lat">Univer.lat / App</button>
-              </div>
-            </div>
+            <button *ngIf="receiptEmailError" type="button" class="email-fallback-link" (click)="openUniversalEmail('auto')">
+              Abrir mi aplicación de correo como alternativa
+            </button>
           </div>
 
         </div>
@@ -1040,7 +1026,7 @@
         <div class="receipt-action-card quick-actions-card">
           <div class="card-section-title">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            <h4>Acciones Rapidas</h4>
+            <h4>Acciones rápidas</h4>
           </div>
           
           <div class="action-buttons-stack">

@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { filter, timeout } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import {
   BrowserMultiFormatReader,
   BarcodeFormat,
@@ -39,7 +40,7 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   totalPages = 0;
   totalElements = 0;
 
-  activeTab: 'compras' | 'tracking' | 'scanner' = 'compras';
+  activeTab: 'compras' | 'tracking' | 'scanner' | 'history' = 'compras';
 
   get isHttp(): boolean {
     return typeof window !== 'undefined' && window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
@@ -68,6 +69,8 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   showAssignBarcodeModal = false;
   scannedUnknownBarcode = '';
   selectedItemIndexToAssign = 0;
+  editandoCodigo = false;
+  guardandoCodigo = false;
 
   selectedCompra?: Compra | null;
   compraForm!: FormGroup;
@@ -75,6 +78,18 @@ export class PurchasesComponent implements OnInit, OnDestroy {
 
   errorMessage = '';
   successMessage = '';
+  comparandoOfertas = false;
+  ofertasProveedores: any[] = [];
+  busquedaProductoProveedor = '';
+  productosProveedor: any[] = [];
+  totalProductosProveedor = 0;
+  buscandoProductosProveedor = false;
+  busquedaSinResultados = false;
+  private temporizadorBusqueda?: ReturnType<typeof setTimeout>;
+  private busquedaProductoSubscription?: Subscription;
+  errorBusquedaMedicamento = '';
+  ofertaSeleccionada: any | null = null;
+  mostrarComparador = false;
 
   codigoBarrasInput = '';
   lastScannedMessage = '';
@@ -94,7 +109,7 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   scanHistory: ScanLogItem[] = [];
   totalScannedSessionCount = 0;
 
-  readonly tiposDocumento: TipoDocumentoCompra[] = ['FACTURA', 'BOLETA', 'GUIA_REMISION', 'ORDEN_COMPRA'];
+  readonly tiposDocumento: TipoDocumentoCompra[] = ['SOLICITUD_COTIZACION'];
 
   constructor(
     private compraService: CompraService,
@@ -116,7 +131,12 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe((event: any) => {
+        const previousTab = this.activeTab;
         this.detectTabFromUrl(event.url);
+        if (previousTab !== this.activeTab) {
+          this.page = 0;
+          this.cargarCompras();
+        }
       });
 
     this.cargarProveedores();
@@ -130,7 +150,9 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   }
 
   detectTabFromUrl(url: string): void {
-    if (url.includes('/purchases/tracking') || url.includes('tab=tracking')) {
+    if (url.includes('/purchases/history')) {
+      this.activeTab = 'history';
+    } else if (url.includes('/purchases/tracking') || url.includes('tab=tracking')) {
       this.activeTab = 'tracking';
     } else if (url.includes('/purchases/scanner') || url.includes('tab=scanner')) {
       this.activeTab = 'scanner';
@@ -148,7 +170,7 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     }
   }
 
-  setTab(tab: 'compras' | 'tracking' | 'scanner'): void {
+  setTab(tab: 'compras' | 'tracking' | 'scanner' | 'history'): void {
     this.activeTab = tab;
     if (tab !== 'scanner') {
       this.stopScanning();
@@ -212,9 +234,9 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     productoId: number = 0,
     nombre: string = '',
     barcode: string = '',
-    costo: number = 1.00,
-    precioVenta: number = 2.00,
-    cantidad: number = 100,
+    costo: number = 0,
+    precioVenta: number | null = null,
+    cantidad: number = 1,
     proveedorId?: number,
     prescriptionRequired: boolean = false
   ): void {
@@ -225,15 +247,91 @@ export class PurchasesComponent implements OnInit, OnDestroy {
       nombreProducto: [nombre, [Validators.required]],
       codigoBarra: [barcode],
       cantidadComprada: [cantidad, [Validators.required, Validators.min(1)]],
-      costoUnitario: [costo, [Validators.required, Validators.min(0.01)]],
-      precioVenta: [precioVenta, [Validators.required, Validators.min(0.01)]],
+      costoUnitario: [costo, [Validators.required, Validators.min(0)]],
+      // El PVP lo define la botica; nunca se inventa a partir del costo.
+      precioVenta: [precioVenta, [Validators.min(0.01)]],
       descuento: [0],
-      loteSugerido: ['LOT-' + (baseYear + 1) + '-' + Math.floor(100 + Math.random() * 900)],
-      fechaVencimiento: [new Date(Date.now() + 365*24*60*60*1000*2).toISOString().split('T')[0]],
+      loteSugerido: [''],
+      fechaVencimiento: [''],
       proveedorId: [currentProv, [Validators.required]],
       prescriptionRequired: [prescriptionRequired]
     });
     this.detallesFormArray.push(item);
+    item.get('nombreProducto')?.valueChanges.subscribe(() => this.invalidarOfertas());
+    item.get('cantidadComprada')?.valueChanges.subscribe(() => this.invalidarOfertas());
+  }
+
+  private invalidarOfertas(): void {
+    this.ofertaSeleccionada = null;
+    this.ofertasProveedores = [];
+    this.mostrarComparador = false;
+    this.detallesFormArray.controls.forEach(row => row.get('costoUnitario')?.setValue(0, { emitEvent: false }));
+  }
+
+  buscarProductosProveedor(): void {
+    if (this.temporizadorBusqueda) clearTimeout(this.temporizadorBusqueda);
+    this.busquedaProductoSubscription?.unsubscribe();
+    const termino = this.busquedaProductoProveedor.trim();
+    if (termino.length === 1) {
+      this.buscandoProductosProveedor = false;
+      return;
+    }
+    this.buscandoProductosProveedor = true;
+    this.errorBusquedaMedicamento = '';
+    this.busquedaProductoSubscription = this.compraService.buscarProductosProveedor(termino).pipe(timeout(8000)).subscribe({
+      next: response => {
+        if (termino !== this.busquedaProductoProveedor.trim()) return;
+        this.productosProveedor = (response.productos || []).map((producto: any) => ({ ...producto, cantidadSolicitada: 1 }));
+        this.totalProductosProveedor = response.total || this.productosProveedor.length;
+        this.busquedaSinResultados = this.productosProveedor.length === 0;
+        this.buscandoProductosProveedor = false;
+      },
+      error: error => {
+        if (termino !== this.busquedaProductoProveedor.trim()) return;
+        this.errorBusquedaMedicamento = error.name === 'TimeoutError'
+          ? 'El servidor tardó demasiado. Intenta buscar otra vez o agrega el medicamento manualmente.'
+          : (error.message || 'No se pudo cargar el catálogo de medicamentos.');
+        this.buscandoProductosProveedor = false;
+      }
+    });
+  }
+
+  onBuscarMedicamento(): void {
+    if (this.temporizadorBusqueda) clearTimeout(this.temporizadorBusqueda);
+    this.busquedaProductoSubscription?.unsubscribe();
+    this.buscandoProductosProveedor = false;
+    this.productosProveedor = [];
+    this.totalProductosProveedor = 0;
+    this.busquedaSinResultados = false;
+    this.errorBusquedaMedicamento = '';
+    if (this.busquedaProductoProveedor.trim().length === 1) return;
+    this.temporizadorBusqueda = setTimeout(() => this.buscarProductosProveedor(), 300);
+  }
+
+  agregarProductoProveedor(producto: any): void {
+    const cantidad = Math.floor(Number(producto.cantidadSolicitada));
+    if (!Number.isFinite(cantidad) || cantidad < 1) {
+      this.errorMessage = 'Indica una cantidad mayor a cero para agregar el medicamento.';
+      return;
+    }
+    const existente = this.detallesFormArray.controls.find(row =>
+      (row.get('nombreProducto')?.value || '').trim().toLowerCase() === producto.nombre.trim().toLowerCase()
+    );
+    if (!existente) {
+      this.agregarDetalle(producto.id, producto.nombre, '', 0, null, cantidad);
+      this.invalidarOfertas();
+    } else {
+      existente.get('cantidadComprada')?.setValue(Number(existente.get('cantidadComprada')?.value || 0) + cantidad);
+    }
+    this.errorMessage = '';
+    producto.cantidadSolicitada = 1;
+  }
+
+  cantidadEnPedido(nombre: string): number {
+    const row = this.detallesFormArray.controls.find(item =>
+      (item.get('nombreProducto')?.value || '').trim().toLowerCase() === nombre.trim().toLowerCase()
+    );
+    return Number(row?.get('cantidadComprada')?.value || 0);
   }
 
   toggleRecetaDetalle(index: number): void {
@@ -252,6 +350,7 @@ export class PurchasesComponent implements OnInit, OnDestroy {
 
   eliminarDetalle(index: number): void {
     this.detallesFormArray.removeAt(index);
+    this.invalidarOfertas();
   }
 
   calcularSubtotal(): number {
@@ -280,7 +379,8 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   cargarCompras(): void {
     this.loading = true;
     this.errorMessage = '';
-    this.compraService.listarCompras(this.page, this.size, this.filtro, this.estadoFiltro).subscribe({
+    const estadoConsulta = this.activeTab === 'tracking' || this.activeTab === 'scanner' ? 'ACTIVAS' : this.activeTab === 'history' ? 'RECIBIDA' : this.estadoFiltro;
+    this.compraService.listarCompras(this.page, this.size, this.filtro, estadoConsulta).subscribe({
       next: (resp) => {
         this.compras = resp.content;
         this.totalPages = resp.totalPages;
@@ -344,21 +444,80 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     const defaultProv = this.proveedores.length > 0 ? this.proveedores[0].id : 1;
     this.compraForm.reset({
       proveedorId: defaultProv,
-      tipoDocumento: 'FACTURA',
-      numeroDocumento: 'F001-' + Math.floor(100000 + Math.random() * 900000),
+      tipoDocumento: 'SOLICITUD_COTIZACION',
+      numeroDocumento: 'SC-' + Math.floor(100000 + Math.random() * 900000),
       fechaEmision: new Date().toISOString().split('T')[0],
       observaciones: 'Reposición programada de medicamentos a laboratorio'
     });
     this.detallesFormArray.clear();
-    this.agregarDetalle(1, 'Paracetamol 500mg Tabletas', '', 1.20, 2.50, 100);
-    this.agregarDetalle(2, 'Amoxicilina 500mg Cápsulas', '', 2.50, 5.00, 50);
+    this.ofertasProveedores = [];
+    this.busquedaProductoProveedor = '';
+    this.productosProveedor = [];
+    this.ofertaSeleccionada = null;
+    this.mostrarComparador = false;
     this.errorMessage = '';
     this.successMessage = '';
     this.showNuevaModal = true;
+    this.buscarProductosProveedor();
   }
 
   cerrarNuevaModal(): void {
     this.showNuevaModal = false;
+  }
+
+  compararPreciosProveedores(): void {
+    const detalles = (this.compraForm.value.detalles || []).map((item: any) => ({
+      nombreProducto: (item.nombreProducto || '').trim(),
+      cantidadComprada: Number(item.cantidadComprada) || 0
+    })).filter((item: any) => item.nombreProducto && item.cantidadComprada > 0);
+    if (!detalles.length) {
+      this.errorMessage = 'Agrega medicamentos y cantidades antes de comparar proveedores.';
+      return;
+    }
+    this.comparandoOfertas = true;
+    this.ofertaSeleccionada = null;
+    this.compraService.compararOfertas(detalles).subscribe({
+      next: (response) => {
+        this.ofertasProveedores = response.ofertas || [];
+        this.errorMessage = '';
+        if (!this.ofertasProveedores.some(oferta => oferta.completa)) {
+          this.errorMessage = 'Los proveedores aún deben cotizar algunos medicamentos. Elige uno para enviarle la solicitud.';
+        }
+        this.mostrarComparador = true;
+        this.comparandoOfertas = false;
+      },
+      error: (error) => {
+        this.errorMessage = error.message || 'No se pudieron comparar las tarifas.';
+        this.comparandoOfertas = false;
+      }
+    });
+  }
+
+  seleccionarOferta(oferta: any): void {
+    if (!oferta) return;
+    this.compraForm.patchValue({ proveedorId: oferta.proveedorId });
+    this.detallesFormArray.controls.forEach(control => {
+      const name = (control.get('nombreProducto')?.value || '').trim().toLowerCase();
+      const line = (oferta.lineas || []).find((item: any) =>
+        (item.nombreProducto || '').trim().toLowerCase() === name
+      );
+      control.patchValue({ costoUnitario: line?.disponible ? line.precioUnitario : 0 });
+    });
+    this.ofertaSeleccionada = oferta;
+    this.mostrarComparador = false;
+    this.successMessage = '';
+    this.cdr.detectChanges();
+    requestAnimationFrame(() => {
+      document.getElementById('oferta-seleccionada')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  cambiarOferta(): void {
+    this.mostrarComparador = true;
+    this.cdr.detectChanges();
+    requestAnimationFrame(() => {
+      document.getElementById('comparador-proveedores')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   abrirNuevaCompraConBajoStock(): void {
@@ -483,17 +642,17 @@ export class PurchasesComponent implements OnInit, OnDestroy {
       nombreProducto: (d.nombreProducto || '').trim(),
       cantidad: Number(d.cantidadComprada) || 1,
       cantidadComprada: Number(d.cantidadComprada) || 1,
-      costoUnitario: Number(d.costoUnitario) || 1.0,
-      precioVenta: Number(d.precioVenta) || 2.0,
+      costoUnitario: Number(d.costoUnitario) || 0,
+      precioVenta: d.precioVenta === null || d.precioVenta === '' ? 0 : Number(d.precioVenta),
       descuento: Number(d.descuento) || 0,
-      loteSugerido: d.loteSugerido || ('LOT-' + (new Date().getFullYear() + 1) + '-' + Math.floor(100 + Math.random() * 900)),
-      fechaVencimiento: d.fechaVencimiento || new Date(Date.now() + 365*24*60*60*1000*2).toISOString().split('T')[0],
+      loteSugerido: '',
+      fechaVencimiento: '',
       codigoBarra: (d.codigoBarra || '').trim()
     }));
 
     const payload = {
       proveedorId: Number(formVal.proveedorId) || (this.proveedores[0]?.id || 1),
-      tipoDocumento: formVal.tipoDocumento || 'FACTURA',
+      tipoDocumento: formVal.tipoDocumento || 'SOLICITUD_COTIZACION',
       numeroDocumento: (formVal.numeroDocumento || 'F001-' + Date.now()).trim().toUpperCase(),
       fechaEmision: formVal.fechaEmision || new Date().toISOString().split('T')[0],
       observaciones: formVal.observaciones || 'Reposición formal de medicamentos para botica',
@@ -541,6 +700,10 @@ export class PurchasesComponent implements OnInit, OnDestroy {
 
     this.compraService.actualizarEstado(compra.id, target).subscribe({
       next: (upd) => {
+        this.auditLogService.recordActivity({
+          action: 'PURCHASE_STATUS_UPDATED', entityType: 'PURCHASE', entityId: String(compra.id),
+          description: `Orden ${compra.numeroDocumento} actualizada a ${this.getEstadoLabel(upd.estado)}`
+        }).subscribe({ error: () => undefined });
         compra.estado = upd.estado;
         this.successMessage = 'Estado actualizado a "' + this.getEstadoLabel(upd.estado) + '" para la orden ' + compra.numeroDocumento + '.';
         this.cargarCompras();
@@ -551,6 +714,31 @@ export class PurchasesComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.errorMessage = err.message || 'Error al actualizar el tracking de la orden.';
+      }
+    });
+  }
+
+  abrirPortalProveedor(compra: Compra): void {
+    if (!compra.providerPortalUrl) {
+      this.errorMessage = 'No se pudo generar el enlace del proveedor.';
+      return;
+    }
+    window.open(compra.providerPortalUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  confirmarEntregaBotica(compra: Compra): void {
+    if (!confirm(`¿Confirmas que la botica recibió físicamente la orden ${compra.numeroDocumento}?`)) return;
+    this.loading = true;
+    this.compraService.actualizarEstado(compra.id, 'POR_VERIFICAR').subscribe({
+      next: (updated) => {
+        compra.estado = updated.estado;
+        this.successMessage = 'Entrega física confirmada. La orden ya puede pasar a la mesa de escaneo FEFO.';
+        this.loading = false;
+        this.cargarCompras();
+      },
+      error: (err) => {
+        this.errorMessage = err.message || 'No se pudo confirmar la entrega.';
+        this.loading = false;
       }
     });
   }
@@ -566,12 +754,10 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     this.scanHistory = [];
     this.totalScannedSessionCount = 0;
 
-    const baseYear = new Date().getFullYear();
-
     (compra.detalles || []).forEach((det, idx) => {
       const suggestedBarcode = det.codigoBarra || '';
-      const suggestedLot = det.loteSugerido || ('LOTE-' + (baseYear + 1) + '-X' + (idx + 1));
-      const suggestedExpiry = det.fechaVencimiento || (baseYear + 2 + '-12-31');
+      const suggestedLot = det.loteSugerido || '';
+      const suggestedExpiry = det.fechaVencimiento || '';
       const costoUnitario = det.costoUnitario || 1.00;
       const precioVenta = det.precioVenta || Number((costoUnitario * 2.0).toFixed(2));
 
@@ -595,8 +781,8 @@ export class PurchasesComponent implements OnInit, OnDestroy {
         cantidadRecibida: [det.cantidadRecibida || 0, [Validators.required, Validators.min(0)]],
         costoUnitario: [costoUnitario, [Validators.required, Validators.min(0.01)]],
         precioVenta: [precioVenta, [Validators.required, Validators.min(0.01)]],
-        batchNumber: [suggestedLot, Validators.required],
-        expiryDate: [suggestedExpiry, Validators.required],
+        batchNumber: [suggestedLot],
+        expiryDate: [suggestedExpiry],
         prescriptionRequired: [isRx]
       });
 
@@ -789,9 +975,16 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     if (matchedIndex !== -1) {
       // CÓDIGO CONOCIDO -> Directo suma +1
       const targetCtrl = this.itemsRecepcionArray.at(matchedIndex);
-      const actual = targetCtrl.get('cantidadRecibida')?.value || 0;
-      const comprada = targetCtrl.get('cantidadComprada')?.value || 0;
+      const actual = Number(targetCtrl.get('cantidadRecibida')?.value) || 0;
+      const comprada = Number(targetCtrl.get('cantidadComprada')?.value) || 0;
       const nombre = targetCtrl.get('nombreProducto')?.value || 'Medicamento';
+
+      if (actual >= comprada) {
+        this.lastScannedSuccess = false;
+        this.lastScannedMessage = '⚠️ ' + nombre + ' ya tiene ' + actual + '/' + comprada + ' unidades. Revisa el excedente antes de confirmar.';
+        this.codigoBarrasInput = '';
+        return;
+      }
 
       const nuevaCantidad = actual + 1;
       targetCtrl.patchValue({ cantidadRecibida: nuevaCantidad });
@@ -814,47 +1007,90 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     } else {
       // CÓDIGO NUEVO / NO ASIGNADO
       this.scannedUnknownBarcode = code;
-      this.selectedItemIndexToAssign = 0;
+      this.selectedItemIndexToAssign = this.itemsRecepcionArray.controls.findIndex(item => !item.get('codigoBarra')?.value);
+      if (this.selectedItemIndexToAssign < 0) {
+        this.lastScannedSuccess = false;
+        this.lastScannedMessage = '⚠️ Código ' + code + ' no reconocido. Todos los medicamentos ya tienen código; usa «Editar código» en el producto correcto si el envase trae otro.';
+        this.codigoBarrasInput = '';
+        return;
+      }
+      this.editandoCodigo = false;
       this.showAssignBarcodeModal = true;
       this.codigoBarrasInput = '';
     }
   }
 
   asignarCodigoNuevo(): void {
-    if (this.selectedItemIndexToAssign < 0 || this.selectedItemIndexToAssign >= this.itemsRecepcionArray.length) {
+    const index = Number(this.selectedItemIndexToAssign);
+    const code = this.scannedUnknownBarcode.trim();
+    if (!this.selectedCompra || !code || index < 0 || index >= this.itemsRecepcionArray.length || this.guardandoCodigo) {
       return;
     }
-
-    const targetCtrl = this.itemsRecepcionArray.at(this.selectedItemIndexToAssign);
-    targetCtrl.patchValue({ codigoBarra: this.scannedUnknownBarcode });
-
-    const actual = targetCtrl.get('cantidadRecibida')?.value || 0;
-    const comprada = targetCtrl.get('cantidadComprada')?.value || 0;
-    const nombre = targetCtrl.get('nombreProducto')?.value || 'Medicamento';
-
-    const nuevaCantidad = actual + 1;
-    targetCtrl.patchValue({ cantidadRecibida: nuevaCantidad });
-
-    this.playBeepSound();
-    this.triggerFlashEffect(this.selectedItemIndexToAssign);
-
-    this.totalScannedSessionCount++;
-    this.scanHistory.unshift({
-      barcode: this.scannedUnknownBarcode,
-      name: nombre,
-      time: new Date().toLocaleTimeString(),
-      count: nuevaCantidad
+    const targetCtrl = this.itemsRecepcionArray.at(index);
+    if (!this.editandoCodigo && targetCtrl.get('codigoBarra')?.value?.trim()) {
+      this.errorMessage = 'Este medicamento ya tiene código. Usa «Editar código» para corregirlo.';
+      return;
+    }
+    const duplicate = this.itemsRecepcionArray.controls.some((item, position) => position !== index && item.get('codigoBarra')?.value?.trim() === code);
+    if (duplicate) {
+      this.errorMessage = 'Ese código ya está vinculado a otro medicamento de esta orden.';
+      return;
+    }
+    this.guardandoCodigo = true;
+    this.compraService.guardarCodigoRecepcion(this.selectedCompra.id, Number(targetCtrl.get('detalleId')?.value), code, this.editandoCodigo).subscribe({
+      next: () => {
+        targetCtrl.patchValue({ codigoBarra: code });
+        const detalle = this.selectedCompra?.detalles?.find(item => item.id === Number(targetCtrl.get('detalleId')?.value));
+        if (detalle) detalle.codigoBarra = code;
+        const nombre = targetCtrl.get('nombreProducto')?.value || 'Medicamento';
+        if (this.editandoCodigo) {
+          this.lastScannedMessage = '✅ Código actualizado para ' + nombre + ': ' + code;
+        } else {
+          const actual = Number(targetCtrl.get('cantidadRecibida')?.value) || 0;
+          const comprada = Number(targetCtrl.get('cantidadComprada')?.value) || 0;
+          const nuevaCantidad = Math.min(actual + 1, comprada);
+          targetCtrl.patchValue({ cantidadRecibida: nuevaCantidad });
+          this.totalScannedSessionCount++;
+          this.scanHistory.unshift({ barcode: code, name: nombre, time: new Date().toLocaleTimeString(), count: nuevaCantidad });
+          if (this.scanHistory.length > 8) this.scanHistory.pop();
+          this.playBeepSound();
+          this.lastScannedMessage = '✅ Código guardado para ' + nombre + '. Contabilizado: ' + nuevaCantidad + '/' + comprada + ' uds';
+        }
+        this.triggerFlashEffect(index);
+        this.lastScannedSuccess = true;
+        this.guardandoCodigo = false;
+        this.cerrarAssignModal();
+      },
+      error: err => {
+        this.guardandoCodigo = false;
+        this.errorMessage = err.message || 'No se pudo guardar el código. Intenta nuevamente.';
+      }
     });
+  }
 
-    this.lastScannedSuccess = true;
-    this.lastScannedMessage = '✅ Código ' + this.scannedUnknownBarcode + ' asignado a "' + nombre + '". Contabilizado: ' + nuevaCantidad + '/' + comprada + ' uds';
-    this.showAssignBarcodeModal = false;
-    this.scannedUnknownBarcode = '';
+  editarCodigo(index: number): void {
+    const ctrl = this.itemsRecepcionArray.at(index);
+    this.selectedItemIndexToAssign = index;
+    this.scannedUnknownBarcode = ctrl.get('codigoBarra')?.value || '';
+    this.editandoCodigo = true;
+    this.showAssignBarcodeModal = true;
+  }
+
+  get medicamentosSinCodigo(): { index: number; nombre: string; cantidad: number; recibidas: number }[] {
+    return this.itemsRecepcionArray.controls.map((item, index) => ({
+      index,
+      nombre: item.get('nombreProducto')?.value || 'Medicamento',
+      cantidad: Number(item.get('cantidadComprada')?.value) || 0,
+      recibidas: Number(item.get('cantidadRecibida')?.value) || 0,
+      codigo: item.get('codigoBarra')?.value
+    })).filter(item => !item.codigo);
   }
 
   cerrarAssignModal(): void {
+    if (this.guardandoCodigo) return;
     this.showAssignBarcodeModal = false;
     this.scannedUnknownBarcode = '';
+    this.editandoCodigo = false;
   }
 
   simularEscaneo(barcode: string): void {
@@ -878,6 +1114,7 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     const max = ctrl.get('cantidadComprada')?.value || 9999;
     const nuevo = Math.min(actual + delta, max);
     ctrl.patchValue({ cantidadRecibida: nuevo });
+    this.lastScannedMessage = '';
     this.playBeepSound();
     this.triggerFlashEffect(index);
   }
@@ -887,6 +1124,7 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     const actual = ctrl.get('cantidadRecibida')?.value || 0;
     if (actual > 0) {
       ctrl.patchValue({ cantidadRecibida: actual - 1 });
+      this.lastScannedMessage = '';
     }
   }
 
@@ -894,6 +1132,7 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     const ctrl = this.itemsRecepcionArray.at(index);
     const comprada = ctrl.get('cantidadComprada')?.value || 0;
     ctrl.patchValue({ cantidadRecibida: comprada });
+    this.lastScannedMessage = '';
     this.playBeepSound();
     this.triggerFlashEffect(index);
   }
@@ -975,6 +1214,11 @@ export class PurchasesComponent implements OnInit, OnDestroy {
 
   abrirConfirmarModal(): void {
     if (!this.selectedCompra || this.recepcionForm.invalid) return;
+    const invalid = this.itemsRecepcionArray.controls.find(ctrl => Number(ctrl.get('cantidadRecibida')?.value) > 0 && (!ctrl.get('batchNumber')?.value?.trim() || !ctrl.get('expiryDate')?.value));
+    if (invalid) {
+      this.errorMessage = 'Ingresa el lote y vencimiento reales de cada medicamento recibido.';
+      return;
+    }
     this.showConfirmModal = true;
   }
 
@@ -1017,17 +1261,17 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.compraService.confirmarRecepcion(this.selectedCompra.id, payload).subscribe({
       next: () => {
-        // Actualizar precios globales en el catálogo farmacéutico
-        this.actualizarPreciosGlobalesCatalogo();
-
         const numDoc = this.selectedCompra?.numeroDocumento || '';
+        this.auditLogService.recordActivity({
+          action: 'PURCHASE_RECEIVED', entityType: 'PURCHASE', entityId: String(this.selectedCompra!.id),
+          description: `Compra recepcionada e ingresada al inventario: ${numDoc}`
+        }).subscribe({ error: () => undefined });
         this.successMessage = '✅ ¡Orden ' + numDoc + ' recepcionada exitosamente! Las existencias ingresaron al almacén FEFO y la orden se archivó en el Historial de Compras.';
         this.loading = false;
         this.cerrarConfirmarModal();
         this.selectedCompra = undefined;
         this.itemsRecepcionArray.clear();
-        this.cargarCompras();
-        this.setTab('compras');
+        this.router.navigate(['/purchases/history']);
       },
       error: (err) => {
         this.errorMessage = err.message || 'Error al confirmar la recepción en inventario';
@@ -1136,12 +1380,20 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   }
 
   cancelar(c: Compra): void {
-    if (!confirm('¿Está seguro de cancelar la compra ' + c.numeroDocumento + '?')) {
+    if (c.estado !== 'BORRADOR' && c.estado !== 'PENDIENTE') {
+      this.errorMessage = 'El proveedor ya aceptó esta orden. Registra cualquier diferencia durante la recepción.';
+      return;
+    }
+    if (!confirm('¿Cancelar la solicitud ' + c.numeroDocumento + ' antes de que el proveedor la acepte?')) {
       return;
     }
     this.loading = true;
     this.compraService.cancelarCompra(c.id, 'Cancelado por usuario').subscribe({
       next: () => {
+        this.auditLogService.recordActivity({
+          action: 'PURCHASE_CANCELLED', entityType: 'PURCHASE', entityId: String(c.id),
+          description: `Orden de compra cancelada: ${c.numeroDocumento}`
+        }).subscribe({ error: () => undefined });
         this.successMessage = 'Compra cancelada correctamente.';
         this.cargarCompras();
       },
@@ -1206,17 +1458,15 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   }
 
 
-  trackingFiltro: 'TODOS' | 'EN_TRANSITO' | 'POR_VERIFICAR' | 'RECIBIDA' = 'TODOS';
+  trackingFiltro: 'TODOS' | 'EN_TRANSITO' | 'POR_VERIFICAR' = 'TODOS';
   trackingSearch: string = '';
 
   getComprasTracking(): Compra[] {
-    let list = this.compras;
+    let list = this.compras.filter(c => c.estado !== 'RECIBIDA' && c.estado !== 'CANCELADA');
     if (this.trackingFiltro === 'EN_TRANSITO') {
       list = list.filter(c => ['PENDIENTE', 'ORDEN_ACEPTADA', 'EMPAQUETANDO', 'EN_CAMINO'].includes(c.estado));
     } else if (this.trackingFiltro === 'POR_VERIFICAR') {
       list = list.filter(c => ['EN_ENTREGA', 'POR_VERIFICAR', 'VERIFICANDO'].includes(c.estado));
-    } else if (this.trackingFiltro === 'RECIBIDA') {
-      list = list.filter(c => c.estado === 'RECIBIDA');
     }
 
     if (this.trackingSearch && this.trackingSearch.trim()) {
@@ -1259,8 +1509,12 @@ export class PurchasesComponent implements OnInit, OnDestroy {
     }
   }
 
-  setTrackingFiltro(filtro: 'TODOS' | 'EN_TRANSITO' | 'POR_VERIFICAR' | 'RECIBIDA'): void {
+  setTrackingFiltro(filtro: 'TODOS' | 'EN_TRANSITO' | 'POR_VERIFICAR'): void {
     this.trackingFiltro = filtro;
+  }
+
+  irHistorialRecepciones(): void {
+    this.router.navigate(['/purchases/history']);
   }
 
 

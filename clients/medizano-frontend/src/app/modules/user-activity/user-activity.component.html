@@ -83,7 +83,7 @@
               <th>Acción</th>
               <th>Entidad</th>
               <th>Descripción</th>
-              <th>Dirección IP</th>
+              <th>IP pública</th>
             </tr>
           </thead>
           <tbody>
@@ -115,7 +115,9 @@
               </td>
               <td>{{ getEntityLabel(log.entityType) }}</td>
               <td class="description-cell">{{ getDescriptionLabel(log.description) }}</td>
-              <td class="ip-cell">{{ log.ipAddress || 'N/A' }}</td>
+              <td class="ip-cell" [title]="log.ipAddress ? 'IP pública de Internet registrada por el servidor' : 'El evento ocurrió antes de habilitar el registro de IP'">
+                {{ log.ipAddress || 'No registrada (histórico)' }}
+              </td>
             </tr>
           </tbody>
         </table>

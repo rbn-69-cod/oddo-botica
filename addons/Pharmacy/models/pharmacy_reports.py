@@ -34,22 +34,91 @@ class ReportPharmacySalesBranch(models.Model):
         self.env.cr.execute(
             """
             CREATE OR REPLACE VIEW %s AS (
+                WITH orders AS (
+                    SELECT
+                        po.branch_id,
+                        DATE(po.date_order) AS date,
+                        po.user_id AS cashier_id,
+                        SUM(po.amount_total) AS total_sales,
+                        SUM(COALESCE(po.insurance_amount, 0)) AS insurance_sales,
+                        COUNT(po.id) AS total_orders,
+                        COUNT(DISTINCT po.partner_id) AS total_customers,
+                        COUNT(DISTINCT po.prescription_id) AS total_prescriptions
+                    FROM pos_order po
+                    WHERE po.state IN ('paid', 'done', 'invoiced')
+                    GROUP BY po.branch_id, DATE(po.date_order), po.user_id
+                ),
+                recorded_payments AS (
+                    SELECT
+                        po.branch_id,
+                        DATE(po.date_order) AS date,
+                        po.user_id AS cashier_id,
+                        SUM(CASE
+                            WHEN COALESCE(ppm.is_cash_count, FALSE)
+                              OR LOWER(COALESCE(ppm.name::text, '')) LIKE '%%cash%%'
+                              OR LOWER(COALESCE(ppm.name::text, '')) LIKE '%%efectivo%%'
+                            THEN pp.amount ELSE 0 END) AS cash_sales,
+                        SUM(CASE
+                            WHEN LOWER(COALESCE(ppm.name::text, '')) LIKE '%%m-pesa%%'
+                              OR LOWER(COALESCE(ppm.name::text, '')) LIKE '%%mpesa%%'
+                              OR LOWER(COALESCE(ppm.name::text, '')) LIKE '%%yape%%'
+                              OR LOWER(COALESCE(ppm.name::text, '')) LIKE '%%plin%%'
+                              OR LOWER(COALESCE(ppm.name::text, '')) LIKE '%%billetera%%'
+                              OR LOWER(COALESCE(ppm.name::text, '')) LIKE '%%paypal%%'
+                              OR LOWER(COALESCE(ppm.name::text, '')) LIKE '%%mercado%%'
+                            THEN pp.amount ELSE 0 END) AS mpesa_sales,
+                        SUM(CASE
+                            WHEN LOWER(COALESCE(ppm.name::text, '')) LIKE '%%card%%'
+                              OR LOWER(COALESCE(ppm.name::text, '')) LIKE '%%tarjeta%%'
+                            THEN pp.amount ELSE 0 END) AS card_sales
+                    FROM pos_payment pp
+                    JOIN pos_order po ON po.id = pp.pos_order_id
+                    JOIN pos_payment_method ppm ON ppm.id = pp.payment_method_id
+                    WHERE po.state IN ('paid', 'done', 'invoiced')
+                    GROUP BY po.branch_id, DATE(po.date_order), po.user_id
+                ),
+                legacy_payments AS (
+                    /* Legacy website orders may not yet have a pos.payment. */
+                    SELECT
+                        po.branch_id,
+                        DATE(po.date_order) AS date,
+                        po.user_id AS cashier_id,
+                        SUM(CASE WHEN po.medizano_payment_method = 'CASH'
+                            THEN po.amount_total ELSE 0 END) AS cash_sales,
+                        SUM(CASE WHEN po.medizano_payment_method IN
+                            ('PAYPAL', 'MERCADO_PAGO')
+                            THEN po.amount_total ELSE 0 END) AS mpesa_sales,
+                        0::numeric AS card_sales
+                    FROM pos_order po
+                    WHERE po.state IN ('paid', 'done', 'invoiced')
+                      AND NOT EXISTS (
+                          SELECT 1 FROM pos_payment pp
+                          WHERE pp.pos_order_id = po.id
+                      )
+                    GROUP BY po.branch_id, DATE(po.date_order), po.user_id
+                )
                 SELECT
-                    row_number() OVER () AS id,
-                    po.branch_id,
-                    DATE(po.date_order) as date,
-                    po.user_id as cashier_id,
-                    SUM(po.amount_total) as total_sales,
-                    0 as cash_sales,
-                    0 as mpesa_sales,
-                    0 as card_sales,
-                    SUM(po.insurance_amount) as insurance_sales,
-                    COUNT(po.id) as total_orders,
-                    COUNT(DISTINCT po.partner_id) as total_customers,
-                    COUNT(DISTINCT po.prescription_id) as total_prescriptions
-                FROM pos_order po
-                WHERE po.state IN ('paid', 'done', 'invoiced')
-                GROUP BY po.branch_id, DATE(po.date_order), po.user_id
+                    ROW_NUMBER() OVER (ORDER BY o.date DESC, o.branch_id, o.cashier_id) AS id,
+                    o.branch_id,
+                    o.date,
+                    o.cashier_id,
+                    o.total_sales,
+                    COALESCE(rp.cash_sales, 0) + COALESCE(lp.cash_sales, 0) AS cash_sales,
+                    COALESCE(rp.mpesa_sales, 0) + COALESCE(lp.mpesa_sales, 0) AS mpesa_sales,
+                    COALESCE(rp.card_sales, 0) + COALESCE(lp.card_sales, 0) AS card_sales,
+                    o.insurance_sales,
+                    o.total_orders,
+                    o.total_customers,
+                    o.total_prescriptions
+                FROM orders o
+                LEFT JOIN recorded_payments rp
+                  ON rp.branch_id IS NOT DISTINCT FROM o.branch_id
+                 AND rp.date = o.date
+                 AND rp.cashier_id IS NOT DISTINCT FROM o.cashier_id
+                LEFT JOIN legacy_payments lp
+                  ON lp.branch_id IS NOT DISTINCT FROM o.branch_id
+                 AND lp.date = o.date
+                 AND lp.cashier_id IS NOT DISTINCT FROM o.cashier_id
             )
         """
             % self._table

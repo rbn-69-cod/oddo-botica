@@ -11,6 +11,26 @@ _logger = logging.getLogger(__name__)
 class PosOrder(models.Model):
     _inherit = "pos.order"
 
+    # References used by the MediZano web checkout.  Keeping them on the POS
+    # order makes the pending electronic order, the provider payment and the
+    # final receipt one auditable database record.
+    medizano_payment_method = fields.Selection(
+        [("CASH", "Efectivo"), ("PAYPAL", "PayPal"),
+         ("MERCADO_PAGO", "Mercado Pago")],
+        string="MediZano payment method",
+        index=True,
+    )
+    medizano_provider_order_id = fields.Char(
+        "Provider order", index=True, copy=False
+    )
+    medizano_provider_payment_id = fields.Char(
+        "Provider payment", index=True, copy=False
+    )
+    medizano_provider_status = fields.Char(
+        "Provider status", index=True, copy=False
+    )
+    medizano_customer_email = fields.Char("Checkout customer email")
+
     # Pharmacy fields
     branch_id = fields.Many2one(
         "pharmacy.branch", "Branch", required=False, tracking=True
@@ -70,10 +90,21 @@ class PosOrder(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            # Auto-set branch from POS config if not set
+            # Auto-set branch from the POS configuration.  Orders created by
+            # integrations do not always include a config, so use the active
+            # principal branch as a safe final fallback.  A sale must never be
+            # left without a branch because it would disappear from branch
+            # sales, cash and BSC reporting.
             if not vals.get("branch_id") and vals.get("config_id"):
                 config = self.env["pos.config"].browse(vals["config_id"])
                 vals["branch_id"] = config.branch_id.id
+
+            if not vals.get("branch_id"):
+                principal_branch = self.env["pharmacy.branch"].search(
+                    [("active", "=", True)], order="id", limit=1
+                )
+                if principal_branch:
+                    vals["branch_id"] = principal_branch.id
 
             # Link patient from partner if available
             if vals.get("partner_id") and not vals.get("patient_id"):

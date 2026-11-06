@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { AuthService } from './auth/auth.service';
 import { UserRole } from './core/models/user.model';
 import { ThemeService } from './core/services/theme.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,11 @@ export class AppComponent implements OnInit, OnDestroy {
   isStarting = true;
   readonly UserRole = UserRole;
   private startupTimer?: ReturnType<typeof setTimeout>;
+  private lastSsoCheck = 0;
+  private readonly onWindowFocus = () => this.synchronizeSession(false);
+  private readonly onVisibilityChange = () => {
+    if (document.visibilityState === 'visible') this.synchronizeSession(false);
+  };
 
   constructor(
     public authService: AuthService,
@@ -35,15 +41,43 @@ export class AppComponent implements OnInit, OnDestroy {
       this.isAuthenticated = !!user;
     });
 
-    this.startupTimer = setTimeout(() => {
-      this.isStarting = false;
-    }, 1800);
+    this.synchronizeSession(true);
+    window.addEventListener('focus', this.onWindowFocus);
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
+
+    // Fallback so a network interruption cannot leave the splash visible.
+    this.startupTimer = setTimeout(() => this.isStarting = false, 5000);
   }
 
   ngOnDestroy(): void {
     if (this.startupTimer) {
       clearTimeout(this.startupTimer);
     }
+    window.removeEventListener('focus', this.onWindowFocus);
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
+  }
+
+  private synchronizeSession(initial: boolean): void {
+    const now = Date.now();
+    if (!initial && now - this.lastSsoCheck < 1000) return;
+    this.lastSsoCheck = now;
+
+    this.authService.restoreSsoSession().pipe(
+      finalize(() => {
+        if (initial) this.isStarting = false;
+      })
+    ).subscribe(restored => {
+      if (restored) {
+        if (this.router.url.startsWith('/auth/') || this.router.url === '/') {
+          this.router.navigate(['/dashboard']);
+        }
+        return;
+      }
+
+      if (!initial && !this.router.url.startsWith('/auth/')) {
+        this.router.navigate(['/auth/login']);
+      }
+    });
   }
 
   logout(): void {

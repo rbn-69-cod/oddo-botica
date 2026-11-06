@@ -83,7 +83,7 @@ export class UserActivityComponent implements OnInit {
   }
 
   formatDate(dateString: string): string {
-    return formatDateTime(dateString);
+    return formatDateTime(dateString, true);
   }
 
   getRoleLabel(role: string): string {
@@ -104,7 +104,8 @@ export class UserActivityComponent implements OnInit {
       MEDICINE_UPDATED: 'Medicamento actualizado', MEDICINE_DELETED: 'Medicamento eliminado',
       BATCH_ADDED: 'Lote agregado', BATCH_UPDATED: 'Lote actualizado', BATCH_DELETED: 'Lote eliminado',
       USER_LOGIN: 'Ingreso al sistema', USER_LOGOUT: 'Cierre de sesión',
-      USER_PASSWORD_CHANGED: 'Contraseña actualizada', USER_STATUS_CHANGED: 'Estado de usuario actualizado'
+      USER_PASSWORD_CHANGED: 'Contraseña actualizada', USER_STATUS_CHANGED: 'Estado de usuario actualizado',
+      USER_CREATED: 'Usuario creado', USER_UPDATED: 'Usuario actualizado', USER_DELETED: 'Usuario eliminado'
     };
     return labels[action] || action.replace(/_/g, ' ');
   }

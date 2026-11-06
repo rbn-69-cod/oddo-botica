@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { BillingService } from '../../core/services/billing.service';
 import { DialogService } from '../../core/services/dialog.service';
-import { BillResponse } from '../../core/models/billing.model';
+import { BillResponse, EmailReceiptRequest } from '../../core/models/billing.model';
 import { formatDateTime, parseBackendDate } from '../../core/utils/date-time.util';
 
 @Component({
@@ -14,6 +14,9 @@ export class PurchaseHistoryComponent implements OnInit {
   bills: BillResponse[] = [];
   isLoading = false;
   searchTerm = '';
+  expandedBillId: number | null = null;
+  emailDrafts: Record<number, string> = {};
+  emailingBillId: number | null = null;
 
   constructor(
     private billingService: BillingService,
@@ -28,7 +31,15 @@ export class PurchaseHistoryComponent implements OnInit {
     this.isLoading = true;
     this.billingService.getAllBills().subscribe({
       next: (bills) => {
-        this.bills = bills;
+        this.bills = Array.isArray(bills) ? bills.map(bill => ({
+          ...bill,
+          items: Array.isArray(bill.items) ? bill.items : [],
+          payments: Array.isArray(bill.payments) ? bill.payments : [],
+          totalAmount: Number(bill.totalAmount) || 0,
+          subtotal: Number(bill.subtotal) || 0,
+          totalGst: Number(bill.totalGst) || 0
+        })) : [];
+        this.bills.forEach(bill => this.emailDrafts[bill.id] = bill.customerEmail || '');
         this.isLoading = false;
       },
       error: (error) => {
@@ -45,10 +56,10 @@ export class PurchaseHistoryComponent implements OnInit {
     }
     const term = this.searchTerm.toLowerCase().trim();
     return this.bills.filter(bill =>
-      bill.billNumber.toLowerCase().includes(term) ||
+      (bill.billNumber || '').toLowerCase().includes(term) ||
       (bill.customerName && bill.customerName.toLowerCase().includes(term)) ||
       (bill.customerPhone && bill.customerPhone.toLowerCase().includes(term)) ||
-      bill.items.some(item => item.medicineName.toLowerCase().includes(term))
+      (bill.items || []).some(item => (item.medicineName || '').toLowerCase().includes(term))
     );
   }
 
@@ -113,7 +124,7 @@ export class PurchaseHistoryComponent implements OnInit {
   }
 
   getTotalPaid(bill: BillResponse): number {
-    return bill.payments
+    return (bill.payments || [])
       .filter(p => p.status === 'COMPLETED')
       .reduce((sum, payment) => sum + payment.amount, 0);
   }
@@ -133,6 +144,14 @@ export class PurchaseHistoryComponent implements OnInit {
   }
 
   reprintBillPdf(bill: BillResponse): void {
+    this.downloadBillPdf(bill);
+  }
+
+  toggleDetails(bill: BillResponse): void {
+    this.expandedBillId = this.expandedBillId === bill.id ? null : bill.id;
+  }
+
+  downloadBillPdf(bill: BillResponse): void {
     if (!bill?.id) {
       this.dialogService.error('No se pudo identificar el comprobante.');
       return;
@@ -155,6 +174,63 @@ export class PurchaseHistoryComponent implements OnInit {
         console.error('Error reprinting bill PDF:', error);
         this.dialogService.error('Error al reimprimir PDF: ' + (error.message || 'Error desconocido'));
         this.isLoading = false;
+      }
+    });
+  }
+
+  printBill(bill: BillResponse): void {
+    if (!bill?.id) return;
+    this.billingService.downloadBillPdf(bill.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const printWindow = window.open(url, '_blank');
+        if (!printWindow) {
+          window.URL.revokeObjectURL(url);
+          this.dialogService.warning('Permite ventanas emergentes para abrir la impresión.');
+          return;
+        }
+        printWindow.opener = null;
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+      },
+      error: (error) => this.dialogService.error('No se pudo abrir el comprobante: ' + (error?.message || 'Error desconocido'))
+    });
+  }
+
+  resendBill(bill: BillResponse): void {
+    const email = (this.emailDrafts[bill.id] || '').trim();
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      this.dialogService.warning('Ingresa un correo válido para reenviar el comprobante.');
+      return;
+    }
+    const payload: EmailReceiptRequest = {
+      billId: bill.id,
+      to: email,
+      seriesNumber: bill.billNumber,
+      customerName: bill.customerName || 'Cliente general',
+      customerDoc: 'Sin documento',
+      cashier: bill.cashierName || 'Cajero',
+      paymentMode: bill.payments?.[0]?.mode || 'EFECTIVO',
+      date: this.formatDateTime(bill.billDate),
+      subtotal: bill.subtotal,
+      igv: bill.totalGst,
+      total: bill.totalAmount,
+      items: (bill.items || []).map(item => ({
+        name: item.medicineName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.totalAmount
+      }))
+    };
+    this.emailingBillId = bill.id;
+    this.billingService.sendReceiptEmail(payload).subscribe({
+      next: () => {
+        this.emailingBillId = null;
+        this.emailDrafts[bill.id] = email;
+        this.dialogService.success(`Comprobante reenviado a ${email}`);
+      },
+      error: (error) => {
+        this.emailingBillId = null;
+        this.dialogService.error(error?.error?.message || 'No se pudo reenviar el comprobante.');
       }
     });
   }

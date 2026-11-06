@@ -14,6 +14,7 @@ export class SuppliersComponent implements OnInit {
   proveedores: Proveedor[] = [];
   loading = false;
   filtro = '';
+  estadoFiltro: 'TODOS' | 'ACTIVOS' | 'INACTIVOS' = 'TODOS';
   page = 0;
   size = 10;
   totalPages = 0;
@@ -57,6 +58,7 @@ export class SuppliersComponent implements OnInit {
     this.loading = true;
     this.proveedorService.listarProveedores({
       filtro: this.filtro.trim(),
+      estado: this.estadoFiltro,
       page: this.page,
       size: this.size
     }).subscribe({
@@ -80,6 +82,7 @@ export class SuppliersComponent implements OnInit {
 
   limpiar(): void {
     this.filtro = '';
+    this.estadoFiltro = 'TODOS';
     this.page = 0;
     this.cargarProveedores();
   }
@@ -166,13 +169,43 @@ export class SuppliersComponent implements OnInit {
       return;
     }
     this.loading = true;
-    this.proveedorService.desactivarProveedor(p.id).subscribe({
-      next: (resp) => {
-        this.successMessage = resp.message || 'Proveedor desactivado correctamente.';
+    this.proveedorService.cambiarEstado(p.id, false).subscribe({
+      next: () => {
+        this.successMessage = 'Proveedor desactivado correctamente.';
         this.cargarProveedores();
       },
       error: (err) => {
         this.errorMessage = err.message || 'Error al desactivar proveedor';
+        this.loading = false;
+      }
+    });
+  }
+
+  activar(p: Proveedor): void {
+    if (!confirm(`¿Desea activar al proveedor ${p.razonSocial}?`)) return;
+    this.loading = true;
+    this.proveedorService.cambiarEstado(p.id, true).subscribe({
+      next: () => {
+        this.successMessage = 'Proveedor activado correctamente.';
+        this.cargarProveedores();
+      },
+      error: (err) => {
+        this.errorMessage = err.message || 'Error al activar proveedor';
+        this.loading = false;
+      }
+    });
+  }
+
+  eliminar(p: Proveedor): void {
+    if (p.activo || !confirm(`¿Eliminar definitivamente al proveedor inactivo ${p.razonSocial}? Esta acción no se puede deshacer.`)) return;
+    this.loading = true;
+    this.proveedorService.eliminarProveedor(p.id).subscribe({
+      next: () => {
+        this.successMessage = 'Proveedor eliminado definitivamente.';
+        this.cargarProveedores();
+      },
+      error: (err) => {
+        this.errorMessage = err.message || 'Error al eliminar proveedor';
         this.loading = false;
       }
     });

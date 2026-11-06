@@ -1,0 +1,47 @@
+<main class="bsc-screen">
+  <header class="bsc-header">
+    <div class="heading">
+      <span class="eyebrow">Gestión estratégica de la botica</span>
+      <h1><span class="title-mark"><svg-icon name="reports" [size]="27"></svg-icon></span>Balanced Scorecard</h1>
+      <p>Una lectura única de ventas, servicio, operación y control. Cada resultado se consulta directamente desde Odoo.</p>
+    </div>
+    <section class="score-card" [class.loading]="isLoading">
+      <span>Desempeño global</span><strong>{{ globalScore }}</strong>
+      <small *ngIf="report">{{ report.summary.onTrack }} en meta · {{ report.summary.warning }} en atención · {{ report.summary.critical }} críticos</small>
+      <small *ngIf="!report">Sincronizando indicadores…</small>
+    </section>
+  </header>
+
+  <section class="bsc-toolbar">
+    <div class="period-copy"><strong>Periodo de análisis</strong><span>Las metas se administran desde Odoo; los resultados se calculan automáticamente.</span></div>
+    <div class="quick-actions"><button type="button" (click)="setRange('today')">Hoy</button><button type="button" (click)="setRange('week')">7 días</button><button type="button" (click)="setRange('month')">Este mes</button></div>
+    <form [formGroup]="form" (ngSubmit)="load()">
+      <label>Desde<input type="date" formControlName="startDate"></label>
+      <label>Hasta<input type="date" formControlName="endDate"></label>
+      <button type="submit" [disabled]="isLoading"><span *ngIf="!isLoading">↻</span>{{ isLoading ? 'Sincronizando…' : 'Actualizar' }}</button>
+    </form>
+  </section>
+
+  <nav class="perspectives" aria-label="Perspectivas BSC">
+    <button type="button" [class.active]="activePerspective === 'all'" (click)="selectPerspective('all')"><b>Todo</b><small>{{ report?.indicators?.length || 0 }} KPIs</small></button>
+    <button type="button" *ngFor="let card of perspectives" [class.active]="activePerspective === card.key" (click)="selectPerspective(card.key)">
+      <svg-icon [name]="card.icon" [size]="20"></svg-icon><span><b>{{ card.title }}</b><small>{{ indicatorsFor(card.key).length }} indicadores</small></span>
+    </button>
+  </nav>
+
+  <section class="bsc-body" *ngIf="report; else loadingState">
+    <article class="perspective" *ngFor="let card of perspectives" [class.hidden]="activePerspective !== 'all' && activePerspective !== card.key">
+      <header><div><span>{{ card.eyebrow }}</span><h2>{{ card.title }}</h2><p>{{ card.description }}</p></div><b>{{ indicatorsFor(card.key).length }} KPI{{ indicatorsFor(card.key).length === 1 ? '' : 's' }}</b></header>
+      <div class="indicator-grid">
+        <article class="indicator" *ngFor="let item of indicatorsFor(card.key)" [class]="item.status">
+          <div class="indicator-top"><span class="status-pill">{{ statusText(item.status) }}</span><small>{{ item.code }}</small></div>
+          <h3>{{ item.name }}</h3><p>{{ item.objective }}</p>
+          <div class="metric"><strong>{{ displayValue(item) }}</strong><span>Meta: {{ displayTarget(item) }}</span></div>
+          <div class="progress" *ngIf="item.achievement !== null"><i [style.width.%]="item.achievement > 100 ? 100 : item.achievement"></i></div>
+          <footer><span *ngIf="item.achievement !== null">{{ item.achievement | number:'1.0-1' }}% cumplimiento</span><span *ngIf="item.achievement === null">Se activará cuando exista historial</span><small>{{ item.source }}</small></footer>
+        </article>
+      </div>
+    </article>
+  </section>
+  <ng-template #loadingState><section class="empty"><span class="loader"></span><h2>Cargando BSC desde Odoo</h2><p>Se están consolidando los datos reales de tu botica.</p></section></ng-template>
+</main>

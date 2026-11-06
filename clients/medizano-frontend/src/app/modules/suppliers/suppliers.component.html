@@ -26,6 +26,11 @@
         placeholder="Buscar por RUC, Razón Social o Nombre Comercial..."
         class="form-control"
       />
+      <select [(ngModel)]="estadoFiltro" (change)="buscar()" class="form-control status-filter" aria-label="Filtrar por estado">
+        <option value="TODOS">Todos</option>
+        <option value="ACTIVOS">Activos</option>
+        <option value="INACTIVOS">Inactivos</option>
+      </select>
       <button class="btn btn-secondary" (click)="buscar()">Buscar</button>
       <button class="btn btn-outline" (click)="limpiar()">Limpiar</button>
     </div>
@@ -78,6 +83,8 @@
           <td class="actions-cell">
             <button class="btn-icon" (click)="abrirEditar(p)" title="Editar">✏️</button>
             <button *ngIf="p.activo" class="btn-icon btn-danger" (click)="desactivar(p)" title="Desactivar">🚫</button>
+            <button *ngIf="!p.activo" class="btn-icon btn-activate" (click)="activar(p)" title="Activar">✅</button>
+            <button *ngIf="!p.activo" class="btn-icon btn-danger" (click)="eliminar(p)" title="Eliminar definitivamente">🗑️</button>
           </td>
         </tr>
       </tbody>

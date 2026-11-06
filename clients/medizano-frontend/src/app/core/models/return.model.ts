@@ -6,6 +6,8 @@ export interface ReturnItemRequest {
 export interface ReturnRequest {
   billId: number;
   reason: string;
+  operationType: 'REFUND' | 'EXCHANGE';
+  disposition: 'RESTOCK' | 'QUARANTINE';
   items: ReturnItemRequest[];
 }
 
@@ -32,6 +34,8 @@ export interface ReturnResponse {
   refundAmount: number;
   reason: string;
   returnType: ReturnType;
+  operationType?: 'REFUND' | 'EXCHANGE';
+  disposition?: 'RESTOCK' | 'QUARANTINE';
   createdAt: string;
   items: ReturnItemResponse[];
 }

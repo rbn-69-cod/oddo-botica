@@ -66,7 +66,11 @@ class PharmacyBranch(models.Model):
     active = fields.Boolean('Active', default=True, tracking=True)
     
     # Statistics
-    total_sales = fields.Float(compute='_compute_statistics', store=True)
+    total_sales = fields.Float(
+        compute='_compute_total_sales',
+        compute_sudo=True,
+        help='Ventas pagadas de la sede, calculadas en tiempo real desde el POS.'
+    )
     total_claims = fields.Float(compute='_compute_statistics', store=True)
     stock_value = fields.Float(compute='_compute_statistics', store=True)
     
@@ -75,16 +79,37 @@ class PharmacyBranch(models.Model):
         for branch in self:
             branch.display_name = f"[{branch.code}] {branch.name}"
     
+    def _compute_total_sales(self):
+        """Keep the branch total aligned with the real paid POS orders.
+
+        A stored computed field depending only on branch settings is not
+        invalidated when a POS order is paid, which is why the branch list
+        could show S/ 0.00 while the sales report already had sales.
+        """
+        for branch in self:
+            branch.total_sales = 0.0
+        if not self.ids:
+            return
+
+        grouped_sales = self.env['pos.order'].sudo().read_group(
+            [
+                ('branch_id', 'in', self.ids),
+                ('state', 'in', ('paid', 'done', 'invoiced')),
+            ],
+            ['branch_id', 'amount_total:sum'],
+            ['branch_id'],
+        )
+        totals_by_branch = {
+            row['branch_id'][0]: row.get('amount_total', row.get('amount_total_sum', 0.0))
+            for row in grouped_sales
+            if row.get('branch_id')
+        }
+        for branch in self:
+            branch.total_sales = totals_by_branch.get(branch.id, 0.0)
+
     @api.depends('pos_config_ids', 'location_ids')
     def _compute_statistics(self):
         for branch in self:
-            # Total sales from POS orders
-            sales = self.env['pos.order'].search([
-                ('branch_id', '=', branch.id),
-                ('state', 'in', ['paid', 'done', 'invoiced'])
-            ])
-            branch.total_sales = sum(sales.mapped('amount_total'))
-            
             # Total claims amount
             claims = self.env['pharmacy.claim'].search([
                 ('branch_id', '=', branch.id),

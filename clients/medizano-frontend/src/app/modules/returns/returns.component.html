@@ -1,358 +1,50 @@
-<div class="returns-screen">
-  <!-- Header -->
-  <div class="returns-header">
-    <div class="header-content">
-      <div class="header-title">
-        <h1 class="screen-title">
-          <svg-icon name="returns" class="title-icon" [size]="28"></svg-icon>
-          Devoluciones y reembolsos
-        </h1>
-        <p class="screen-subtitle">Procesa devoluciones y reembolsos</p>
-      </div>
-      <button
-        type="button"
-        class="btn-history"
-        (click)="toggleHistoryView()"
-      >
-        <svg-icon name="reports" class="btn-icon" [size]="18"></svg-icon>
-        <span>{{ showReturnHistory ? 'Ocultar' : 'Ver' }} historial</span>
-      </button>
-    </div>
-  </div>
+<div class="returns-screen returns-v2">
+  <header class="returns-hero">
+    <div class="hero-copy"><span class="hero-kicker">CONTROL DE VENTAS</span><h1><span class="hero-icon"><svg-icon name="returns" [size]="30"></svg-icon></span> Devoluciones y cambios</h1><p>Atiende al cliente paso a paso y mantén caja e inventario sincronizados.</p></div>
+    <button type="button" class="history-button" (click)="toggleHistoryView()"><svg-icon name="reports" [size]="18"></svg-icon>{{ showReturnHistory ? 'Volver al proceso' : 'Historial' }}<span class="history-count">{{ returnHistory.length }}</span></button>
+  </header>
 
-  <!-- Bill Search Section -->
-  <div class="search-section">
-    <div class="search-card">
-      <form [formGroup]="searchForm" (ngSubmit)="searchBill()" class="search-form">
-        <div class="form-group">
-          <label class="form-label">Numero de comprobante</label>
-          <div class="input-wrapper">
-            <svg-icon name="search" class="input-icon" [size]="20"></svg-icon>
-            <input
-              type="text"
-              class="form-input"
-              formControlName="billNumber"
-              placeholder="Ingresa el comprobante (ej.: VENTA202401170001)"
-              autofocus
-            />
+  <nav class="stepper" *ngIf="!showReturnHistory" aria-label="Progreso de la devolución">
+    <div class="step" [class.active]="currentStep === 1" [class.done]="currentStep > 1"><span>1</span><div><strong>Comprobante</strong><small>Localizar venta</small></div></div><i></i>
+    <div class="step" [class.active]="currentStep === 2" [class.done]="currentStep > 2"><span>2</span><div><strong>Productos</strong><small>Elegir cantidades</small></div></div><i></i>
+    <div class="step" [class.active]="currentStep === 3" [class.done]="currentStep > 3"><span>3</span><div><strong>Solución</strong><small>Reembolso o cambio</small></div></div><i></i>
+    <div class="step" [class.active]="currentStep === 4"><span>4</span><div><strong>Confirmación</strong><small>Movimiento registrado</small></div></div>
+  </nav>
+
+  <ng-container *ngIf="!showReturnHistory">
+    <section class="lookup-card" *ngIf="!processedReturn">
+      <div class="lookup-label"><span>01</span><div><strong>Buscar comprobante</strong><small>Escribe el número exacto que figura en la boleta</small></div></div>
+      <form [formGroup]="searchForm" (ngSubmit)="searchBill()" class="lookup-form"><div class="lookup-input"><svg-icon name="search" [size]="21"></svg-icon><input type="text" formControlName="billNumber" placeholder="B001-00007780" autofocus /></div><button type="submit" [disabled]="searchForm.invalid || isLoading"><span *ngIf="isLoading" class="spinner-mini"></span>{{ isLoading ? 'Buscando...' : 'Buscar venta' }}</button></form>
+    </section>
+
+    <div class="welcome-card" *ngIf="!bill && !isLoading && !processedReturn"><div class="welcome-visual"><svg-icon name="billing" [size]="38"></svg-icon></div><div><h2>Empieza con el comprobante</h2><p>La venta debe estar pagada. El sistema validará productos, cantidades y devoluciones anteriores.</p></div><div class="welcome-safety"><strong>Proceso seguro</strong><small>No se puede devolver dos veces la misma unidad.</small></div></div>
+    <div class="loading-card" *ngIf="isLoading && !bill"><div class="spinner"></div><strong>Buscando la venta en Odoo…</strong></div>
+
+    <div class="return-workspace" *ngIf="bill && !processedReturn">
+      <main class="workspace-main">
+        <section class="sale-banner"><div class="sale-number"><small>COMPROBANTE ENCONTRADO</small><strong>{{ bill.billNumber }}</strong><span class="paid-pill">● PAGADO</span></div><div class="sale-meta"><div><small>Cliente</small><strong>{{ bill.customerName || 'Cliente general' }}</strong></div><div><small>Fecha</small><strong>{{ bill.billDate | date:'dd/MM/yyyy, h:mm a' }}</strong></div><div><small>Cajero</small><strong>{{ bill.cashierName }}</strong></div></div></section>
+
+        <section class="products-card">
+          <div class="card-heading"><div><span class="section-number">02</span><h2>Selecciona los productos</h2><p>Indica exactamente qué unidades regresan a la botica.</p></div><div class="table-actions"><button type="button" (click)="selectAllItems()">Seleccionar todo</button><button type="button" (click)="clearItems()">Limpiar</button></div></div>
+          <div class="product-list"><article class="product-row" *ngFor="let item of bill.items; trackBy: trackByItemId" [class.selected]="isItemSelected(item.id)" (click)="toggleItem(item)"><span class="selection-box"><span *ngIf="isItemSelected(item.id)">✓</span></span><div class="product-info"><strong>{{ item.medicineName }}</strong><small>Lote {{ item.batchNumber || 'no registrado' }}</small></div><div class="product-stat"><small>Compró</small><strong>{{ item.quantity }} uds.</strong></div><div class="quantity-control" (click)="$event.stopPropagation()"><small>A devolver</small><input type="number" [value]="getReturnQuantity(item.id)" min="1" [max]="item.quantity" [disabled]="!isItemSelected(item.id)" (change)="updateReturnQuantity(item.id, +$any($event.target).value)" /></div><div class="product-credit"><small>Crédito</small><strong>S/ {{ getItemRefund(item.id) | number:'1.2-2' }}</strong></div></article></div>
+        </section>
+
+        <form *ngIf="selectedItems.length" [formGroup]="returnForm" (ngSubmit)="processReturn()" class="solution-card">
+          <div class="card-heading"><div><span class="section-number">03</span><h2>Elige cómo resolverlo</h2><p>El sistema aplicará el movimiento correcto.</p></div></div>
+          <div class="solution-columns">
+            <div class="solution-group"><h3>¿Qué necesita el cliente?</h3><label class="solution-option" [class.selected]="returnForm.get('operationType')?.value === 'REFUND'"><input type="radio" formControlName="operationType" value="REFUND"/><span class="option-icon money">S/</span><span><strong>Devolver dinero</strong><small>Registra una salida en la caja actual.</small></span><b>✓</b></label><label class="solution-option" [class.selected]="returnForm.get('operationType')?.value === 'EXCHANGE'"><input type="radio" formControlName="operationType" value="EXCHANGE"/><span class="option-icon exchange">⇄</span><span><strong>Cambiar por otro producto</strong><small>Genera el crédito y abre una nueva venta.</small></span><b>✓</b></label></div>
+            <div class="solution-group"><h3>¿Puede volver a venderse?</h3><label class="solution-option" [class.selected]="returnForm.get('disposition')?.value === 'RESTOCK'"><input type="radio" formControlName="disposition" value="RESTOCK"/><span class="option-icon stock">✓</span><span><strong>Sí, está sellado</strong><small>Regresa a su lote y al orden FEFO.</small></span><b>✓</b></label><label class="solution-option danger-option" [class.selected]="returnForm.get('disposition')?.value === 'QUARANTINE'"><input type="radio" formControlName="disposition" value="QUARANTINE"/><span class="option-icon blocked">!</span><span><strong>No, abierto o dañado</strong><small>Queda fuera del stock vendible.</small></span><b>✓</b></label></div>
           </div>
-          <small class="form-hint">Ingresa el numero del comprobante impreso</small>
-        </div>
-        <button
-          type="submit"
-          class="btn-search"
-          [disabled]="searchForm.invalid || isLoading"
-        >
-          <span *ngIf="isLoading" class="spinner-mini"></span>
-          <svg-icon name="search" class="btn-icon" [size]="18" *ngIf="!isLoading"></svg-icon>
-          <span>Buscar comprobante</span>
-        </button>
-      </form>
-    </div>
-  </div>
+          <div class="reason-area"><label>Motivo de la devolución</label><div class="reason-chips"><button type="button" (click)="setReason('Solicitud del cliente')">Solicitud del cliente</button><button type="button" (click)="setReason('Producto defectuoso')">Producto defectuoso</button><button type="button" (click)="setReason('Error de despacho')">Error de despacho</button><button type="button" (click)="setReason('Cambio por otro producto')">Cambio de producto</button></div><textarea formControlName="reason" rows="3" placeholder="Describe brevemente lo sucedido…"></textarea></div>
+          <div class="mobile-submit"><button type="submit" [disabled]="returnForm.invalid || isProcessing">Confirmar operación</button></div>
+        </form>
+      </main>
 
-  <!-- Empty State -->
-  <div class="empty-state-card" *ngIf="!bill && !isLoading">
-    <svg-icon name="returns" class="empty-icon" [size]="64"></svg-icon>
-    <h3 class="empty-title">No hay comprobante seleccionado</h3>
-    <p class="empty-message">Ingresa un comprobante para iniciar la devolucion</p>
-  </div>
-
-  <!-- Loading State -->
-  <div class="empty-state-card" *ngIf="isLoading && !bill">
-    <div class="spinner"></div>
-    <p class="empty-state-text">Buscando comprobante...</p>
-  </div>
-
-  <!-- Bill Details Section -->
-  <div class="bill-details-section" *ngIf="bill">
-    <div class="section-header">
-      <div class="section-header-content">
-        <svg-icon name="billing" class="section-icon" [size]="24"></svg-icon>
-        <div>
-          <h2 class="section-title">Detalle del comprobante</h2>
-          <p class="section-subtitle">Comprobante: {{ bill.billNumber }}</p>
-        </div>
-      </div>
+      <aside class="return-summary"><div class="summary-top"><small>RESUMEN DE OPERACIÓN</small><h2>{{ returnForm.get('operationType')?.value === 'EXCHANGE' ? 'Cambio de producto' : 'Reembolso' }}</h2></div><div class="summary-money"><small>Importe a favor del cliente</small><strong>S/ {{ getTotalRefund() | number:'1.2-2' }}</strong></div><dl><div><dt>Productos</dt><dd>{{ selectedItems.length }}</dd></div><div><dt>Unidades</dt><dd>{{ totalUnits }}</dd></div><div><dt>Movimiento de caja</dt><dd>{{ returnForm.get('operationType')?.value === 'EXCHANGE' ? 'Crédito' : 'Salida' }}</dd></div><div><dt>Destino</dt><dd>{{ returnForm.get('disposition')?.value === 'QUARANTINE' ? 'No vendible' : 'Stock FEFO' }}</dd></div></dl><div class="summary-note" [class.warning]="returnForm.get('disposition')?.value === 'QUARANTINE'"><strong>{{ returnForm.get('disposition')?.value === 'QUARANTINE' ? 'Producto aislado' : 'Inventario protegido' }}</strong><small>{{ returnForm.get('disposition')?.value === 'QUARANTINE' ? 'No volverá a estar disponible para venta.' : 'Se conservarán el lote y vencimiento.' }}</small></div><button type="button" class="confirm-button" [disabled]="!selectedItems.length || returnForm.invalid || isProcessing" (click)="processReturn()"><span *ngIf="isProcessing" class="spinner-mini"></span>{{ isProcessing ? 'Procesando…' : 'Confirmar y registrar' }}</button><button type="button" class="cancel-button" (click)="resetForm()">Cancelar operación</button></aside>
     </div>
 
-    <div class="bill-info-grid">
-      <div class="info-item">
-        <span class="info-label">Fecha</span>
-        <span class="info-value">{{ bill.billDate | date:'short' }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Cajero</span>
-        <span class="info-value">{{ bill.cashierName }}</span>
-      </div>
-      <div class="info-item" *ngIf="bill.customerName">
-        <span class="info-label">Cliente</span>
-        <span class="info-value">{{ bill.customerName }}</span>
-      </div>
-      <div class="info-item" *ngIf="bill.customerPhone">
-        <span class="info-label">Celular</span>
-        <span class="info-value">{{ bill.customerPhone }}</span>
-      </div>
-    </div>
+    <section class="success-card" *ngIf="processedReturn"><div class="success-check">✓</div><span class="success-kicker">OPERACIÓN COMPLETADA</span><h2>{{ processedReturn.operationType === 'EXCHANGE' ? 'Cambio registrado correctamente' : 'Devolución registrada correctamente' }}</h2><p>Odoo actualizó caja e inventario. Guarda este número como referencia.</p><div class="success-number"><small>NÚMERO DE DEVOLUCIÓN</small><strong>{{ processedReturn.returnNumber }}</strong></div><div class="success-grid"><div><small>Venta original</small><strong>{{ processedReturn.billNumber }}</strong></div><div><small>Monto</small><strong>S/ {{ processedReturn.refundAmount | number:'1.2-2' }}</strong></div><div><small>Productos</small><strong>{{ processedReturn.items.length }}</strong></div><div><small>Destino</small><strong>{{ processedReturn.disposition === 'QUARANTINE' ? 'No vendible' : 'Stock FEFO' }}</strong></div></div><div class="success-actions"><button *ngIf="processedReturn.operationType === 'EXCHANGE'" type="button" class="new-sale" (click)="startExchangeSale()">Continuar con el reemplazo →</button><button type="button" (click)="clearProcessedReturn()">Nueva devolución</button></div></section>
+  </ng-container>
 
-    <div class="items-section">
-      <h3 class="items-title">Seleccionar productos a devolver</h3>
-      
-      <div class="data-table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th class="col-select">Seleccionar</th>
-              <th>Medicamento</th>
-              <th>Lote</th>
-              <th>Cant. original</th>
-              <th>Cant. devolver</th>
-              <th>Reembolso</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of bill.items; trackBy: trackByItemId">
-              <td class="col-select">
-                <label class="checkbox-label">
-                  <input
-                    type="checkbox"
-                    class="checkbox-input"
-                    [checked]="isItemSelected(item.id)"
-                    (change)="toggleItem(item)"
-                  />
-                  <span class="checkbox-custom"></span>
-                </label>
-              </td>
-              <td class="cell-medicine">
-                <span class="medicine-name">{{ item.medicineName }}</span>
-              </td>
-              <td class="cell-batch">
-                <span class="batch-number">{{ item.batchNumber }}</span>
-              </td>
-              <td class="cell-quantity">
-                <span class="quantity-value">{{ item.quantity }}</span>
-              </td>
-              <td class="cell-return-qty">
-                <input
-                  type="number"
-                  class="quantity-input"
-                  [value]="getReturnQuantity(item.id)"
-                  [min]="1"
-                  [max]="item.quantity"
-                  [disabled]="!isItemSelected(item.id)"
-                  (change)="updateReturnQuantity(item.id, +$any($event.target).value)"
-                />
-              </td>
-              <td class="cell-refund">
-                <span class="refund-amount" *ngIf="isItemSelected(item.id)">
-                  S/ {{ getItemRefund(item.id) | number:'1.2-2' }}
-                </span>
-                <span class="text-muted" *ngIf="!isItemSelected(item.id)">-</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Return Form -->
-    <div class="return-form-section" *ngIf="selectedItems.length > 0">
-      <div class="refund-summary">
-        <div class="summary-content">
-          <svg-icon name="cash" class="summary-icon" [size]="24"></svg-icon>
-          <div class="summary-text">
-            <span class="summary-label">Reembolso total</span>
-            <span class="summary-amount">S/ {{ getTotalRefund() | number:'1.2-2' }}</span>
-          </div>
-        </div>
-      </div>
-
-      <form [formGroup]="returnForm" (ngSubmit)="processReturn()" class="return-form">
-        <div class="form-group">
-          <label class="form-label">Motivo de devolucion <span class="required">*</span></label>
-          <textarea
-            class="form-textarea"
-            formControlName="reason"
-            rows="3"
-            placeholder="Ingresa el motivo (ej.: solicitud del cliente, producto defectuoso, etc.)"
-          ></textarea>
-          <div class="form-error" *ngIf="returnForm.get('reason')?.invalid && returnForm.get('reason')?.touched">
-            El motivo de devolucion es obligatorio
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button
-            type="button"
-            class="btn-secondary"
-            (click)="resetForm()"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            class="btn-primary"
-            [disabled]="returnForm.invalid || isProcessing"
-          >
-            <span *ngIf="isProcessing" class="spinner-mini"></span>
-            <span *ngIf="!isProcessing">Procesar devolucion</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Processed Return Details -->
-  <div class="return-details-section" *ngIf="processedReturn">
-    <div class="section-header">
-      <div class="section-header-content">
-        <svg-icon name="returns" class="section-icon" [size]="24"></svg-icon>
-        <div>
-          <h2 class="section-title">Devolución procesada correctamente</h2>
-          <p class="section-subtitle">Devolución: {{ processedReturn.returnNumber }}</p>
-        </div>
-      </div>
-      <button
-        type="button"
-        class="btn-close"
-        (click)="clearProcessedReturn()"
-      >
-        <svg-icon name="close" [size]="20"></svg-icon>
-      </button>
-    </div>
-
-    <div class="return-info-grid">
-      <div class="info-item">
-        <span class="info-label">Fecha de devolución</span>
-        <span class="info-value">{{ formatDate(processedReturn.returnDate) }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Número de venta</span>
-        <span class="info-value">{{ processedReturn.billNumber }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Tipo de devolución</span>
-        <span class="info-value return-type" [ngClass]="'return-type-' + processedReturn.returnType.toLowerCase()">
-          {{ processedReturn.returnType }}
-        </span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Procesado por</span>
-        <span class="info-value">{{ processedReturn.processedByName }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Monto reembolsado</span>
-        <span class="info-value refund-amount">S/ {{ processedReturn.refundAmount | number:'1.2-2' }}</span>
-      </div>
-      <div class="info-item full-width">
-        <span class="info-label">Motivo</span>
-        <span class="info-value">{{ processedReturn.reason }}</span>
-      </div>
-    </div>
-
-    <div class="return-items-section">
-      <h3 class="items-title">Productos devueltos</h3>
-      <div class="data-table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Medicamento</th>
-              <th>Número de lote</th>
-              <th>Cantidad</th>
-              <th>Monto reembolsado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of processedReturn.items">
-              <td class="cell-medicine">
-                <span class="medicine-name">{{ item.medicineName }}</span>
-              </td>
-              <td class="cell-batch">
-                <span class="batch-number">{{ item.batchNumber }}</span>
-              </td>
-              <td class="cell-quantity">
-                <span class="quantity-value">{{ item.quantity }}</span>
-              </td>
-              <td class="cell-refund">
-                <span class="refund-amount">S/ {{ item.refundAmount | number:'1.2-2' }}</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Return History Section -->
-  <div class="return-history-section" *ngIf="showReturnHistory">
-    <div class="section-header">
-      <div class="section-header-content">
-        <svg-icon name="reports" class="section-icon" [size]="24"></svg-icon>
-        <div>
-          <h2 class="section-title">Historial de devoluciones</h2>
-          <p class="section-subtitle">Todas las devoluciones procesadas</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="history-content" *ngIf="!isLoadingHistory">
-      <div class="history-stats">
-        <div class="stat-card">
-          <span class="stat-label">Total de devoluciones</span>
-          <span class="stat-value">{{ returnHistory.length }}</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Total reembolsado</span>
-          <span class="stat-value">S/ {{ getTotalRefunded() | number:'1.2-2' }}</span>
-        </div>
-      </div>
-
-      <div class="history-list" *ngIf="returnHistory.length > 0">
-        <div class="history-item" *ngFor="let returnItem of returnHistory">
-          <div class="history-item-header">
-            <div class="history-item-title">
-              <span class="return-number">{{ returnItem.returnNumber }}</span>
-              <span class="return-type-badge" [ngClass]="'return-type-' + returnItem.returnType.toLowerCase()">
-                {{ returnItem.returnType }}
-              </span>
-            </div>
-            <span class="return-date">{{ formatDate(returnItem.returnDate) }}</span>
-          </div>
-          <div class="history-item-details">
-            <div class="detail-row">
-              <span class="detail-label">Venta:</span>
-              <span class="detail-value">{{ returnItem.billNumber }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Reembolso:</span>
-              <span class="detail-value refund-amount">S/ {{ returnItem.refundAmount | number:'1.2-2' }}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Productos:</span>
-              <span class="detail-value">{{ returnItem.items.length }} producto(s)</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Procesado por:</span>
-              <span class="detail-value">{{ returnItem.processedByName }}</span>
-            </div>
-          </div>
-          <div class="history-item-reason">
-            <span class="reason-label">Motivo:</span>
-            <span class="reason-text">{{ returnItem.reason }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="empty-state-card" *ngIf="returnHistory.length === 0">
-        <svg-icon name="returns" class="empty-icon" [size]="64"></svg-icon>
-        <h3 class="empty-title">No se encontraron devoluciones</h3>
-        <p class="empty-message">Todavía no se han procesado devoluciones</p>
-      </div>
-    </div>
-
-    <div class="loading-state" *ngIf="isLoadingHistory">
-      <div class="spinner"></div>
-      <p>Cargando historial de devoluciones...</p>
-    </div>
-  </div>
+  <section class="history-panel" *ngIf="showReturnHistory"><div class="history-header"><div><span>HISTORIAL</span><h2>Operaciones realizadas</h2><p>Consulta devoluciones y cambios registrados en Odoo.</p></div><div class="history-total"><small>Total reembolsado</small><strong>S/ {{ getTotalRefunded() | number:'1.2-2' }}</strong></div></div><div class="history-loading" *ngIf="isLoadingHistory"><div class="spinner"></div>Cargando historial…</div><div class="history-empty" *ngIf="!isLoadingHistory && !returnHistory.length"><svg-icon name="returns" [size]="42"></svg-icon><h3>Aún no hay devoluciones</h3><p>Las operaciones aparecerán aquí automáticamente.</p></div><div class="history-table" *ngIf="!isLoadingHistory && returnHistory.length"><div class="history-row history-columns"><span>Referencia</span><span>Comprobante</span><span>Operación</span><span>Fecha</span><span>Monto</span></div><div class="history-row" *ngFor="let item of returnHistory"><span><strong>{{ item.returnNumber }}</strong><small>{{ item.reason }}</small></span><span>{{ item.billNumber }}</span><span><b class="operation-pill">{{ item.operationType === 'EXCHANGE' ? 'Cambio' : 'Reembolso' }}</b></span><span>{{ formatDate(item.returnDate) }}</span><span class="history-amount">S/ {{ item.refundAmount | number:'1.2-2' }}</span></div></div></section>
 </div>
