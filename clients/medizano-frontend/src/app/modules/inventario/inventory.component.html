@@ -30,19 +30,11 @@
     <div class="kpi-card" (click)="setFiltro('TODOS')">
       <div class="kpi-icon-wrap bg-blue-light">📦</div>
       <div class="kpi-content">
-        <div class="kpi-title">Medicamentos en Catálogo</div>
+        <div class="kpi-title">Inventario Total</div>
         <div class="kpi-value text-primary font-mono">{{ getMedicamentosTotalCount() }}</div>
-        <div class="kpi-sub">{{ getMedicamentosConStockCount() }} con stock · {{ getMedicamentosSinStockCount() }} por abastecer</div>
+        <div class="kpi-sub">{{ getPhysicalBatchesCount() }} lotes · {{ getTotalUnidadesAlmacen() }} uds ({{ getMedicamentosConStockCount() }} con stock)</div>
       </div>
     </div>
-
-    <div class="kpi-card" (click)="setFiltro('CON_STOCK')">
-      <div class="kpi-icon-wrap bg-teal-light">🟢</div>
-      <div class="kpi-content">
-        <div class="kpi-title">Lotes Físicos en Almacén</div>
-        <div class="kpi-value text-teal font-mono">{{ getPhysicalBatchesCount() }}</div>
-        <div class="kpi-sub">{{ getTotalUnidadesAlmacen() }} unidades físicas totales</div>
-      </div>
     </div>
 
     <div class="kpi-card" (click)="setFiltro('BAJO_STOCK')">
