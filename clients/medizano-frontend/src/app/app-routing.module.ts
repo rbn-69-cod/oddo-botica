@@ -16,18 +16,18 @@ const routes: Routes = [
   },
   {
     path: 'inicio',
-    loadChildren: () => import('./modules/dashboard/dashboard.module').then(m => m.DashboardModule),
+    loadChildren: () => import('./modules/inicio/dashboard.module').then(m => m.DashboardModule),
     canActivate: [AuthGuard]
   },
   {
     path: 'ventas',
-    loadChildren: () => import('./modules/billing/billing.module').then(m => m.BillingModule),
+    loadChildren: () => import('./modules/ventas/billing.module').then(m => m.BillingModule),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.CASHIER, UserRole.ADMIN] }
   },
   {
     path: 'inventario',
-    loadChildren: () => import('./modules/inventory/inventory.module').then(m => m.InventoryModule),
+    loadChildren: () => import('./modules/inventario/inventory.module').then(m => m.InventoryModule),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.MANAGER, UserRole.ADMIN] }
   },
@@ -38,37 +38,37 @@ const routes: Routes = [
   },
   {
     path: 'devoluciones',
-    loadChildren: () => import('./modules/returns/returns.module').then(m => m.ReturnsModule),
+    loadChildren: () => import('./modules/devoluciones/returns.module').then(m => m.ReturnsModule),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.CUSTOMER_SUPPORT, UserRole.MANAGER, UserRole.ADMIN] }
   },
   {
     path: 'reportes',
-    loadChildren: () => import('./modules/reports/reports.module').then(m => m.ReportsModule),
+    loadChildren: () => import('./modules/reportes/reports.module').then(m => m.ReportsModule),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN] }
   },
   {
     path: 'proveedores',
-    loadChildren: () => import('./modules/suppliers/suppliers.module').then(m => m.SuppliersModule),
+    loadChildren: () => import('./modules/proveedores/suppliers.module').then(m => m.SuppliersModule),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.ADMIN] }
   },
   {
     path: 'compras',
-    loadChildren: () => import('./modules/purchases/purchases.module').then(m => m.PurchasesModule),
+    loadChildren: () => import('./modules/compras/purchases.module').then(m => m.PurchasesModule),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.ADMIN] }
   },
   {
     path: 'historial-compras',
-    loadChildren: () => import('./modules/purchase-history/purchase-history.module').then(m => m.PurchaseHistoryModule),
+    loadChildren: () => import('./modules/historial-compras/purchase-history.module').then(m => m.PurchaseHistoryModule),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.MANAGER, UserRole.ADMIN] }
   },
   {
     path: 'actividad-usuarios',
-    loadChildren: () => import('./modules/user-activity/user-activity.module').then(m => m.UserActivityModule),
+    loadChildren: () => import('./modules/actividad-usuarios/user-activity.module').then(m => m.UserActivityModule),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.ADMIN] }
   },
@@ -80,13 +80,13 @@ const routes: Routes = [
   },
   {
     path: 'historial-accesos',
-    loadChildren: () => import('./modules/login-history/login-history.module').then(m => m.LoginHistoryModule),
+    loadChildren: () => import('./modules/historial-accesos/login-history.module').then(m => m.LoginHistoryModule),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.ADMIN] }
   },
   {
     path: 'usuarios',
-    loadChildren: () => import('./modules/user-management/user-management.module').then(m => m.UserManagementModule),
+    loadChildren: () => import('./modules/usuarios/user-management.module').then(m => m.UserManagementModule),
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [UserRole.ADMIN] }
   },
