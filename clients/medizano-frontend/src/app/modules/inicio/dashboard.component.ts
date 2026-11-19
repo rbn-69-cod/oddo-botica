@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ReportService } from '../../core/services/report.service';
 import { InventoryService } from '../../core/services/inventory.service';
-import { AuditLogService, AuditLogResponse } from '../../core/services/audit-log.service';
 import { AuthService } from '../../core/services/auth.service';
 import { UserRole } from '../../core/models/user.model';
 import { SalesReportResponse, CashRegisterReportResponse } from '../../core/models/report.model';
@@ -28,7 +27,6 @@ export class DashboardComponent implements OnInit {
   batches: Batch[] = [];
   totalBatchesCount = 0;
   lowStockBatches: Batch[] = [];
-  recentActivities: AuditLogResponse[] = [];
 
   todayFormatted: string = '';
 
@@ -36,8 +34,7 @@ export class DashboardComponent implements OnInit {
     public authService: AuthService,
     private router: Router,
     private reportService: ReportService,
-    private inventoryService: InventoryService,
-    private auditLogService: AuditLogService
+    private inventoryService: InventoryService
   ) {
     const today = new Date();
     this.todayFormatted = today.toLocaleDateString('es-PE', {
@@ -66,15 +63,13 @@ export class DashboardComponent implements OnInit {
     const canViewReports = this.authService.hasAnyRole([UserRole.ADMIN, UserRole.ANALYST, UserRole.MANAGER]);
     const canViewMedicines = this.authService.hasAnyRole([UserRole.ADMIN, UserRole.CASHIER, UserRole.STOCK_KEEPER, UserRole.STOCK_MONITOR]);
     const canViewStock = this.authService.hasAnyRole([UserRole.ADMIN, UserRole.CASHIER, UserRole.STOCK_KEEPER, UserRole.STOCK_MONITOR]);
-    const canViewAudit = this.authService.hasRole(UserRole.ADMIN);
 
     forkJoin({
       sales: canViewReports ? this.reportService.getDailySalesReport(today, today).pipe(catchError(() => of(null))) : of(null),
       cash: canViewReports ? this.reportService.getCashRegisterReport(today, today).pipe(catchError(() => of(null))) : of(null),
       medicines: canViewMedicines ? this.inventoryService.getAllMedicines().pipe(catchError(() => of([]))) : of([] as Medicine[]),
       batches: canViewStock ? this.inventoryService.getAllBatches().pipe(catchError(() => of([]))) : of([] as Batch[]),
-      lowStock: canViewStock ? this.inventoryService.getLowStockBatches(10).pipe(catchError(() => of([]))) : of([] as Batch[]),
-      audit: canViewAudit ? this.auditLogService.getAllAuditLogs().pipe(catchError(() => of([]))) : of([] as AuditLogResponse[])
+      lowStock: canViewStock ? this.inventoryService.getLowStockBatches(10).pipe(catchError(() => of([]))) : of([] as Batch[])
     }).subscribe({
       next: (res) => {
         this.salesReport = res.sales;
@@ -114,7 +109,6 @@ export class DashboardComponent implements OnInit {
         // debe mostrar los lotes que existen en el inventario físico vigente.
         const activeBatchIds = new Set(allBatches.map(batch => Number(batch.id)));
         this.lowStockBatches = (res.lowStock || []).filter(batch => activeBatchIds.has(Number(batch.id)));
-        this.recentActivities = (res.audit || []).slice(0, 5);
         this.isLoading = false;
       },
       error: () => {

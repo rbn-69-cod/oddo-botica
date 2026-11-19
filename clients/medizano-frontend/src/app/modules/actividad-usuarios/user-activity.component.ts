@@ -36,7 +36,7 @@ export class UserActivityComponent implements OnInit {
         // Los accesos tienen su propia pantalla: aquí solo se muestran
         // operaciones realizadas dentro del sistema.
         this.auditLogs = logs
-          .filter(log => log.action !== 'USER_LOGIN' && log.action !== 'USER_LOGOUT')
+          .filter(log => !['USER_LOGIN', 'USER_LOGOUT', 'USER_LOGIN_FAILED'].includes(log.action))
           .slice(0, 50);
         this.filteredLogs = this.auditLogs;
         this.extractUniqueValues();

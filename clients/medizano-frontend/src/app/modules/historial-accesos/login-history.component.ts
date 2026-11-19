@@ -29,8 +29,12 @@ export class LoginHistoryComponent implements OnInit {
     this.isLoading = true;
     this.auditLogService.getLoginLogoutLogs().subscribe({
       next: (logs) => {
-        // Limit to top 50 activities (backend should already limit, but adding safety check)
-        this.loginLogoutLogs = logs.slice(0, 50);
+        // Esta pantalla es exclusivamente para el ciclo de acceso.  Se filtra
+        // también en el cliente para no mezclar operaciones de negocio si un
+        // backend antiguo devuelve registros adicionales.
+        this.loginLogoutLogs = logs
+          .filter(log => ['USER_LOGIN', 'USER_LOGOUT', 'USER_LOGIN_FAILED'].includes(log.action))
+          .slice(0, 50);
         this.filteredLogs = this.loginLogoutLogs;
         this.isLoading = false;
       },
