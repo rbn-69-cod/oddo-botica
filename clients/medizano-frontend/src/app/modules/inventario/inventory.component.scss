@@ -259,6 +259,20 @@
     border: 1.5px solid #e2e8f0;
     border-radius: 20px;
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.035);
+    overflow: visible;
+
+    .table-responsive {
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 10px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #9ab7c9 #edf3f7;
+
+      &::-webkit-scrollbar { height: 10px; }
+      &::-webkit-scrollbar-track { background: #edf3f7; border-radius: 999px; }
+      &::-webkit-scrollbar-thumb { background: #9ab7c9; border-radius: 999px; }
+    }
 
     .inv-modern-table {
       width: 100%;
