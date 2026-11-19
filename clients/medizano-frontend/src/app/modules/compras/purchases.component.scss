@@ -7,9 +7,16 @@
 @import '../../../styles/glass-tokens';
 @import '../../../styles/animations';
 
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f5f8fb;
+  color: #0f293a;
+}
+
 .purchases-container {
-  padding: 24px 32px;
-  max-width: 1480px;
+  padding: 24px clamp(18px, 3vw, 32px) 44px;
+  max-width: 1360px;
   margin: 0 auto;
   min-height: 100vh;
   box-sizing: border-box;
@@ -18,8 +25,10 @@
   .header-section {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
 
     .badge-tag {
       display: inline-block;
@@ -27,78 +36,78 @@
       font-weight: 700;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      color: #0d9488;
-      background: rgba(13, 148, 136, 0.1);
-      padding: 4px 10px;
-      border-radius: 20px;
+      color: #0b74b8;
+      background: #e6f4fe;
+      padding: 4px 11px;
+      border-radius: 999px;
       margin-bottom: 6px;
     }
 
     .page-title {
-      font-size: 1.85rem;
+      font-size: 1.6rem;
       font-weight: 800;
-      color: #0f172a;
+      color: #0f293a;
       margin: 0 0 4px 0;
       letter-spacing: -0.025em;
     }
 
     .page-subtitle {
-      font-size: 13.5px;
-      color: #64748b;
+      font-size: 0.86rem;
+      color: #647c8a;
       margin: 0;
     }
   }
 
-  /* Module Tabs Bar */
+  /* Module Tabs Bar — Segmented limpio */
   .module-tabs {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
-    background: rgba(241, 245, 249, 0.85);
-    backdrop-filter: blur(12px);
-    padding: 6px;
-    border-radius: 16px;
-    border: 1px solid rgba(226, 232, 240, 0.9);
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: #e8f0f6;
+    padding: 4px;
+    border-radius: 12px;
+    border: 0;
 
     .tab-btn {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 22px;
-      border-radius: 12px;
+      gap: 8px;
+      padding: 9px 18px;
+      border-radius: 9px;
       border: none;
       background: transparent;
-      color: #64748b;
-      font-size: 14px;
-      font-weight: 600;
+      color: #4b6575;
+      font-size: 0.84rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.16s ease;
 
       .tab-icon {
-        font-size: 17px;
+        font-size: 15px;
       }
 
       .tab-badge {
-        background: #e2e8f0;
-        color: #334155;
+        background: rgba(15, 41, 58, 0.08);
+        color: #2c4a5c;
         font-size: 11px;
-        padding: 2px 8px;
-        border-radius: 20px;
+        padding: 2px 7px;
+        border-radius: 999px;
         font-weight: 700;
       }
 
       &:hover {
-        background: rgba(255, 255, 255, 0.8);
-        color: #0f172a;
+        background: rgba(255, 255, 255, 0.65);
+        color: #0f293a;
       }
 
       &.active {
-        background: #ffffff;
-        color: #0d9488;
-        box-shadow: 0 4px 14px rgba(13, 148, 136, 0.15), 0 1px 3px rgba(0, 0, 0, 0.05);
+        background: #0b74b8;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(11, 116, 184, 0.25);
 
         .tab-badge {
-          background: #0d9488;
+          background: rgba(255, 255, 255, 0.22);
           color: #ffffff;
         }
       }
@@ -108,68 +117,80 @@
   /* Glass Card Base */
   .card-glass {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.035);
+    border: 1px solid #e2ecf2;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(15, 41, 58, 0.03);
   }
 
   .card-glass-light {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
+    background: #f8fbfd;
+    border: 1px solid #e2ecf2;
+    border-radius: 12px;
   }
 
   /* KPIs */
   .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-    margin-bottom: 24px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
 
     .kpi-card {
       background: #ffffff;
-      padding: 20px 24px;
-      border-radius: 16px;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      padding: 16px 20px;
+      border-radius: 14px;
+      border: 1px solid #e2ecf2;
+      box-shadow: 0 2px 10px rgba(15, 41, 58, 0.03);
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: 14px;
+      transition: all 0.18s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(11, 116, 184, 0.08);
+        border-color: #7cc4ec;
+      }
 
       .kpi-icon-wrap {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 22px;
+        font-size: 20px;
       }
 
-      .bg-teal-light { background: #ccfbf1; }
-      .bg-amber-light { background: #fef3c7; }
-      .bg-blue-light { background: #e0f2fe; }
+      .bg-teal-light { background: #dff8ed; }
+      .bg-amber-light { background: #fff3cc; }
+      .bg-blue-light { background: #e6f4fe; }
 
       .kpi-title {
-        font-size: 11.5px;
+        font-size: 0.72rem;
         font-weight: 700;
-        color: #64748b;
+        color: #6b8391;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        margin-bottom: 4px;
+        letter-spacing: 0.05em;
+        margin-bottom: 3px;
       }
 
       .kpi-value {
-        font-size: 28px;
+        font-size: 1.55rem;
         font-weight: 800;
         letter-spacing: -0.02em;
         line-height: 1.1;
+        color: #0f293a;
       }
 
       .kpi-sub {
-        font-size: 11.5px;
-        color: #94a3b8;
-        margin-top: 2px;
+        font-size: 0.74rem;
+        color: #7d93a0;
+        margin-top: 3px;
       }
     }
   }
@@ -177,13 +198,16 @@
   /* Filter Card */
   .filter-card {
     background: #ffffff;
-    padding: 16px 22px;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    margin-bottom: 20px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1px solid #e2ecf2;
+    box-shadow: 0 2px 10px rgba(15, 41, 58, 0.025);
+    margin-bottom: 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
 
     .search-box {
       display: flex;

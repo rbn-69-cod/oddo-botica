@@ -1,86 +1,175 @@
 
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f5f8fb;
+  color: #0f293a;
+}
+
 .inventory-screen {
-  padding: 24px;
-  max-width: 100%; box-sizing: border-box;
+  padding: 24px clamp(18px, 3vw, 32px) 44px;
+  max-width: 1360px;
+  box-sizing: border-box;
   margin: 0 auto;
 
-  /* Tarjetas KPI */
-  .inventory-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 12px;
+  /* Header moderno y limpio */
+  .inventory-header {
     margin-bottom: 20px;
 
-    @media (max-width: 1440px) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
     }
-    @media (max-width: 860px) {
+
+    .badge-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #0b74b8;
+      background: #e6f4fe;
+      padding: 4px 11px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+    }
+
+    .screen-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #0f293a;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+    }
+
+    .screen-subtitle {
+      font-size: 0.86rem;
+      color: #647c8a;
+      margin-top: 4px !important;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .btn {
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 10px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        transition: all 0.18s ease;
+      }
+
+      .btn-outline {
+        background: #fff;
+        border: 1px solid #d2e1ea;
+        color: #244557;
+        &:hover {
+          border-color: #0b74b8;
+          color: #0b74b8;
+          background: #f0f8fe;
+        }
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #0b74b8, #085d94);
+        border: 0;
+        color: #fff;
+        box-shadow: 0 6px 16px rgba(11, 116, 184, 0.22);
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 8px 20px rgba(11, 116, 184, 0.3);
+        }
+      }
+    }
+  }
+
+  /* Tarjetas KPI — 4 columnas equilibradas en 1 sola fila */
+  .inventory-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+
+    @media (max-width: 1024px) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    @media (max-width: 520px) {
+    @media (max-width: 560px) {
       grid-template-columns: 1fr;
     }
 
     .kpi-card {
       background: #ffffff;
-      padding: 18px 20px;
-      border-radius: 18px;
-      border: 1.5px solid #e2e8f0;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.035);
+      padding: 16px 18px;
+      border-radius: 14px;
+      border: 1px solid #e2ecf2;
+      box-shadow: 0 2px 10px rgba(15, 41, 58, 0.03);
       display: flex;
       align-items: center;
       gap: 14px;
       cursor: pointer;
-      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.18s ease;
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
-        border-color: #0284c7;
+        box-shadow: 0 8px 22px rgba(11, 116, 184, 0.09);
+        border-color: #7cc4ec;
       }
 
       .kpi-icon-wrap {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 22px;
+        font-size: 20px;
         flex-shrink: 0;
       }
 
-      .bg-blue-light { background: #e0f2fe; }
-      .bg-teal-light { background: #ccfbf1; }
-      .bg-amber-light { background: #fef3c7; }
+      .bg-blue-light { background: #e6f4fe; }
+      .bg-teal-light { background: #dff8ed; }
+      .bg-amber-light { background: #fff3cc; }
       .bg-orange-light { background: #ffedd5; }
-      .bg-red-light { background: #fee2e2; }
+      .bg-red-light { background: #ffe4e8; }
 
       .kpi-content {
         flex: 1;
+        min-width: 0;
 
         .kpi-title {
-          font-size: 12.5px;
+          font-size: 0.72rem;
           font-weight: 700;
-          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: #6b8391;
           margin-bottom: 3px;
         }
 
         .kpi-value {
-          font-size: 26px;
+          font-size: 1.55rem;
           font-weight: 800;
           line-height: 1.1;
+          letter-spacing: -0.02em;
         }
 
-        .text-primary { color: #0284c7 !important; }
-        .text-teal { color: #0d9488 !important; }
-        .text-warning { color: #d97706 !important; }
-        .text-orange { color: #ea580c !important; }
-        .text-danger { color: #dc2626 !important; }
+        .text-primary { color: #0b74b8 !important; }
+        .text-teal { color: #0a8a5f !important; }
+        .text-warning { color: #c77d00 !important; }
+        .text-orange { color: #d95d16 !important; }
+        .text-danger { color: #c62839 !important; }
 
         .kpi-sub {
-          font-size: 11px;
-          color: #94a3b8;
+          font-size: 0.74rem;
+          color: #7d93a0;
           margin-top: 3px;
           white-space: nowrap;
           overflow: hidden;
@@ -93,31 +182,35 @@
   /* Barra de Filtros y Búsqueda */
   .inventory-toolbar-card {
     background: #ffffff;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    border: 1px solid #e2ecf2;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(15, 41, 58, 0.025);
+    padding: 14px 16px !important;
+    margin-bottom: 16px !important;
 
     .filter-pills-row {
       .inv-filter-btn {
-        background: #f8fafc;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 7px 14px;
-        font-size: 12.5px;
+        background: #f6f9fc;
+        border: 1px solid #dce6ee;
+        border-radius: 9px;
+        padding: 6px 12px;
+        font-size: 0.78rem;
         font-weight: 700;
-        color: #475569;
+        color: #466170;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.15s ease;
 
         &:hover {
-          background: #f1f5f9;
-          color: #0f172a;
-          border-color: #cbd5e1;
+          background: #edf6fd;
+          color: #0b74b8;
+          border-color: #a9d6f2;
         }
 
         &.active {
-          background: #0284c7;
-          border-color: #0284c7;
+          background: #0b74b8;
+          border-color: #0b74b8;
+          color: #ffffff;
+          box-shadow: 0 4px 10px rgba(11, 116, 184, 0.22);
           color: #ffffff;
           box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
         }
