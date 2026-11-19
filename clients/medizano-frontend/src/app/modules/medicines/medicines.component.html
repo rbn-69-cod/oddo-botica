@@ -224,7 +224,7 @@
   <!-- Main Content -->
     <!-- BARRA DE NAVEGACIÓN UNIFICADA DE INVENTARIO Y MEDICAMENTOS -->
   <div class="inventory-hub-nav mb-4">
-    <a routerLink="/medicines" class="hub-pill-btn active">
+    <a routerLink="/medicamentos" class="hub-pill-btn active">
       <span class="hub-pill-icon">💊</span>
       <div class="hub-pill-text">
         <span class="hub-pill-title">Catálogo Maestro de Medicamentos</span>
@@ -233,7 +233,7 @@
       <span class="hub-pill-badge">{{ medicines.length }} registrados</span>
     </a>
 
-    <a routerLink="/inventory" class="hub-pill-btn">
+    <a routerLink="/inventario" class="hub-pill-btn">
       <span class="hub-pill-icon">🔬</span>
       <div class="hub-pill-text">
         <span class="hub-pill-title">Stock Físico & Lotes FEFO</span>
@@ -346,7 +346,7 @@
               <div class="action-buttons">
                 <a
                   class="btn-action btn-view-fefo"
-                  [routerLink]="['/inventory']"
+                  [routerLink]="['/inventario']"
                   [queryParams]="{ search: medicine.name }"
                   aria-label="Ver Lotes FEFO en Inventario"
                   title="Ver lotes físicos, vencimientos y stock FEFO de este medicamento"

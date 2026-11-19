@@ -69,19 +69,19 @@ export class AppComponent implements OnInit, OnDestroy {
     ).subscribe(restored => {
       if (restored) {
         if (this.router.url.startsWith('/auth/') || this.router.url === '/') {
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/inicio']);
         }
         return;
       }
 
       if (!initial && !this.router.url.startsWith('/auth/')) {
-        this.router.navigate(['/auth/login']);
+        this.router.navigate(['/acceso/iniciar-sesion']);
       }
     });
   }
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/acceso/iniciar-sesion']);
   }
 }

@@ -23,7 +23,7 @@ export class RoleGuard implements CanActivate {
       return true;
     }
     
-    this.router.navigate(['/auth/unauthorized']);
+    this.router.navigate(['/acceso/sin-permiso']);
     return false;
   }
 }

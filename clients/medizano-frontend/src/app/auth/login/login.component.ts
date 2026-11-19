@@ -45,14 +45,14 @@ export class LoginComponent implements OnInit, OnDestroy {
     
     if (this.authService.isAuthenticated()) {
       const user = this.authService.getCurrentUser();
-      const defaultRoute = user ? this.getDefaultRouteForRole(user.role) : '/billing';
+      const defaultRoute = user ? this.getDefaultRouteForRole(user.role) : '/ventas';
       this.router.navigate([this.returnUrl || defaultRoute]);
       return;
     }
 
     // Covers an already-open login tab after the user authenticates in Odoo.
     this.authService.restoreSsoSession().subscribe(restored => {
-      if (restored) this.router.navigate(['/dashboard']);
+      if (restored) this.router.navigate(['/inicio']);
     });
   }
 
@@ -183,40 +183,40 @@ export class LoginComponent implements OnInit, OnDestroy {
   private completeLogin(): void {
     this.stopTimer();
     const user = this.authService.getCurrentUser();
-    const defaultRoute = user ? this.getDefaultRouteForRole(user.role) : '/billing';
+    const defaultRoute = user ? this.getDefaultRouteForRole(user.role) : '/ventas';
     const targetRoute = this.returnUrl && this.canAccessRoute(this.returnUrl, user?.role)
       ? this.returnUrl : defaultRoute;
     this.router.navigate([targetRoute]);
   }
 
   private getDefaultRoute(): string {
-    return '/dashboard';
+    return '/inicio';
   }
 
   private getDefaultRouteForRole(role: UserRole | string): string {
     switch (role) {
       case UserRole.CASHIER:
-        return '/billing';
+        return '/ventas';
       case UserRole.STOCK_MONITOR:
-        return '/inventory';
+        return '/inventario';
       case UserRole.STOCK_KEEPER:
-        return '/medicines';
+        return '/medicamentos';
       case UserRole.WAREHOUSE:
-        return '/purchases';
+        return '/compras';
       case UserRole.CUSTOMER_SUPPORT:
-        return '/returns';
+        return '/devoluciones';
       case UserRole.ANALYST:
       case UserRole.MANAGER:
-        return '/reports';
+        return '/reportes';
       case UserRole.ADMIN:
-        return '/dashboard';
+        return '/inicio';
       default:
-        return '/dashboard';
+        return '/inicio';
     }
   }
 
   private canAccessRoute(route: string, role?: UserRole | string): boolean {
-    if (!role || !route || route.startsWith('/auth')) {
+    if (!role || !route || route.startsWith('/acceso') || route.startsWith('/auth')) {
       return false;
     }
 
@@ -226,13 +226,13 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     const cleanRoute = route.split('?')[0].split('#')[0];
     const roleRoutes: Record<string, string[]> = {
-      [UserRole.CASHIER]: ['/billing'],
-      [UserRole.STOCK_MONITOR]: ['/inventory'],
-      [UserRole.STOCK_KEEPER]: ['/medicines'],
-      [UserRole.WAREHOUSE]: ['/purchases', '/suppliers'],
-      [UserRole.CUSTOMER_SUPPORT]: ['/returns'],
-      [UserRole.ANALYST]: ['/reports'],
-      [UserRole.MANAGER]: ['/reports', '/purchase-history']
+      [UserRole.CASHIER]: ['/ventas'],
+      [UserRole.STOCK_MONITOR]: ['/inventario'],
+      [UserRole.STOCK_KEEPER]: ['/medicamentos'],
+      [UserRole.WAREHOUSE]: ['/compras', '/proveedores'],
+      [UserRole.CUSTOMER_SUPPORT]: ['/devoluciones'],
+      [UserRole.ANALYST]: ['/reportes'],
+      [UserRole.MANAGER]: ['/reportes', '/historial-compras']
     };
 
     return (roleRoutes[role] || []).some(allowedRoute => cleanRoute.startsWith(allowedRoute));

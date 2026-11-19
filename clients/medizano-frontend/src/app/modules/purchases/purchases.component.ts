@@ -152,9 +152,9 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   detectTabFromUrl(url: string): void {
     if (url.includes('/purchases/history')) {
       this.activeTab = 'history';
-    } else if (url.includes('/purchases/tracking') || url.includes('tab=tracking')) {
+    } else if (url.includes('/compras/seguimiento') || url.includes('tab=tracking')) {
       this.activeTab = 'tracking';
-    } else if (url.includes('/purchases/scanner') || url.includes('tab=scanner')) {
+    } else if (url.includes('/compras/escaner') || url.includes('tab=scanner')) {
       this.activeTab = 'scanner';
       const ordenParaEscanear = this.compras.find(c => c.estado !== 'RECIBIDA' && c.estado !== 'CANCELADA');
       if (ordenParaEscanear) {
@@ -709,7 +709,7 @@ export class PurchasesComponent implements OnInit, OnDestroy {
         this.cargarCompras();
         if (target === 'POR_VERIFICAR') {
           this.seleccionarParaVerificar({ ...compra, estado: upd.estado });
-          this.router.navigate(['/purchases/scanner'], { queryParams: { compraId: compra.id } });
+          this.router.navigate(['/compras/escaner'], { queryParams: { compraId: compra.id } });
         }
       },
       error: (err) => {
@@ -1708,7 +1708,7 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   irATrackingDesdeMulti(): void {
     this.resumenMultiEmision = null;
     this.activeTab = 'tracking';
-    this.router.navigate(['/purchases/tracking']);
+    this.router.navigate(['/compras/seguimiento']);
   }
 
   cargarCatalogoMedicamentos(): void {
