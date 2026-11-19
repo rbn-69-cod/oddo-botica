@@ -65,8 +65,8 @@
   </div>
 
   <!-- Barra de Filtros y Búsqueda -->
-  <div class="inventory-toolbar-card card-glass p-3 mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-    <div class="filter-pills-row d-flex gap-2 flex-wrap">
+  <div class="inventory-toolbar-card card-glass p-3 mb-4">
+    <div class="filter-pills-row">
       <button type="button" class="inv-filter-btn" [class.active]="filtroTipo === 'TODOS'" (click)="setFiltro('TODOS')">
         Todos ({{ getMedicamentosTotalCount() }})
       </button>
@@ -153,10 +153,10 @@
             <!-- Medicamento y Fabricante -->
             <td class="cell-med-info">
               <div class="font-bold med-title-text">{{ b.medicineName }}</div>
-              <div class="med-meta-tags d-flex align-items-center gap-2 mt-1">
+              <div class="med-meta-tags">
                 <span class="badge-lab font-semibold">{{ b.manufacturer }}</span>
-                <span class="badge-barcode font-mono text-xs">Cód: {{ b.barcode }}</span>
                 <span class="badge-cat text-xs text-muted">{{ b.category }}</span>
+                <span class="badge-barcode font-mono text-xs">Cód: {{ b.barcode }}</span>
               </div>
             </td>
 

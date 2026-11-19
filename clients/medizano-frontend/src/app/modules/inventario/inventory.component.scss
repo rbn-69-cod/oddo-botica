@@ -189,6 +189,11 @@
     margin-bottom: 16px !important;
 
     .filter-pills-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+
       .inv-filter-btn {
         background: #f6f9fc;
         border: 1px solid #dce6ee;
@@ -226,9 +231,8 @@
     }
 
     .search-wrap {
-      flex: 1;
-      max-width: 380px;
-      min-width: 260px;
+      width: min(100%, 500px);
+      margin-top: 12px;
 
       .inv-search-input {
         width: 100%;
@@ -258,8 +262,10 @@
 
     .inv-modern-table {
       width: 100%;
+      min-width: 1180px;
       border-collapse: separate;
       border-spacing: 0;
+      table-layout: fixed;
 
       thead th {
         background: #f8fafc;
@@ -297,6 +303,8 @@
       }
 
       .cell-med-info {
+        overflow: hidden;
+
         .med-title-text {
           color: #0f172a;
           font-size: 14.5px;
@@ -312,11 +320,30 @@
         }
 
         .badge-barcode {
+          display: block;
+          width: max-content;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
           background: #f8fafc;
           color: #64748b;
           padding: 2px 6px;
           border-radius: 6px;
           border: 1px solid #e2e8f0;
+        }
+
+        .med-meta-tags {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 5px 6px;
+          margin-top: 6px;
+          min-width: 0;
+        }
+
+        .badge-cat {
+          color: #64748b;
+          font-size: 11px;
         }
       }
 
@@ -343,37 +370,42 @@
       }
 
       .th-med-info, .cell-med-info {
-        min-width: 180px;
+        width: 27%;
+        min-width: 300px;
       }
 
       .th-prescription, .cell-prescription {
-        width: 130px;
+        width: 14%;
         white-space: nowrap;
       }
 
       .th-batch, .cell-batch {
-        width: 130px;
+        width: 13%;
         white-space: nowrap;
       }
 
       .th-fefo, .cell-fefo {
-        width: 135px;
+        width: 14%;
         white-space: nowrap;
       }
 
       .th-stock, .cell-stock {
-        width: 90px;
+        width: 10%;
         white-space: nowrap;
       }
 
       .th-prices, .cell-prices {
-        width: 105px;
+        width: 12%;
         white-space: nowrap;
       }
 
       .th-actions, .cell-actions {
-        width: 115px;
+        width: 10%;
         white-space: nowrap;
+      }
+
+      .cell-actions > div {
+        flex-wrap: nowrap;
       }
 
       .batch-pill-badge {
@@ -411,6 +443,15 @@
         font-weight: 700;
       }
     }
+  }
+
+  @media (max-width: 780px) {
+    .inventory-header .header-actions {
+      width: 100%;
+      .btn { flex: 1; }
+    }
+
+    .inventory-toolbar-card .search-wrap { width: 100%; }
   }
 
   /* Toggle de Receta Médica en Modal */
