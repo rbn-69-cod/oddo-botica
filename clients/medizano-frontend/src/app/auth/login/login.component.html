@@ -1,65 +1,63 @@
-<main class="access-page">
-  <section class="brand-panel" aria-label="Presentación de MediZano">
-    <div class="brand-panel__glow" aria-hidden="true"></div>
-    <div class="brand-panel__grid" aria-hidden="true"></div>
+<main class="access-stage">
+  <div class="stage-orb stage-orb--one" aria-hidden="true"></div>
+  <div class="stage-orb stage-orb--two" aria-hidden="true"></div>
+  <div class="stage-dots" aria-hidden="true"></div>
 
-    <div class="brand-top">
-      <div class="brand">
-        <div class="brand__mark" aria-hidden="true">
-          <span class="brand__mark-v"></span>
-          <span class="brand__mark-h"></span>
+  <div class="login-shell">
+    <!-- LEFT: VISUAL BRAND SHOWCASE -->
+    <section class="showcase-panel" aria-label="MediZano Botica">
+      <div class="showcase-top">
+        <div class="brand-lockup">
+          <div class="brand-icon" aria-hidden="true">
+            <span class="cross-v"></span>
+            <span class="cross-h"></span>
+          </div>
+          <div>
+            <div class="brand-title">MediZano</div>
+            <div class="brand-tag">BOTICA &amp; FARMACIA</div>
+          </div>
         </div>
-        <div class="brand__text">
-          <span class="brand__name">MediZano</span>
-          <span class="brand__sub">BOTICA &amp; FARMACIA</span>
+        <span class="status-pill"><i class="status-dot"></i>En línea</span>
+      </div>
+
+      <div class="showcase-body">
+        <h1>Tu botica en orden.<br><span>Tu atención, primero.</span></h1>
+        <p>
+          Punto de venta rápido, inventario por lotes FEFO, pagos con Culqi y Yape y boletas electrónicas sincronizadas con Odoo 18.
+        </p>
+
+        <div class="glass-metrics" aria-label="Capacidades principales">
+          <div class="metric-tile">
+            <span class="metric-label">PASARELA</span>
+            <strong>Culqi &amp; Yape</strong>
+            <small>Cobro inmediato</small>
+          </div>
+          <div class="metric-tile">
+            <span class="metric-label">INVENTARIO</span>
+            <strong>FEFO 100%</strong>
+            <small>Lotes y vencimientos</small>
+          </div>
+          <div class="metric-tile">
+            <span class="metric-label">BOLETAS</span>
+            <strong>B001 + QR</strong>
+            <small>Envío automático</small>
+          </div>
         </div>
       </div>
-      <span class="brand-badge">POS · ERP Clínico</span>
-    </div>
 
-    <div class="brand-copy">
-      <p class="brand-copy__eyebrow">Gestión farmacéutica integral</p>
-      <h1>Tu botica en orden.<br><span>Tu atención, primero.</span></h1>
-      <p class="brand-copy__lead">
-        Controla ventas, lotes FEFO, vencimientos, pagos con Culqi y Yape y boletas electrónicas desde un solo lugar.
-      </p>
-    </div>
-
-    <div class="feature-list" aria-label="Beneficios">
-      <div class="feature">
-        <span class="feature__icon" aria-hidden="true">✓</span>
-        <div>
-          <strong>Inventario y lotes FEFO en tiempo real</strong>
-          <span>Alertas automáticas de stock mínimo y vencimientos</span>
-        </div>
+      <div class="showcase-footer">
+        <span>MediZano ERP Cloud</span>
+        <span>•</span>
+        <span>Odoo 18 + Angular 20</span>
       </div>
-      <div class="feature">
-        <span class="feature__icon" aria-hidden="true">✓</span>
-        <div>
-          <strong>Cobros ágiles con Efectivo, Culqi y Yape</strong>
-          <span>Boleta electrónica y envío por correo al instante</span>
-        </div>
-      </div>
-      <div class="feature">
-        <span class="feature__icon" aria-hidden="true">✓</span>
-        <div>
-          <strong>Reportes financieros y auditoría completa</strong>
-          <span>Caja diaria, ventas, kardex y trazabilidad por usuario</span>
-        </div>
-      </div>
-    </div>
+    </section>
 
-    <div class="brand-footer">
-      <span>MediZano Botica · Sistema conectado a Odoo 18</span>
-    </div>
-  </section>
-
-  <section class="form-panel" aria-label="Acceso al sistema">
-    <div class="access-card">
-      <div class="access-header">
-        <span class="access-eyebrow">{{ verificationStep ? 'VERIFICACIÓN DE SEGURIDAD' : 'BIENVENIDO DE NUEVO' }}</span>
-        <h2>{{ verificationStep ? 'Ingresa tu código' : 'Inicia sesión' }}</h2>
-        <p *ngIf="!verificationStep">Ingresa tus credenciales para acceder al panel de MediZano.</p>
+    <!-- RIGHT: CLEAN FORM PANEL -->
+    <section class="auth-panel" aria-label="Inicio de sesión">
+      <div class="auth-header">
+        <span class="auth-kicker">{{ verificationStep ? 'VERIFICACIÓN EN 2 PASOS' : 'ACCESO AL SISTEMA' }}</span>
+        <h2>{{ verificationStep ? 'Ingresa tu código' : 'Iniciar sesión' }}</h2>
+        <p *ngIf="!verificationStep">Ingresa tu usuario y contraseña para continuar.</p>
         <p *ngIf="verificationStep">Enviamos un código de 6 dígitos a <strong>{{ maskedEmail }}</strong>.</p>
       </div>
 
@@ -163,7 +161,7 @@
         </div>
       </form>
 
-      <p class="access-help">¿Problemas para acceder? Contacta al administrador de MediZano.</p>
-    </div>
-  </section>
+      <p class="access-help">¿Problemas para acceder? Contacta al administrador.</p>
+    </section>
+  </div>
 </main>
