@@ -1,58 +1,96 @@
-<main class="login-canvas">
-  <div class="canvas-glow canvas-glow--top" aria-hidden="true"></div>
-  <div class="canvas-glow canvas-glow--bottom" aria-hidden="true"></div>
+<main class="access-stage">
+  <div class="stage-orb stage-orb--one" aria-hidden="true"></div>
+  <div class="stage-orb stage-orb--two" aria-hidden="true"></div>
+  <div class="stage-dots" aria-hidden="true"></div>
 
-  <div class="login-wrap">
-    <!-- CENTERED BRAND HEADER -->
-    <div class="brand-header">
-      <div class="brand-emblem" aria-hidden="true">
-        <span class="plus-v"></span>
-        <span class="plus-h"></span>
+  <div class="login-shell">
+    <!-- LEFT: VISUAL BRAND SHOWCASE -->
+    <section class="showcase-panel" aria-label="MediZano Botica">
+      <div class="showcase-top">
+        <div class="brand-lockup">
+          <div class="brand-icon" aria-hidden="true">
+            <span class="cross-v"></span>
+            <span class="cross-h"></span>
+          </div>
+          <div>
+            <div class="brand-title">MediZano</div>
+            <div class="brand-tag">BOTICA &amp; FARMACIA</div>
+          </div>
+        </div>
+        <span class="status-pill"><i class="status-dot"></i>En línea</span>
       </div>
-      <div class="brand-copy">
-        <span class="brand-name">MediZano Botica</span>
-        <span class="brand-subtitle">ERP &amp; Punto de Venta Farmacéutico</span>
-      </div>
-    </div>
 
-    <!-- CLEAN MINIMALIST CARD -->
-    <section class="login-card" aria-label="Inicio de sesión">
-      <div class="card-head">
-        <h1>{{ verificationStep ? 'Verificación de seguridad' : 'Inicia sesión' }}</h1>
-        <p *ngIf="!verificationStep">Ingresa tus credenciales para continuar.</p>
-        <p *ngIf="verificationStep">Ingresa el código de 6 dígitos enviado a <strong>{{ maskedEmail }}</strong>.</p>
+      <div class="showcase-body">
+        <h1>Tu botica en orden.<br><span>Tu atención, primero.</span></h1>
+        <p>
+          Punto de venta rápido, inventario por lotes FEFO, pagos con Culqi y Yape y boletas electrónicas sincronizadas con Odoo 18.
+        </p>
+
+        <div class="glass-metrics" aria-label="Capacidades principales">
+          <div class="metric-tile">
+            <span class="metric-label">PASARELA</span>
+            <strong>Culqi &amp; Yape</strong>
+            <small>Cobro inmediato</small>
+          </div>
+          <div class="metric-tile">
+            <span class="metric-label">INVENTARIO</span>
+            <strong>FEFO 100%</strong>
+            <small>Lotes y vencimientos</small>
+          </div>
+          <div class="metric-tile">
+            <span class="metric-label">BOLETAS</span>
+            <strong>B001 + QR</strong>
+            <small>Envío automático</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-footer">
+        <span>MediZano ERP Cloud</span>
+        <span>•</span>
+        <span>Odoo 18 + Angular 20</span>
+      </div>
+    </section>
+
+    <!-- RIGHT: CLEAN FORM PANEL -->
+    <section class="auth-panel" aria-label="Inicio de sesión">
+      <div class="auth-header">
+        <span class="auth-kicker">{{ verificationStep ? 'VERIFICACIÓN EN 2 PASOS' : 'ACCESO AL SISTEMA' }}</span>
+        <h2>{{ verificationStep ? 'Ingresa tu código' : 'Iniciar sesión' }}</h2>
+        <p *ngIf="!verificationStep">Ingresa tu usuario y contraseña para continuar.</p>
+        <p *ngIf="verificationStep">Enviamos un código de 6 dígitos a <strong>{{ maskedEmail }}</strong>.</p>
       </div>
 
       <form *ngIf="!verificationStep" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" novalidate>
         <div class="form-field">
           <label for="username">Usuario</label>
-          <div class="input-box" [class.input-box--invalid]="username?.invalid && username?.touched">
-            <span class="input-icon" aria-hidden="true">
+          <div class="input-control" [class.input-control--invalid]="username?.invalid && username?.touched">
+            <span class="input-control__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             </span>
             <input
               id="username"
               type="text"
               formControlName="username"
-              placeholder="Ej. admin, cajero, gerente"
+              placeholder="Ej. admin o cajero"
               autocomplete="username"
               autofocus
             />
           </div>
-          <p class="field-error" *ngIf="username?.invalid && username?.touched">Ingresa tu nombre de usuario.</p>
+          <p class="form-error" *ngIf="username?.invalid && username?.touched">Ingresa tu nombre de usuario.</p>
         </div>
 
         <div class="form-field">
           <label for="password">Contraseña</label>
-          <div class="input-box" [class.input-box--invalid]="password?.invalid && password?.touched">
-            <span class="input-icon" aria-hidden="true">
+          <div class="input-control" [class.input-control--invalid]="password?.invalid && password?.touched">
+            <span class="input-control__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none"><path d="M6 10V8a6 6 0 0 1 12 0v2M5 10h14v11H5V10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
             </span>
             <input
               id="password"
               [type]="showPassword ? 'text' : 'password'"
               formControlName="password"
-              placeholder="••••••••"
+              placeholder="Ingresa tu contraseña"
               autocomplete="current-password"
             />
             <button
@@ -61,10 +99,10 @@
               (click)="togglePasswordVisibility()"
               [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
             >
-              <svg-icon [name]="showPassword ? 'eye-off' : 'eye'" [size]="19"></svg-icon>
+              <svg-icon [name]="showPassword ? 'eye-off' : 'eye'" [size]="20"></svg-icon>
             </button>
           </div>
-          <p class="field-error" *ngIf="password?.invalid && password?.touched">Ingresa tu contraseña.</p>
+          <p class="form-error" *ngIf="password?.invalid && password?.touched">Ingresa tu contraseña.</p>
         </div>
 
         <div class="error-alert" *ngIf="errorMessage" role="alert">
@@ -72,25 +110,25 @@
           <span>{{ errorMessage }}</span>
         </div>
 
-        <button type="submit" class="btn-login" [disabled]="loginForm.invalid || isLoading">
-          <span *ngIf="isLoading" class="spinner" aria-hidden="true"></span>
-          <span>{{ isLoading ? 'Ingresando...' : 'Ingresar' }}</span>
-          <span *ngIf="!isLoading" class="btn-arrow" aria-hidden="true">→</span>
+        <button type="submit" class="submit-button" [disabled]="loginForm.invalid || isLoading">
+          <span *ngIf="isLoading" class="button-spinner" aria-hidden="true"></span>
+          <span>{{ isLoading ? 'Validando acceso...' : 'Ingresar a MediZano' }}</span>
+          <span *ngIf="!isLoading" class="submit-button__arrow" aria-hidden="true">→</span>
         </button>
       </form>
 
-      <form *ngIf="verificationStep" (ngSubmit)="verifyCode()" class="login-form" novalidate>
-        <div class="mfa-banner">
-          <span class="mfa-badge">✓</span>
-          <div class="mfa-text">
-            <strong>Código enviado</strong>
-            <span>Válido por 5 minutos</span>
+      <form *ngIf="verificationStep" (ngSubmit)="verifyCode()" class="login-form verification-form" novalidate>
+        <div class="verification-hero">
+          <div class="verification-hero__shield"><span>✓</span></div>
+          <div>
+            <strong>Protegemos tu cuenta</strong>
+            <span>Confirma que realmente eres tú</span>
           </div>
-          <span class="mfa-timer">{{ expiryLabel }}</span>
+          <span class="verification-hero__timer">{{ expiryLabel }}</span>
         </div>
 
         <div class="form-field">
-          <label for="access-code">Código de 6 dígitos</label>
+          <label for="access-code">Código de acceso</label>
           <div class="otp-control">
             <div class="otp-digits" aria-hidden="true">
               <span *ngFor="let index of [0,1,2,3,4,5]" [class.filled]="digitAt(index)">{{ digitAt(index) || '·' }}</span>
@@ -99,7 +137,7 @@
               autocomplete="one-time-code" maxlength="6" [value]="code"
               (input)="onCodeInput($any($event.target).value)" aria-label="Código de acceso de 6 dígitos" autofocus />
           </div>
-          <div class="mfa-meta">
+          <div class="verification-meta">
             <span><b>{{ attemptsRemaining }}</b> intento(s)</span>
             <span><b>{{ resendsRemaining }}</b> reenvío(s)</span>
           </div>
@@ -109,25 +147,21 @@
           <svg-icon name="error" [size]="18"></svg-icon><span>{{ errorMessage }}</span>
         </div>
 
-        <button type="submit" class="btn-login" [disabled]="isLoading || expiresIn === 0">
-          <span *ngIf="isLoading" class="spinner" aria-hidden="true"></span>
-          <span>{{ isLoading ? 'Verificando...' : 'Confirmar código' }}</span>
-          <span *ngIf="!isLoading" class="btn-arrow" aria-hidden="true">→</span>
+        <button type="submit" class="submit-button" [disabled]="isLoading || expiresIn === 0">
+          <span *ngIf="isLoading" class="button-spinner" aria-hidden="true"></span>
+          <span>{{ isLoading ? 'Comprobando código...' : 'Confirmar acceso seguro' }}</span>
+          <span *ngIf="!isLoading" class="submit-button__arrow" aria-hidden="true">→</span>
         </button>
 
-        <div class="mfa-actions">
+        <div class="verification-actions">
           <button type="button" (click)="resendCode()" [disabled]="resendIn > 0 || resendsRemaining === 0 || isLoading">
             {{ resendIn > 0 ? 'Reenviar en ' + resendIn + ' s' : 'Reenviar código' }}
           </button>
           <button type="button" (click)="cancelVerification()">Cambiar usuario</button>
         </div>
       </form>
-    </section>
 
-    <footer class="login-footer">
-      <span>MediZano Botica</span>
-      <span class="sep">·</span>
-      <span>Ventas, Inventario FEFO y Facturación</span>
-    </footer>
+      <p class="access-help">¿Problemas para acceder? Contacta al administrador.</p>
+    </section>
   </div>
 </main>
