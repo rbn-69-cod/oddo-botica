@@ -68,7 +68,7 @@ export class MercadoPagoService {
    */
   abrirCheckoutPro(preference: MercadoPagoPreferenceResponse, checkoutWindow?: Window): Promise<void> {
     return new Promise((resolve) => {
-      const url = preference.sandboxInitPoint || preference.initPoint;
+      const url = preference.initPoint || preference.sandboxInitPoint;
       if (!url) {
         throw new Error('No se recibió la URL de checkout de Mercado Pago');
       }

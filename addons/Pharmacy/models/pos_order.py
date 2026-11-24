@@ -16,7 +16,7 @@ class PosOrder(models.Model):
     # final receipt one auditable database record.
     medizano_payment_method = fields.Selection(
         [("CASH", "Efectivo"), ("PAYPAL", "PayPal"),
-         ("MERCADO_PAGO", "Mercado Pago")],
+         ("MERCADO_PAGO", "Mercado Pago"), ("CULQI", "Culqi")],
         string="MediZano payment method",
         index=True,
     )
@@ -238,18 +238,24 @@ class PosOrder(models.Model):
             # Create dispensing records without prescription
             for line in self.lines:
                 if line.product_id.is_pharma_product:
+                    patient = getattr(self.partner_id, "pharmacy_patient_id", False) if self.partner_id else False
+                    lot = getattr(line, "lot_id", False)
+                    if not lot and hasattr(line, "pack_lot_ids") and line.pack_lot_ids:
+                        lot = self.env["stock.lot"].search([
+                            ("product_id", "=", line.product_id.id),
+                            ("name", "=", line.pack_lot_ids[0].lot_name),
+                        ], limit=1)
+                    branch = getattr(self, "branch_id", False)
                     self.env["pharmacy.dispensing"].create(
                         {
                             "pos_order_id": self.id,
                             "pos_order_line_id": line.id,
-                            "patient_id": self.partner_id.pharmacy_patient_id.id
-                            if self.partner_id and self.partner_id.pharmacy_patient_id
-                            else False,
+                            "patient_id": patient.id if patient else False,
                             "product_id": line.product_id.id,
-                            "lot_id": line.lot_id.id,
+                            "lot_id": lot.id if lot else False,
                             "quantity": line.qty,
-                            "branch_id": self.branch_id.id,
-                            "dispensed_by": self.user_id.id,
+                            "branch_id": branch.id if branch else False,
+                            "dispensed_by": self.user_id.id or self.env.user.id,
                         }
                     )
         else:

@@ -1,0 +1,158 @@
+/* MediZano Obsidian-Emerald SaaS Theme for Odoo 18 */
+:root {
+    --mz-dark: #0F172A;
+    --mz-slate: #1E293B;
+    --mz-emerald: #10B981;
+    --mz-emerald-dark: #059669;
+    --mz-cyan: #06B6D4;
+    --mz-canvas: #EEF2F6;
+}
+
+/* 1. Obsidian Navbar with Neon Emerald Accent */
+.o_main_navbar {
+    background: linear-gradient(90deg, #0F172A 0%, #1E293B 55%, #0F2942 100%) !important;
+    border-bottom: 2px solid #10B981 !important;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.28) !important;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.o_main_navbar .o_menu_brand {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.02em;
+}
+
+.o_main_navbar .o_nav_entry,
+.o_main_navbar .dropdown-toggle {
+    color: #E2E8F0 !important;
+    font-weight: 500 !important;
+    border-radius: 999px !important;
+    padding: 4px 12px !important;
+    margin: 0 2px;
+    transition: all 0.2s ease !important;
+}
+
+.o_main_navbar .o_nav_entry:hover,
+.o_main_navbar .dropdown-toggle:hover {
+    background: rgba(16, 185, 129, 0.2) !important;
+    color: #34D399 !important;
+}
+
+/* 2. Cool Slate-Mist Canvas */
+.o_action_manager,
+.o_kanban_renderer,
+.o_form_view_container {
+    background: linear-gradient(180deg, #EEF2F6 0%, #E2E8F0 100%) !important;
+}
+
+/* 3. Elevated SaaS Kanban Cards with Emerald Accent */
+.o_kanban_renderer .o_kanban_record {
+    background: #FFFFFF !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+    border-top: 3px solid #10B981 !important;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.o_kanban_renderer .o_kanban_record:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14) !important;
+    border-top-color: #06B6D4 !important;
+}
+
+/* 4. Form Sheets as Floating Cards */
+.o_form_view .o_form_sheet_bg .o_form_sheet {
+    border-radius: 18px !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* 5. Vibrant Emerald-Cyan Primary Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, #059669 0%, #0891B2 100%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.32) !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: linear-gradient(135deg, #10B981 0%, #06B6D4 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(6, 182, 212, 0.4) !important;
+}
+
+/* 6. Modern Control Panel & Pill Search Bar */
+.o_control_panel {
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(8px) !important;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+}
+
+.o_searchview {
+    border-radius: 999px !important;
+    border: 1.5px solid #CBD5E1 !important;
+    padding: 4px 14px !important;
+    background: #F8FAFC !important;
+}
+
+.o_searchview:focus-within {
+    background: #FFFFFF !important;
+    border-color: #10B981 !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18) !important;
+}
+
+/* 7. Sleek Modern Tables */
+.o_list_table thead th {
+    background: #0F172A !important;
+    color: #F8FAFC !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    border-bottom: 2px solid #10B981 !important;
+}
+
+.o_list_table tbody tr:hover {
+    background-color: rgba(16, 185, 129, 0.06) !important;
+}
+
+/* 8. Fix Odoo default purple background on navbar dropdowns/pills */
+.o_main_navbar .o_menu_sections .dropdown-toggle,
+.o_main_navbar .o_menu_sections .o_nav_entry,
+.o_main_navbar .o_menu_sections button,
+.o_main_navbar .o_menu_sections a {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: 1px solid transparent !important;
+    color: #E2E8F0 !important;
+}
+
+.o_main_navbar .o_menu_sections .dropdown-toggle:hover,
+.o_main_navbar .o_menu_sections .o_nav_entry:hover,
+.o_main_navbar .o_menu_sections button:hover,
+.o_main_navbar .o_menu_sections a:hover,
+.o_main_navbar .o_menu_sections .dropdown-toggle.show {
+    background: rgba(16, 185, 129, 0.18) !important;
+    border-color: rgba(16, 185, 129, 0.45) !important;
+    color: #34D399 !important;
+}
+
+/* 9. Polish MediZano Dashboard KPI cards */
+.o_form_view .o_form_sheet .card,
+.o_form_view .o_form_sheet .border {
+    border-radius: 14px !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.o_form_view .o_form_sheet .card:hover,
+.o_form_view .o_form_sheet .border:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08) !important;
+}

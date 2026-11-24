@@ -45,14 +45,14 @@ export class LoginComponent implements OnInit, OnDestroy {
     
     if (this.authService.isAuthenticated()) {
       const user = this.authService.getCurrentUser();
-      const defaultRoute = user ? this.getDefaultRouteForRole(user.role) : '/ventas';
+      const defaultRoute = user ? this.getDefaultRouteForRole(user.role) : '/billing';
       this.router.navigate([this.returnUrl || defaultRoute]);
       return;
     }
 
     // Covers an already-open login tab after the user authenticates in Odoo.
     this.authService.restoreSsoSession().subscribe(restored => {
-      if (restored) this.router.navigate(['/inicio']);
+      if (restored) this.router.navigate(['/dashboard']);
     });
   }
 
@@ -73,6 +73,10 @@ export class LoginComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (response) => {
+        if (!response.mfaRequired && response.token && response.userId) {
+          this.completeLogin();
+          return;
+        }
         if (!response.mfaRequired || !response.challengeId) {
           this.errorMessage = 'No se pudo iniciar la verificación de seguridad.';
           return;
@@ -183,40 +187,40 @@ export class LoginComponent implements OnInit, OnDestroy {
   private completeLogin(): void {
     this.stopTimer();
     const user = this.authService.getCurrentUser();
-    const defaultRoute = user ? this.getDefaultRouteForRole(user.role) : '/ventas';
+    const defaultRoute = user ? this.getDefaultRouteForRole(user.role) : '/billing';
     const targetRoute = this.returnUrl && this.canAccessRoute(this.returnUrl, user?.role)
       ? this.returnUrl : defaultRoute;
     this.router.navigate([targetRoute]);
   }
 
   private getDefaultRoute(): string {
-    return '/inicio';
+    return '/dashboard';
   }
 
   private getDefaultRouteForRole(role: UserRole | string): string {
     switch (role) {
       case UserRole.CASHIER:
-        return '/ventas';
+        return '/billing';
       case UserRole.STOCK_MONITOR:
-        return '/inventario';
+        return '/inventory';
       case UserRole.STOCK_KEEPER:
-        return '/medicamentos';
+        return '/medicines';
       case UserRole.WAREHOUSE:
-        return '/compras';
+        return '/purchases';
       case UserRole.CUSTOMER_SUPPORT:
-        return '/devoluciones';
+        return '/returns';
       case UserRole.ANALYST:
       case UserRole.MANAGER:
-        return '/reportes';
+        return '/reports';
       case UserRole.ADMIN:
-        return '/inicio';
+        return '/dashboard';
       default:
-        return '/inicio';
+        return '/dashboard';
     }
   }
 
   private canAccessRoute(route: string, role?: UserRole | string): boolean {
-    if (!role || !route || route.startsWith('/acceso') || route.startsWith('/auth')) {
+    if (!role || !route || route.startsWith('/auth')) {
       return false;
     }
 
@@ -226,13 +230,13 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     const cleanRoute = route.split('?')[0].split('#')[0];
     const roleRoutes: Record<string, string[]> = {
-      [UserRole.CASHIER]: ['/ventas'],
-      [UserRole.STOCK_MONITOR]: ['/inventario'],
-      [UserRole.STOCK_KEEPER]: ['/medicamentos'],
-      [UserRole.WAREHOUSE]: ['/compras', '/proveedores'],
-      [UserRole.CUSTOMER_SUPPORT]: ['/devoluciones'],
-      [UserRole.ANALYST]: ['/reportes'],
-      [UserRole.MANAGER]: ['/reportes', '/historial-compras']
+      [UserRole.CASHIER]: ['/billing'],
+      [UserRole.STOCK_MONITOR]: ['/inventory'],
+      [UserRole.STOCK_KEEPER]: ['/medicines'],
+      [UserRole.WAREHOUSE]: ['/purchases', '/suppliers'],
+      [UserRole.CUSTOMER_SUPPORT]: ['/returns'],
+      [UserRole.ANALYST]: ['/reports'],
+      [UserRole.MANAGER]: ['/reports', '/purchase-history']
     };
 
     return (roleRoutes[role] || []).some(allowedRoute => cleanRoute.startsWith(allowedRoute));

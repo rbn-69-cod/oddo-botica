@@ -41,7 +41,7 @@ class PharmacyDispensing(models.Model):
 
     # Patient information
     patient_id = fields.Many2one(
-        "pharmacy.patient", "Patient", required=True, tracking=True, index=True
+        "pharmacy.patient", "Patient", required=False, tracking=True, index=True
     )
 
     # Product and batch information

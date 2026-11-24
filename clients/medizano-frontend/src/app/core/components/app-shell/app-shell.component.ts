@@ -31,14 +31,14 @@ export class AppShellComponent implements OnInit {
   currentRoute = '';
   sidebarExpanded = false;
   openMenus: { [route: string]: boolean } = {
-    '/compras': true,
-    '/reportes': true
+    '/purchases': true,
+    '/reports': true
   };
 
   navItems: NavItem[] = [
     {
       label: 'Dashboard',
-      route: '/inicio',
+      route: '/dashboard',
       icon: 'reports',
       roles: [UserRole.CASHIER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.CUSTOMER_SUPPORT, UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN]
     },
@@ -50,42 +50,42 @@ export class AppShellComponent implements OnInit {
     },
     {
       label: 'Ventas / POS',
-      route: '/ventas',
+      route: '/billing',
       icon: 'billing',
       roles: [UserRole.CASHIER, UserRole.ADMIN]
     },
     {
       label: 'Medicamentos e Inventario',
-      route: '/inventario',
+      route: '/inventory',
       icon: 'inventory',
       roles: [UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.MANAGER, UserRole.ADMIN]
     },
     {
       label: 'Devoluciones',
-      route: '/devoluciones',
+      route: '/returns',
       icon: 'returns',
       roles: [UserRole.CUSTOMER_SUPPORT, UserRole.MANAGER, UserRole.ADMIN]
     },
     {
       label: 'Proveedores',
-      route: '/proveedores',
+      route: '/suppliers',
       icon: 'suppliers',
       roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.ADMIN]
     },
     {
       label: 'Compras',
-      route: '/compras',
+      route: '/purchases',
       icon: 'purchases',
       roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.ADMIN],
       subItems: [
         {
           label: 'Órdenes de Compra',
-          route: '/compras',
+          route: '/purchases',
           roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.ADMIN]
         },
         {
           label: 'Estado de Pedidos',
-          route: '/compras/seguimiento',
+          route: '/purchases/tracking',
           roles: [UserRole.MANAGER, UserRole.STOCK_MONITOR, UserRole.STOCK_KEEPER, UserRole.WAREHOUSE, UserRole.ADMIN]
         },
         {
@@ -95,20 +95,20 @@ export class AppShellComponent implements OnInit {
         },
         {
           label: 'Escanear Productos',
-          route: '/compras/escaner',
+          route: '/purchases/scanner',
           roles: [UserRole.STOCK_KEEPER, UserRole.STOCK_MONITOR, UserRole.WAREHOUSE, UserRole.ADMIN]
         }
       ]
     },
     {
       label: 'Facturación',
-      route: '/historial-compras',
+      route: '/purchase-history',
       icon: 'purchase-history',
       roles: [UserRole.MANAGER, UserRole.ADMIN]
     },
     {
       label: 'Reportes',
-      route: '/reportes',
+      route: '/reports',
       icon: 'reports',
       roles: [UserRole.ANALYST, UserRole.MANAGER, UserRole.ADMIN],
       subItems: [
@@ -126,19 +126,19 @@ export class AppShellComponent implements OnInit {
     },
     {
       label: 'Actividad de usuarios',
-      route: '/actividad-usuarios',
+      route: '/user-activity',
       icon: 'user-activity',
       roles: [UserRole.ADMIN]
     },
     {
       label: 'Historial de accesos',
-      route: '/historial-accesos',
+      route: '/login-history',
       icon: 'login-history',
       roles: [UserRole.ADMIN]
     },
     {
       label: 'Usuarios',
-      route: '/usuarios',
+      route: '/user-management',
       icon: 'user-management',
       roles: [UserRole.ADMIN]
     }
@@ -162,11 +162,11 @@ export class AppShellComponent implements OnInit {
   }
 
   autoOpenParentMenu(): void {
-    if (this.currentRoute.startsWith('/compras')) {
-      this.openMenus['/compras'] = true;
+    if (this.currentRoute.startsWith('/purchases')) {
+      this.openMenus['/purchases'] = true;
     }
-    if (this.currentRoute.startsWith('/reportes')) {
-      this.openMenus['/reportes'] = true;
+    if (this.currentRoute.startsWith('/reports')) {
+      this.openMenus['/reports'] = true;
     }
     
   }
@@ -186,21 +186,21 @@ export class AppShellComponent implements OnInit {
   }
 
   isActive(route: string): boolean {
-    if (route === '/compras') {
-      return this.currentRoute === '/compras' || this.currentRoute === '/compras/';
+    if (route === '/purchases') {
+      return this.currentRoute === '/purchases' || this.currentRoute === '/purchases/';
     }
     return this.currentRoute === route || this.currentRoute.startsWith(route + '?');
   }
 
   isSubItemActive(subRoute: string): boolean {
-    if (subRoute === '/compras') {
-      return this.currentRoute === '/compras' || this.currentRoute === '/compras/';
+    if (subRoute === '/purchases') {
+      return this.currentRoute === '/purchases' || this.currentRoute === '/purchases/';
     }
-    if (subRoute === '/inventario') {
-      return this.currentRoute === '/inventario' || this.currentRoute.startsWith('/inventario?');
+    if (subRoute === '/inventory') {
+      return this.currentRoute === '/inventory' || this.currentRoute.startsWith('/inventory?');
     }
-    if (subRoute === '/medicamentos') {
-      return this.currentRoute.startsWith('/medicamentos');
+    if (subRoute === '/medicines') {
+      return this.currentRoute.startsWith('/medicines');
     }
     return this.currentRoute.startsWith(subRoute);
   }
@@ -227,6 +227,6 @@ export class AppShellComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/acceso/iniciar-sesion']);
+    this.router.navigate(['/auth/login']);
   }
 }

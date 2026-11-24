@@ -81,15 +81,7 @@ class PharmacyControlledSubstanceRegister(models.Model):
 
     # Regulatory information
     schedule = fields.Selection(
-        [
-            ("1", "Schedule I"),
-            ("2", "Schedule II"),
-            ("3", "Schedule III"),
-            ("4", "Schedule IV"),
-            ("5", "Schedule V"),
-            ("unscheduled", "Unscheduled"),
-        ],
-        "Schedule",
+        string="Schedule",
         related="product_id.controlled_substance_schedule",
         readonly=True,
     )

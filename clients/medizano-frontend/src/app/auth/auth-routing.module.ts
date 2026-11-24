@@ -5,22 +5,12 @@ import { UnauthorizedComponent } from './unauthorized/unauthorized.component';
 
 const routes: Routes = [
   {
-    path: 'iniciar-sesion',
+    path: 'login',
     component: LoginComponent
   },
   {
-    path: 'sin-permiso',
-    component: UnauthorizedComponent
-  },
-  {
-    path: 'login',
-    redirectTo: 'iniciar-sesion',
-    pathMatch: 'full'
-  },
-  {
     path: 'unauthorized',
-    redirectTo: 'sin-permiso',
-    pathMatch: 'full'
+    component: UnauthorizedComponent
   }
 ];
 
@@ -29,3 +19,9 @@ const routes: Routes = [
   exports: [RouterModule]
 })
 export class AuthRoutingModule { }
+
+
+
+
+
+

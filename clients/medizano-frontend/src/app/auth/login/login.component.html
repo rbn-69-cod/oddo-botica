@@ -1,52 +1,67 @@
 <main class="access-page">
   <section class="brand-panel" aria-label="Presentación de MediZano">
-    <div class="brand-panel__pattern" aria-hidden="true"></div>
+    <div class="brand-panel__glow" aria-hidden="true"></div>
+    <div class="brand-panel__grid" aria-hidden="true"></div>
 
-    <div class="brand">
-      <div class="brand__mark" aria-hidden="true">
-        <span class="brand__mark-v"></span>
-        <span class="brand__mark-h"></span>
+    <div class="brand-top">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true">
+          <span class="brand__mark-v"></span>
+          <span class="brand__mark-h"></span>
+        </div>
+        <div class="brand__text">
+          <span class="brand__name">MediZano</span>
+          <span class="brand__sub">BOTICA &amp; FARMACIA</span>
+        </div>
       </div>
-      <span class="brand__name">MediZano Botica</span>
+      <span class="brand-badge">POS · ERP Clínico</span>
     </div>
 
     <div class="brand-copy">
-      <p class="brand-copy__eyebrow">Botica simple y segura</p>
+      <p class="brand-copy__eyebrow">Gestión farmacéutica integral</p>
       <h1>Tu botica en orden.<br><span>Tu atención, primero.</span></h1>
-      <p>Administra ventas, medicamentos, stock y atención desde un solo lugar.</p>
+      <p class="brand-copy__lead">
+        Controla ventas, lotes FEFO, vencimientos, pagos con Culqi y Yape y boletas electrónicas desde un solo lugar.
+      </p>
     </div>
 
     <div class="feature-list" aria-label="Beneficios">
       <div class="feature">
-        <span class="feature__check">✓</span>
-        <span>Control de inventario en tiempo real</span>
+        <span class="feature__icon" aria-hidden="true">✓</span>
+        <div>
+          <strong>Inventario y lotes FEFO en tiempo real</strong>
+          <span>Alertas automáticas de stock mínimo y vencimientos</span>
+        </div>
       </div>
       <div class="feature">
-        <span class="feature__check">✓</span>
-        <span>Ventas rápidas y organizadas</span>
+        <span class="feature__icon" aria-hidden="true">✓</span>
+        <div>
+          <strong>Cobros ágiles con Efectivo, Culqi y Yape</strong>
+          <span>Boleta electrónica y envío por correo al instante</span>
+        </div>
       </div>
       <div class="feature">
-        <span class="feature__check">✓</span>
-        <span>Información protegida y confiable</span>
+        <span class="feature__icon" aria-hidden="true">✓</span>
+        <div>
+          <strong>Reportes financieros y auditoría completa</strong>
+          <span>Caja diaria, ventas, kardex y trazabilidad por usuario</span>
+        </div>
       </div>
     </div>
 
-    <p class="brand-panel__footer">MediZano Botica · Ventas e inventario conectados</p>
+    <div class="brand-footer">
+      <span>MediZano Botica · Sistema conectado a Odoo 18</span>
+    </div>
   </section>
 
-  <section class="access-panel">
-    <div class="mobile-brand" aria-label="MediZano">
-      <div class="mobile-brand__mark" aria-hidden="true">+</div>
-      <span>MediZano Botica</span>
-    </div>
-
+  <section class="form-panel" aria-label="Acceso al sistema">
     <div class="access-card">
-      <header class="access-header">
-        <p class="access-header__eyebrow">{{ verificationStep ? 'Verificación segura' : 'Bienvenido' }}</p>
-        <h2>{{ verificationStep ? 'Revisa tu correo' : 'Inicia sesión' }}</h2>
-        <p *ngIf="!verificationStep">Ingresa tus datos para acceder a tu botica.</p>
+      <div class="access-header">
+        <span class="access-eyebrow">{{ verificationStep ? 'VERIFICACIÓN DE SEGURIDAD' : 'BIENVENIDO DE NUEVO' }}</span>
+        <h2>{{ verificationStep ? 'Ingresa tu código' : 'Inicia sesión' }}</h2>
+        <p *ngIf="!verificationStep">Ingresa tus credenciales para acceder al panel de MediZano.</p>
         <p *ngIf="verificationStep">Enviamos un código de 6 dígitos a <strong>{{ maskedEmail }}</strong>.</p>
-      </header>
+      </div>
 
       <form *ngIf="!verificationStep" [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form" novalidate>
         <div class="form-field">
@@ -59,7 +74,7 @@
               id="username"
               type="text"
               formControlName="username"
-              placeholder="Escribe tu usuario"
+              placeholder="Ej. admin o cajero"
               autocomplete="username"
               autofocus
             />
@@ -77,7 +92,7 @@
               id="password"
               [type]="showPassword ? 'text' : 'password'"
               formControlName="password"
-              placeholder="Escribe tu contraseña"
+              placeholder="Ingresa tu contraseña"
               autocomplete="current-password"
             />
             <button
@@ -148,7 +163,7 @@
         </div>
       </form>
 
-      <p class="access-help">Si tienes problemas para ingresar, comunícate con el administrador.</p>
+      <p class="access-help">¿Problemas para acceder? Contacta al administrador de MediZano.</p>
     </div>
   </section>
 </main>

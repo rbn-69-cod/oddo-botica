@@ -16,7 +16,23 @@ export class AuthService {
   constructor(private apiService: ApiService) {}
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.apiService.post<AuthResponse>('/auth/login', credentials);
+    return this.apiService.post<AuthResponse>('/auth/login', credentials).pipe(
+      tap(response => {
+        if (!response.mfaRequired && response.token && response.userId && response.username && response.role) {
+          this.setToken(response.token);
+          const user: User = {
+            id: response.userId,
+            username: response.username,
+            email: response.email || '',
+            fullName: response.fullName || response.username,
+            role: response.role as UserRole,
+            active: true
+          };
+          this.setUser(user);
+          this.currentUserSubject.next(user);
+        }
+      })
+    );
   }
 
   verifyCode(challengeId: string, code: string): Observable<AuthResponse> {

@@ -13,6 +13,7 @@
         <record id="group_pharmacy_cashier" model="res.groups">
             <field name="name">Pharmacy: Cashier</field>
             <field name="category_id" ref="module_category_pharmacy"/>
+            <field name="implied_ids" eval="[(4, ref('point_of_sale.group_pos_user'))]"/>
             <field name="comment">Can handle POS sales, basic dispensing, and cash management</field>
         </record>
         
@@ -26,12 +27,14 @@
         <record id="group_pharmacy_storekeeper" model="res.groups">
             <field name="name">Pharmacy: Storekeeper</field>
             <field name="category_id" ref="module_category_pharmacy"/>
+            <field name="implied_ids" eval="[(4, ref('stock.group_stock_user'))]"/>
             <field name="comment">Can manage inventory, stock transfers, and expiry tracking</field>
         </record>
 
         <record id="group_pharmacy_warehouse" model="res.groups">
             <field name="name">Pharmacy: Warehouse</field>
             <field name="category_id" ref="module_category_pharmacy"/>
+            <field name="implied_ids" eval="[(4, ref('purchase.group_purchase_user')), (4, ref('stock.group_stock_user'))]"/>
             <field name="comment">Can manage purchasing, receiving, and warehouse operations</field>
         </record>
         
@@ -54,7 +57,10 @@
         <record id="group_pharmacy_admin" model="res.groups">
             <field name="name">Pharmacy: Administrator</field>
             <field name="category_id" ref="module_category_pharmacy"/>
-            <field name="implied_ids" eval="[(4, ref('group_pharmacy_manager'))]"/>
+            <field name="implied_ids" eval="[(4, ref('group_pharmacy_manager')), 
+                                          (4, ref('point_of_sale.group_pos_manager')),
+                                          (4, ref('purchase.group_purchase_manager')),
+                                          (4, ref('stock.group_stock_manager'))]"/>
             <field name="comment">Full system administration access</field>
         </record>
         

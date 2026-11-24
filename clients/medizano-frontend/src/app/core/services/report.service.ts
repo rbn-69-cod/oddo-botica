@@ -49,6 +49,10 @@ export class ReportService {
     );
   }
 
+  updateBscTargets(targets: Array<{ code: string; target: number }>): Observable<{ success: boolean; updated: number }> {
+    return this.apiService.put<{ success: boolean; updated: number }>('/admin/bsc/targets', { targets });
+  }
+
   private buildCashRegisterFallback(report: SalesReportResponse): CashRegisterReportResponse {
     const totalCollected = (report.totalCash || 0) + (report.totalUpi || 0) + (report.totalCard || 0);
     const subtotal = Math.max(0, (report.totalSales || 0) - (report.totalGst || 0));

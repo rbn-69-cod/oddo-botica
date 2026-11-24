@@ -131,7 +131,15 @@ class StockPicking(models.Model):
                             if move_line.lot_id.is_quarantined:
                                 raise ValidationError(_('Cannot transfer quarantined batch: %s') % move_line.lot_id.name)
         
-        return super().button_validate()
+        res = super().button_validate()
+        for picking in self:
+            if picking.state == 'done' and picking.purchase_id:
+                incomings = picking.purchase_id.picking_ids.filtered(lambda p: p.picking_type_id.code == 'incoming')
+                if incomings and all(p.state in ('done', 'cancel') for p in incomings):
+                    picking.purchase_id.medizano_state = 'RECIBIDA'
+                elif any(p.state == 'done' for p in incomings):
+                    picking.purchase_id.medizano_state = 'PARCIALMENTE_RECIBIDA'
+        return res
     
     @api.depends('move_ids', 'move_line_ids')
     def _compute_has_variance(self):

@@ -16,7 +16,9 @@ export interface PaymentRequest {
 export enum PaymentMode {
   CASH = 'CASH',
   PAYPAL = 'PAYPAL',
-  MERCADO_PAGO = 'MERCADO_PAGO'
+  MERCADO_PAGO = 'MERCADO_PAGO',
+  CULQI = 'CULQI',
+  YAPE = 'YAPE'
 }
 
 
@@ -92,6 +94,8 @@ export interface PaymentConfigResponse {
   payPalBaseUrl?: string;
   mpPublicKey?: string;
   mpCurrency?: string;
+  culqiPublicKey?: string;
+  culqiCurrency?: string;
 }
 
 // PayPal Sandbox interfaces
@@ -212,4 +216,30 @@ export interface EmailReceiptResponse {
   seriesNumber: string;
   message: string;
   timestamp: string;
+}
+
+
+// Culqi interfaces
+export interface CulqiChargeRequest {
+  ordenId: number;
+  tokenId: string;
+  email?: string;
+  channel?: 'CARD' | 'YAPE';
+}
+
+export interface CulqiChargeResponse {
+  pagoId: number;
+  ordenId: number;
+  numeroOrden: string;
+  chargeId: string;
+  referenceCode?: string;
+  status: string;
+  paymentChannel?: 'CARD' | 'YAPE';
+  message?: string;
+  amount: number;
+  currency: string;
+  cardBrand?: string;
+  last4?: string;
+  timestamp: string;
+  orderConfirmed?: boolean;
 }

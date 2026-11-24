@@ -1,0 +1,1132 @@
+
+.inventory-screen {
+  padding: 24px;
+  max-width: 100%; box-sizing: border-box;
+  margin: 0 auto;
+
+  /* Tarjetas KPI */
+  .inventory-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+
+    @media (max-width: 1440px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    @media (max-width: 860px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (max-width: 520px) {
+      grid-template-columns: 1fr;
+    }
+
+    .kpi-card {
+      background: #ffffff;
+      padding: 18px 20px;
+      border-radius: 18px;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.035);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+        border-color: #0284c7;
+      }
+
+      .kpi-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+      }
+
+      .bg-blue-light { background: #e0f2fe; }
+      .bg-teal-light { background: #ccfbf1; }
+      .bg-amber-light { background: #fef3c7; }
+      .bg-orange-light { background: #ffedd5; }
+      .bg-red-light { background: #fee2e2; }
+
+      .kpi-content {
+        flex: 1;
+
+        .kpi-title {
+          font-size: 12.5px;
+          font-weight: 700;
+          color: #64748b;
+          margin-bottom: 3px;
+        }
+
+        .kpi-value {
+          font-size: 26px;
+          font-weight: 800;
+          line-height: 1.1;
+        }
+
+        .text-primary { color: #0284c7 !important; }
+        .text-teal { color: #0d9488 !important; }
+        .text-warning { color: #d97706 !important; }
+        .text-orange { color: #ea580c !important; }
+        .text-danger { color: #dc2626 !important; }
+
+        .kpi-sub {
+          font-size: 11px;
+          color: #94a3b8;
+          margin-top: 3px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+  }
+
+  /* Barra de Filtros y Búsqueda */
+  .inventory-toolbar-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+
+    .filter-pills-row {
+      .inv-filter-btn {
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 7px 14px;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: #f1f5f9;
+          color: #0f172a;
+          border-color: #cbd5e1;
+        }
+
+        &.active {
+          background: #0284c7;
+          border-color: #0284c7;
+          color: #ffffff;
+          box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+        }
+
+        &.btn-stock-opt.active { background: #0d9488; border-color: #0d9488; }
+        &.btn-stock-low.active { background: #d97706; border-color: #d97706; }
+        &.btn-fefo-alert.active { background: #ea580c; border-color: #ea580c; }
+        &.btn-fefo-retirar.active { background: #be123c; border-color: #be123c; }
+        &.btn-expired.active { background: #dc2626; border-color: #dc2626; }
+        &.btn-receta.active { background: #7c3aed; border-color: #7c3aed; }
+        &.btn-libre.active { background: #059669; border-color: #059669; }
+      }
+    }
+
+    .search-wrap {
+      flex: 1;
+      max-width: 380px;
+      min-width: 260px;
+
+      .inv-search-input {
+        width: 100%;
+        border-radius: 12px;
+        font-size: 13.5px;
+        border: 1.5px solid #cbd5e1;
+        padding: 9px 16px;
+        background: #f8fafc;
+        transition: all 0.2s ease;
+
+        &:focus {
+          background: #ffffff;
+          border-color: #0284c7;
+          box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+          outline: none;
+        }
+      }
+    }
+  }
+
+  /* Tabla de Inventario Moderna */
+  .inventory-table-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 20px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.035);
+
+    .inv-modern-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+
+      thead th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px 14px;
+        border-bottom: 1.5px solid #e2e8f0;
+      }
+
+      tbody tr {
+        transition: background 0.15s ease;
+
+        &:hover {
+          background: #f8fafc;
+        }
+
+        &.row-expired {
+          background: #fff1f2;
+          &:hover { background: #ffe4e6; }
+        }
+
+        &.row-quarantine {
+          background: #fffbeb;
+          &:hover { background: #fef3c7; }
+        }
+
+        td {
+          padding: 12px 14px;
+          border-bottom: 1px solid #f1f5f9;
+          vertical-align: middle;
+        }
+      }
+
+      .cell-med-info {
+        .med-title-text {
+          color: #0f172a;
+          font-size: 14.5px;
+        }
+
+        .badge-lab {
+          background: #f1f5f9;
+          color: #0369a1;
+          padding: 2px 8px;
+          border-radius: 6px;
+          font-size: 11.5px;
+          border: 1px solid #cbd5e1;
+        }
+
+        .badge-barcode {
+          background: #f8fafc;
+          color: #64748b;
+          padding: 2px 6px;
+          border-radius: 6px;
+          border: 1px solid #e2e8f0;
+        }
+      }
+
+      .badge-pill-receta {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+
+        &.badge-receta-yes {
+          background: #fef3c7;
+          color: #b45309;
+          border: 1px solid #fcd34d;
+        }
+
+        &.badge-receta-no {
+          background: #dcfce7;
+          color: #15803d;
+          border: 1px solid #86efac;
+        }
+      }
+
+      .th-med-info, .cell-med-info {
+        min-width: 180px;
+      }
+
+      .th-prescription, .cell-prescription {
+        width: 130px;
+        white-space: nowrap;
+      }
+
+      .th-batch, .cell-batch {
+        width: 130px;
+        white-space: nowrap;
+      }
+
+      .th-fefo, .cell-fefo {
+        width: 135px;
+        white-space: nowrap;
+      }
+
+      .th-stock, .cell-stock {
+        width: 90px;
+        white-space: nowrap;
+      }
+
+      .th-prices, .cell-prices {
+        width: 105px;
+        white-space: nowrap;
+      }
+
+      .th-actions, .cell-actions {
+        width: 115px;
+        white-space: nowrap;
+      }
+
+      .batch-pill-badge {
+        display: inline-block;
+        white-space: nowrap;
+        background: #f1f5f9;
+        color: #1e293b;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid #cbd5e1;
+        letter-spacing: 0.5px;
+      }
+
+      .badge-fefo-pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+
+        &.badge-success { background: #dcfce7; color: #166534; }
+        &.badge-warning-glow { background: #ffedd5; color: #c2410c; }
+        &.badge-warning-dark { background: #fee2e2; color: #991b1b; font-weight: 800; }
+        &.badge-danger-glow { background: #dc2626; color: #ffffff; font-weight: 800; }
+      }
+
+      .badge-danger-soft {
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+      }
+    }
+  }
+
+  /* Toggle de Receta Médica en Modal */
+  .btn-prescription-toggle {
+    border: 2px solid #cbd5e1;
+    background: #ffffff;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+
+    strong {
+      display: block;
+      color: #1e293b;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    small {
+      color: #64748b;
+    }
+
+    &:hover {
+      border-color: #0284c7;
+      background: #f0f9ff;
+    }
+
+    &.active-danger {
+      border-color: #f59e0b;
+      background: #fef3c7;
+      strong { color: #b45309; }
+    }
+
+    &.active-success {
+      border-color: #10b981;
+      background: #dcfce7;
+      strong { color: #15803d; }
+    }
+  }
+}
+
+/* Modales personalizados */
+.custom-modal-fade {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-dialog-center {
+  width: 100%;
+  animation: modalScale 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScale {
+  from { opacity: 0; transform: scale(0.92) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.card-glass {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #94a3b8;
+  cursor: pointer;
+  line-height: 1;
+  &:hover { color: #0f172a; }
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.badge-tag {
+  display: inline-block;
+  background: #e0f2fe;
+  color: #0284c7;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 12px;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+
+/* ==========================================================================
+   BUTTONS SYSTEM FOR INVENTORY
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  border: none;
+  text-decoration: none;
+  box-sizing: border-box;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+    box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45);
+  }
+}
+
+.btn-outline {
+  background: #ffffff;
+  color: #334155;
+  border: 1.5px solid #cbd5e1;
+
+  &:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+  }
+}
+
+.btn-xs {
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 8px;
+}
+
+.btn-outline-primary {
+  background: #f0f9ff;
+  border: 1.5px solid #bae6fd;
+  color: #0284c7;
+
+  &:hover:not(:disabled) {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+  }
+}
+
+.btn-outline-secondary {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  color: #475569;
+
+  &:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+}
+
+.btn-outline-danger {
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #dc2626;
+
+  &:hover:not(:disabled) {
+    background: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+  }
+}
+
+.spinner-border {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  vertical-align: -0.125em;
+  border: 0.2em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-border 0.75s linear infinite;
+}
+
+.spinner-border-sm {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-width: 0.15em;
+}
+
+@keyframes spinner-border {
+  to { transform: rotate(360deg); }
+}
+
+
+
+/* ==========================================================================
+   ESTILOS MODERNOS Y PROFESIONALES PARA MODALES DE INVENTARIO
+   ========================================================================== */
+
+.custom-modal-fade {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.modal-dialog-center {
+  width: 100%;
+  margin: auto;
+  animation: modalScalePop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+
+  &.modal-dialog-lg { max-width: 680px; }
+  &.modal-dialog-md { max-width: 520px; }
+  &.modal-dialog-sm { max-width: 440px; }
+}
+
+@keyframes modalScalePop {
+  from { opacity: 0; transform: scale(0.93) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-card-pro {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  padding: 28px;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+/* Header */
+.modal-header-pro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid #f1f5f9;
+
+  .header-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .header-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+
+    &.bg-blue-subtle {
+      background: #e0f2fe;
+      color: #0284c7;
+    }
+    &.bg-amber-subtle {
+      background: #fef3c7;
+      color: #d97706;
+    }
+  }
+
+  .modal-title-text {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+  }
+
+  .modal-subtitle-text {
+    font-size: 13px;
+    color: #64748b;
+    margin: 4px 0 0 0;
+    font-weight: 500;
+  }
+
+  .modal-close-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: none;
+    font-size: 22px;
+    line-height: 1;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #fee2e2;
+      color: #dc2626;
+      transform: rotate(90deg);
+    }
+  }
+}
+
+/* Área de scroll del formulario */
+.modal-scroll-area {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-right: -6px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+  }
+}
+
+/* Grupos y Campos de Entrada */
+.form-group-pro {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+
+  .form-label-pro {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+
+    .required-star {
+      color: #ef4444;
+      font-weight: 800;
+      margin-left: 2px;
+    }
+  }
+
+  .label-hint-text {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .form-input-pro {
+    width: 100%;
+    height: 44px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #0f172a;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-color: #94a3b8;
+    }
+
+    &:focus {
+      background: #ffffff;
+      border-color: #0284c7;
+      box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.12);
+      outline: none;
+    }
+
+    &::placeholder {
+      color: #94a3b8;
+      font-weight: 400;
+    }
+  }
+
+  .select-wrapper-pro {
+    position: relative;
+    width: 100%;
+
+    .form-select-pro {
+      width: 100%;
+      height: 44px;
+      padding: 10px 38px 10px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #0f172a;
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+
+      &:focus {
+        background: #ffffff;
+        border-color: #0284c7;
+        box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.12);
+        outline: none;
+      }
+    }
+
+    &::after {
+      content: "▾";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: #64748b;
+      pointer-events: none;
+    }
+  }
+}
+
+/* Grillas */
+.grid-col-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.grid-col-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+/* Selector Interactivo de Receta Médica */
+.prescription-box-pro {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+
+  .prescription-box-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 12px;
+
+    .required-star {
+      color: #ef4444;
+    }
+  }
+
+  .prescription-toggle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    @media (max-width: 540px) { grid-template-columns: 1fr; }
+  }
+
+  .toggle-card-pro {
+    background: #ffffff;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.22s ease;
+    box-sizing: border-box;
+
+    &:hover {
+      border-color: #0284c7;
+      background: #f0f9ff;
+      transform: translateY(-1px);
+    }
+
+    .toggle-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .toggle-card-title {
+        font-size: 13.5px;
+        font-weight: 800;
+        color: #1e293b;
+      }
+    }
+
+    .toggle-card-desc {
+      font-size: 11.5px;
+      color: #64748b;
+      line-height: 1.3;
+    }
+
+    &.is-danger-active {
+      border-color: #f59e0b;
+      background: #fffbeb;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.15);
+
+      .toggle-card-title { color: #b45309; }
+      .toggle-card-desc { color: #92400e; }
+    }
+
+    &.is-success-active {
+      border-color: #10b981;
+      background: #ecfdf5;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.15);
+
+      .toggle-card-title { color: #065f46; }
+      .toggle-card-desc { color: #047857; }
+    }
+  }
+}
+
+/* Tarjeta de Stock Inicial */
+.initial-stock-card-pro {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 8px;
+
+  .stock-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .stock-header-icon {
+      font-size: 22px;
+    }
+
+    .stock-header-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #166534;
+      display: block;
+    }
+
+    .stock-header-sub {
+      font-size: 11.5px;
+      color: #15803d;
+    }
+  }
+
+  /* Switch Toggle */
+  .switch-toggle-pro {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+
+    input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+
+      &:checked + .slider-round {
+        background-color: #16a34a;
+
+        &:before {
+          transform: translateX(20px);
+        }
+      }
+    }
+
+    .slider-round {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #cbd5e1;
+      transition: 0.25s;
+      border-radius: 26px;
+
+      &:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.25s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+    }
+  }
+
+  .stock-fields-wrap {
+    border-top: 1.5px dashed #86efac;
+  }
+}
+
+/* Footer Modal */
+.modal-footer-pro {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1.5px solid #f1f5f9;
+
+  .btn-pro {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    font-family: inherit;
+
+    &.btn-cancel {
+      background: #f1f5f9;
+      color: #475569;
+
+      &:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+      }
+    }
+
+    &.btn-save-primary {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+        box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45);
+        transform: translateY(-1px);
+      }
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+/* MODAL 2: STEPPER DE STOCK */
+.batch-info-pill {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 16px;
+
+  .batch-med-name {
+    font-size: 15px;
+    color: #0f172a;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .batch-meta-sub {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+
+    .pill-tag {
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 8px;
+    }
+  }
+}
+
+.stepper-card-pro {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px 20px;
+
+  .stepper-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #64748b;
+    letter-spacing: 0.6px;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .stepper-controls-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    .stepper-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      border: 1.5px solid #cbd5e1;
+      background: #ffffff;
+      font-size: 22px;
+      font-weight: 800;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #0284c7;
+        color: #ffffff;
+        border-color: #0284c7;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+        transform: scale(1.05);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
+    .stepper-input {
+      width: 140px;
+      height: 56px;
+      border: 2px solid #0284c7;
+      border-radius: 14px;
+      background: #ffffff;
+      font-size: 32px;
+      font-weight: 800;
+      color: #0f172a;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.12);
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.2);
+      }
+    }
+  }
+
+  .stepper-footnote {
+    font-size: 11.5px;
+    color: #64748b;
+    margin-top: 10px;
+    display: block;
+    font-weight: 500;
+  }
+}
+
+.text-emerald {
+  color: #059669 !important;
+}
+

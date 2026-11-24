@@ -73,6 +73,26 @@ class PharmacyDashboard(models.TransientModel):
     # Branch Metrics (if multi-branch)
     branch_id = fields.Many2one('pharmacy.branch', 'Branch')
     branch_count = fields.Integer('Number of Branches', readonly=True)
+
+    def read(self, fields=None, load='_classic_read'):
+        """Always render live operational metrics in the Odoo dashboard.
+
+        The dashboard is a transient record, but its form can be reopened with
+        an old record id.  Recalculate stock fields while reading it so those
+        stale stored values never reappear in the Odoo UI.
+        """
+        result = super().read(fields=fields, load=load)
+        metric_fields = {
+            'total_sales', 'sales_today', 'sales_week', 'sales_month',
+            'sales_growth', 'total_orders', 'orders_today', 'orders_week',
+            'orders_month', 'avg_order_value', 'refunds_today', 'stock_units',
+            'total_products', 'low_stock_products', 'out_of_stock_products',
+        }
+        if result and (not fields or metric_fields.intersection(fields)):
+            live_data = self.get_dashboard_data()
+            for row in result:
+                row.update({key: value for key, value in live_data.items() if key in metric_fields})
+        return result
     
     @api.model
     def get_dashboard_data(self, branch_id=None):
@@ -112,9 +132,14 @@ class PharmacyDashboard(models.TransientModel):
         refunds_today = abs(self._get_refunds(today, today))
         
         # Stock Metrics
-        pharma_products = self.env['product.product'].search([('is_pharma_product', '=', True)])
-        total_products = len(pharma_products)
-        stock_units = sum(pharma_products.mapped('qty_available'))
+        # Dashboard inventory is operational stock: do not include historical
+        # catalogue records that have no physical quantity available.
+        pharma_products = self.env['product.product'].search([
+            ('is_pharma_product', '=', True), ('active', '=', True),
+        ])
+        current_products = pharma_products.filtered(lambda product: product.qty_available > 0)
+        total_products = len(current_products)
+        stock_units = sum(current_products.mapped('qty_available'))
         low_stock_products = self._get_low_stock_count()
         out_of_stock_products = self._get_out_of_stock_count()
         
@@ -182,22 +207,23 @@ class PharmacyDashboard(models.TransientModel):
     
     def _get_low_stock_count(self):
         """Get count of products with low stock"""
-        # Products with quantity < 10
-        products = self.env['product.product'].search([('is_pharma_product', '=', True)])
+        # Only products physically available now can be low on stock.  Zero
+        # stock catalogue/history rows must not be counted as low stock.
+        products = self.env['product.product'].search([
+            ('is_pharma_product', '=', True), ('active', '=', True),
+        ])
         low_stock = 0
         for product in products:
-            if product.virtual_available < 10:
+            if 0 < product.qty_available <= 10:
                 low_stock += 1
         return low_stock
     
     def _get_out_of_stock_count(self):
         """Get count of out of stock products"""
-        products = self.env['product.product'].search([('is_pharma_product', '=', True)])
-        out_of_stock = 0
-        for product in products:
-            if product.virtual_available <= 0:
-                out_of_stock += 1
-        return out_of_stock
+        # The operational dashboard intentionally excludes discontinued and
+        # unstocked catalogue records; they are handled in purchasing, not as
+        # current pharmacy inventory.
+        return 0
     
     def _get_expiring_soon_count(self):
         """Get count of products expiring within 30 days"""

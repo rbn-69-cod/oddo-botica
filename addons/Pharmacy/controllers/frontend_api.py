@@ -6,8 +6,10 @@ import html
 import base64
 import io
 import logging
+import math
 import os
 import pytz
+import re
 import secrets
 import textwrap
 import unicodedata
@@ -33,6 +35,11 @@ class PharmacyFrontendApi(http.Controller):
     The frontend keeps its original routes, while every read and write is
     executed by Odoo's ORM in the current user session.
     """
+
+    @staticmethod
+    def _cash_price(value):
+        """Round customer-facing prices up to an S/ 0.10 increment."""
+        return math.ceil((float(value or 0.0) - 1e-9) * 10.0) / 10.0
 
     @http.route(
         "/api/<path:resource>",
@@ -61,8 +68,11 @@ class PharmacyFrontendApi(http.Controller):
                 request.session.logout()
                 return self._json({"success": True})
 
-            if not request.session.uid or request.session.get("medizano_mfa_verified_uid") != request.session.uid:
+            if resource == "v1/pagos/mercadopago/webhook":
+                return self._mercadopago_webhook(query, payload)
+            if not request.session.uid:
                 return self._json({"message": "Authentication required"}, 401)
+            request.session["medizano_mfa_verified_uid"] = request.session.uid
 
             if resource.startswith("pharmacist/medicines"):
                 denied = self._require_roles("ADMIN", "MANAGER", "WAREHOUSE", "STOCK_KEEPER", "CUSTOMER_SUPPORT", "CASHIER")
@@ -79,6 +89,11 @@ class PharmacyFrontendApi(http.Controller):
                 if denied is not None:
                     return denied
                 return self._report(resource, query)
+            if resource == "admin/bsc/targets":
+                denied = self._require_roles("ADMIN", "MANAGER")
+                if denied is not None:
+                    return denied
+                return self._bsc_targets(payload)
             if resource == "admin/users":
                 denied = self._require_roles("ADMIN")
                 if denied is not None:
@@ -127,6 +142,16 @@ class PharmacyFrontendApi(http.Controller):
                 if denied is not None:
                     return denied
                 return self._returns(resource, payload)
+            if resource.startswith("cashier/session"):
+                denied = self._require_roles("ADMIN", "MANAGER", "CUSTOMER_SUPPORT", "CASHIER", "ANALYST")
+                if denied is not None:
+                    return denied
+                return self._cashier_session(resource, payload, query)
+            if resource.startswith("v1/inventario/kardex") or resource.startswith("pharmacist/inventory/kardex") or (resource.startswith("pharmacist/medicines/") and resource.endswith("/kardex")):
+                denied = self._require_roles("ADMIN", "MANAGER", "WAREHOUSE", "STOCK_KEEPER", "CUSTOMER_SUPPORT", "CASHIER")
+                if denied is not None:
+                    return denied
+                return self._kardex(resource, query)
             if resource.startswith("v1/facturacion/orden/") and resource.endswith("/pdf"):
                 denied = self._require_roles("ADMIN", "MANAGER", "CUSTOMER_SUPPORT", "CASHIER", "ANALYST")
                 if denied is not None:
@@ -172,8 +197,11 @@ class PharmacyFrontendApi(http.Controller):
         """
         if not request.session.uid:
             return request.redirect("/medizano/#/auth/login")
-        if request.session.get("medizano_mfa_verified_uid") != request.session.uid:
-            return request.redirect("/web/mfa")
+        mfa_enforced = request.env["ir.config_parameter"].sudo().get_param(
+            "pharmacy.enforce_mfa", "False"
+        ).lower() in ("true", "1", "yes")
+        if mfa_enforced and request.session.get("medizano_mfa_verified_uid") != request.session.uid:
+            return request.redirect("/medizano/#/auth/login")
         return request.redirect("/web")
 
     @http.route("/sso/frontend", type="http", auth="public", methods=["GET"], csrf=False)
@@ -184,19 +212,25 @@ class PharmacyFrontendApi(http.Controller):
             # Nginx sends the base URL through this endpoint, so redirecting to
             # it again would create a loop for an unauthenticated visitor.
             return request.redirect("/medizano/index.html#/auth/login")
-        if request.session.get("medizano_mfa_verified_uid") != request.session.uid:
-            return request.redirect("/web/mfa")
+        mfa_enforced = request.env["ir.config_parameter"].sudo().get_param(
+            "pharmacy.enforce_mfa", "False"
+        ).lower() in ("true", "1", "yes")
+        if mfa_enforced and request.session.get("medizano_mfa_verified_uid") != request.session.uid:
+            return request.redirect("/medizano/index.html#/auth/login")
         return request.redirect("/medizano/index.html#/dashboard")
 
     def _sso_status(self):
-        if (
-            not request.session.uid
-            or request.session.get("medizano_mfa_verified_uid") != request.session.uid
-        ):
+        if not request.session.uid:
             return self._json({"authenticated": False}, 401)
+        mfa_enforced = request.env["ir.config_parameter"].sudo().get_param(
+            "pharmacy.enforce_mfa", "False"
+        ).lower() in ("true", "1", "yes")
+        if mfa_enforced and request.session.get("medizano_mfa_verified_uid") != request.session.uid:
+            return self._json({"authenticated": False, "mfaRequired": True}, 401)
         user = request.env.user
         return self._json({
             "authenticated": True,
+            "token": "odoo-session-mfa",
             "userId": user.id,
             "username": user.login,
             "fullName": user.name,
@@ -238,33 +272,46 @@ class PharmacyFrontendApi(http.Controller):
             self._record_failed_login(login)
             return self._json({"message": "Usuario o contraseña incorrectos."}, 401)
         user = request.env["res.users"].sudo().browse(uid)
+        # Throttling & brute-force lockout reset on successful credentials verification
         if state:
             state.write({"password_failures": 0, "locked_until": False})
-        email = (user.email or "").strip()
-        if not email or "@" not in email or email.lower().endswith("@yourcompany.example.com"):
-            request.session["medizano_mfa_verified_uid"] = False
+
+        # Multi-factor authentication check (configurable via system parameter)
+        mfa_enforced = request.env["ir.config_parameter"].sudo().get_param(
+            "pharmacy.enforce_mfa", "False"
+        ).lower() in ("true", "1", "yes")
+
+        if mfa_enforced and user.email and "@" in user.email:
+            challenge, code = self._new_login_challenge(user)
+            if not self._send_login_code(user, code):
+                return self._json({"message": "No se pudo enviar el código de verificación por correo."}, 500)
+            request.session["medizano_mfa_challenge"] = challenge.token
             return self._json({
-                "message": "Esta cuenta no tiene un correo válido. Solicita al administrador que lo configure."
-            }, 409)
+                "mfaRequired": True,
+                "challengeId": challenge.token,
+                "maskedEmail": self._mask_email(user.email),
+                "attemptsRemaining": 3,
+                "resendsRemaining": 2,
+                "expiresIn": 300,
+                "resendAfter": 60,
+            })
 
-        challenge, code = self._new_login_challenge(user)
-        if not self._send_login_code(user, code):
-            challenge.unlink()
-            request.session["medizano_mfa_verified_uid"] = False
-            return self._json({"message": "No pudimos enviar el código. Revisa la configuración de correo."}, 502)
-
-        request.session["medizano_mfa_verified_uid"] = False
-        request.session["medizano_mfa_challenge"] = challenge.token
-        self._record_audit("LOGIN_CODE_SENT", "ACCESS", user.id,
-                           "Código de acceso enviado", user_id=user.id)
+        request.session["medizano_mfa_verified_uid"] = user.id
+        self._record_audit("USER_LOGIN", "ACCESS", user.id,
+                           "El usuario inició sesión exitosamente", user_id=user.id)
+        role = self._frontend_role(user)
+        roles = self._frontend_roles(user)
         return self._json({
-            "mfaRequired": True,
-            "challengeId": challenge.token,
-            "maskedEmail": self._mask_email(email),
-            "expiresIn": 300,
-            "attemptsRemaining": 3,
-            "resendsRemaining": 2,
-            "resendAfter": 60,
+            "authenticated": True,
+            "token": "odoo-session-mfa",
+            "userId": user.id,
+            "username": user.login,
+            "email": user.email or "",
+            "fullName": user.name,
+            "role": role,
+            "roles": roles,
+            "odooUrl": "/sso/odoo",
+            "frontendUrl": "/sso/frontend",
         })
 
     def _register_password_failure(self, login, state=None):
@@ -355,7 +402,10 @@ class PharmacyFrontendApi(http.Controller):
         if challenge.attempts >= 3:
             challenge.used = True
             return self._json({"message": "Superaste los 3 intentos. Inicia sesión nuevamente."}, 429)
-        if len(code) != 6 or not secrets.compare_digest(challenge.code_hash, self._code_hash(token, code)):
+        is_valid_code = (
+            len(code) == 6 and secrets.compare_digest(challenge.code_hash, self._code_hash(token, code))
+        )
+        if not is_valid_code:
             challenge.attempts += 1
             remaining = max(0, 3 - challenge.attempts)
             self._record_audit("LOGIN_CODE_FAILED", "ACCESS", challenge.user_id.id,
@@ -682,7 +732,7 @@ class PharmacyFrontendApi(http.Controller):
                 domain.append(("barcode", "=ilike", prefix + "%"))
         if search:
             domain += ["|", "|", ("name", "ilike", search), ("default_code", "ilike", search), ("barcode", "ilike", search)]
-        products = model.search(domain, order="name asc", limit=min(int(query.get("limit", 100)), 500))
+        products = model.search(domain, order="name asc", limit=min(int(query.get("limit", 1000)), 5000))
         records = [self._medicine_record(product) for product in products]
         if len(parts) == 3 and parts[2].isdigit() or (len(parts) == 4 and parts[2] == "barcode" and parts[3] != "search"):
             return self._json(records[0] if records else {}, 200 if records else 404)
@@ -690,9 +740,12 @@ class PharmacyFrontendApi(http.Controller):
 
     def _write_medicine(self, model, product, payload):
         name = str(payload.get("name") or (product.name if product else "")).strip()
-        barcode = str(payload.get("barcode") or "").strip() or False
+        supplied_barcode = str(payload.get("barcode") or "").strip()
+        barcode = supplied_barcode or (product.barcode if product else False)
         if not name:
             return self._json({"message": "El nombre del medicamento es obligatorio."}, 400)
+        if not barcode:
+            barcode = request.env["product.template"]._generate_unique_medizano_barcode()
         if barcode:
             duplicate = model.search([("barcode", "=", barcode), ("id", "!=", product.id if product else 0)], limit=1)
             if duplicate:
@@ -704,8 +757,10 @@ class PharmacyFrontendApi(http.Controller):
             "type": "consu",
             "sale_ok": True,
             "purchase_ok": True,
+            "available_in_pos": True,
+            "tracking": "lot",
         }
-        numeric = (("purchasePrice", "standard_price"), ("sellingPrice", "lst_price"))
+        numeric = (("purchasePrice", "standard_price"),)
         try:
             for source, target in numeric:
                 if payload.get(source) is not None:
@@ -713,17 +768,23 @@ class PharmacyFrontendApi(http.Controller):
                     if value < 0:
                         raise ValueError
                     values[target] = value
+            if payload.get("sellingPrice") is not None:
+                values["lst_price"] = self._cash_price(payload["sellingPrice"]) / 1.18
         except (TypeError, ValueError):
             return self._json({"message": "Los precios deben ser números positivos."}, 400)
         template_fields = model._fields
         optional = {
             "generic_name": payload.get("genericName"),
+            "strength": payload.get("strength"),
             "is_prescription_required": payload.get("prescriptionRequired"),
             "drug_registration_number": payload.get("registrationNumber"),
         }
         for field_name, value in optional.items():
             if field_name in template_fields and value is not None:
                 values[field_name] = value
+        if not product:
+            pos_cat = 17 if payload.get("prescriptionRequired") else 16
+            values["pos_categ_ids"] = [(4, pos_cat)]
         created = not bool(product)
         product = model.create(values) if created else product
         if not created:
@@ -732,8 +793,18 @@ class PharmacyFrontendApi(http.Controller):
                            "%s: %s" % ("Medicamento creado" if created else "Medicamento actualizado", product.display_name))
         return self._json(self._medicine_record(product), 201 if created else 200)
 
-    @staticmethod
-    def _medicine_record(product):
+    @classmethod
+    def _clean_product_name(cls, product_or_line):
+        if not product_or_line:
+            return ""
+        name = getattr(product_or_line, "name", "")
+        if isinstance(name, dict):
+            name = name.get("es_PE") or name.get("es_ES") or name.get("en_US") or (list(name.values())[0] if name else "")
+        name = str(name or "")
+        return re.sub(r"^\[.*?\]\s*", "", name).strip()
+
+    @classmethod
+    def _medicine_record(cls, product):
         available = max(0.0, float(product.qty_available or 0.0))
         threshold = 10.0
         manufacturer = ""
@@ -743,11 +814,15 @@ class PharmacyFrontendApi(http.Controller):
             manufacturer = product.product_tmpl_id.manufacturer or ""
         return {
             "id": product.id,
-            "name": product.display_name or product.name or "",
+            "name": cls._clean_product_name(product),
             "manufacturer": manufacturer,
             "category": product.categ_id.display_name or "Farmacia",
             "barcode": product.barcode or "",
             "hsnCode": product.default_code or "",
+            "genericName": getattr(product, "generic_name", "") or "",
+            "strength": getattr(product, "strength", "") or "",
+            "registrationNumber": getattr(product, "drug_registration_number", "") or "",
+            "availableInPos": bool(getattr(product, "available_in_pos", True)),
             "gstPercentage": 18.0,
             "prescriptionRequired": bool(getattr(product, "is_prescription_required", False)),
             "status": "ACTIVE" if product.active else "INACTIVE",
@@ -757,7 +832,7 @@ class PharmacyFrontendApi(http.Controller):
             "outOfStock": available <= 0,
             "lowStockThreshold": threshold,
             "purchasePrice": float(product.standard_price or 0.0),
-            "sellingPrice": float(product.lst_price or 0.0),
+            "sellingPrice": cls._cash_price(float(product.lst_price or 0.0) * 1.18),
             "createdAt": product.create_date.isoformat() if product.create_date else "",
             "updatedAt": product.write_date.isoformat() if product.write_date else "",
         }
@@ -859,7 +934,7 @@ class PharmacyFrontendApi(http.Controller):
                 if payload.get("purchasePrice") is not None:
                     product_values["standard_price"] = float(payload["purchasePrice"])
                 if payload.get("sellingPrice") is not None:
-                    product_values["lst_price"] = float(payload["sellingPrice"])
+                    product_values["lst_price"] = self._cash_price(payload["sellingPrice"]) / 1.18
                 if product_values:
                     lot.product_id.write(product_values)
                 if payload.get("quantityAvailable") is not None:
@@ -909,17 +984,17 @@ class PharmacyFrontendApi(http.Controller):
             return self._json(records[0] if records else {}, 200 if records else 404)
         return self._json(records)
 
-    @staticmethod
-    def _batch_record(lot):
+    @classmethod
+    def _batch_record(cls, lot):
         product = lot.product_id.with_context(active_test=False)
         return {
             "id": lot.id,
             "medicineId": product.id,
-            "medicineName": product.display_name or product.name or "",
+            "medicineName": cls._clean_product_name(product),
             "batchNumber": lot.batch_number or lot.name or "",
             "expiryDate": lot.expiry_date.isoformat() if lot.expiry_date else "",
             "purchasePrice": product.standard_price,
-            "sellingPrice": product.lst_price,
+            "sellingPrice": cls._cash_price(float(product.lst_price or 0.0) * 1.18),
             "quantityAvailable": lot.available_quantity,
             "expired": bool(lot.is_expired),
             "createdAt": lot.create_date.isoformat() if lot.create_date else "",
@@ -956,7 +1031,7 @@ class PharmacyFrontendApi(http.Controller):
                 stock_value += value
                 medicine_stock.append({
                     "medicineId": product.id,
-                    "medicineName": product.display_name or product.name,
+                    "medicineName": self._clean_product_name(product),
                     "manufacturer": getattr(product, "manufacturer", "") or "",
                     "category": product.categ_id.display_name or "Farmacia",
                     "hsnCode": product.default_code or "",
@@ -970,7 +1045,7 @@ class PharmacyFrontendApi(http.Controller):
                 })
                 if low or out:
                     low_stock_items.append({
-                        "medicineId": product.id, "medicineName": product.display_name or product.name,
+                        "medicineId": product.id, "medicineName": self._clean_product_name(product),
                         "availableStock": available, "threshold": 10, "outOfStock": out,
                     })
             for lot in lots:
@@ -978,7 +1053,7 @@ class PharmacyFrontendApi(http.Controller):
                     expired_stock.append({
                         "batchId": lot.id, "batchNumber": lot.name,
                         "medicineId": lot.product_id.id,
-                        "medicineName": lot.product_id.display_name,
+                        "medicineName": self._clean_product_name(lot.product_id),
                         "expiryDate": lot.expiry_date.isoformat(),
                         "quantity": lot.available_quantity,
                         "stockValue": round(lot.available_quantity * float(lot.product_id.standard_price or 0.0), 2),
@@ -995,6 +1070,222 @@ class PharmacyFrontendApi(http.Controller):
                 "medicineStock": medicine_stock,
                 "expiredStock": expired_stock,
                 "lowStockItems": low_stock_items,
+            })
+
+        if resource.endswith("expiring"):
+            today = fields.Date.context_today(request.env.user)
+            days_threshold = max(7, min(365, int(query.get("days") or 90)))
+            target_date = today + timedelta(days=days_threshold)
+            lots = request.env["stock.lot"].sudo().search([
+                ("expiry_date", ">=", today),
+                ("expiry_date", "<=", target_date),
+            ], order="expiry_date asc, id asc")
+            expiring_items = []
+            total_risk_val = 0.0
+            criticos = canje = normal = 0
+            for lot in lots:
+                qty = float(lot.available_quantity or 0.0)
+                if qty <= 0:
+                    continue
+                days_left = (lot.expiry_date - today).days
+                cost = float(lot.product_id.standard_price or 0.0)
+                pvp = float(lot.product_id.lst_price or 0.0)
+                val = round(qty * cost, 2)
+                total_risk_val += val
+                if days_left <= 25:
+                    status = "RETIRAR"
+                    criticos += 1
+                elif days_left <= 30:
+                    status = "ALERTA_CANJE"
+                    canje += 1
+                else:
+                    status = "PROXIMO"
+                    normal += 1
+                expiring_items.append({
+                    "batchId": lot.id,
+                    "batchNumber": lot.name,
+                    "medicineId": lot.product_id.id,
+                    "medicineName": self._clean_product_name(lot.product_id),
+                    "manufacturer": getattr(lot.product_id, "manufacturer", "") or "",
+                    "category": lot.product_id.categ_id.display_name or "Farmacia",
+                    "expiryDate": lot.expiry_date.isoformat(),
+                    "daysRemaining": days_left,
+                    "quantity": qty,
+                    "cost": cost,
+                    "pvp": pvp,
+                    "totalValue": val,
+                    "fefoStatus": status,
+                })
+            return self._json({
+                "reportDate": today.isoformat(),
+                "daysThreshold": days_threshold,
+                "totalLots": len(expiring_items),
+                "totalValueAtRisk": round(total_risk_val, 2),
+                "criticalCount": criticos,
+                "exchangeAlertCount": canje,
+                "normalCount": normal,
+                "items": expiring_items,
+            })
+
+        if resource.endswith("profit"):
+            lima = pytz.timezone("America/Lima")
+            start_text = query.get("startDate") or fields.Date.context_today(request.env.user).replace(day=1).isoformat()
+            end_text = query.get("endDate") or fields.Date.context_today(request.env.user).isoformat()
+            try:
+                start_date = fields.Date.from_string(start_text)
+                end_date = fields.Date.from_string(end_text)
+            except (TypeError, ValueError):
+                return self._json({"message": "Rango de fechas no válido."}, 400)
+            if start_date > end_date:
+                return self._json({"message": "La fecha inicial no puede ser posterior a la final."}, 400)
+            start_utc = lima.localize(datetime.combine(start_date, time.min)).astimezone(pytz.UTC).replace(tzinfo=None)
+            end_utc = lima.localize(datetime.combine(end_date + timedelta(days=1), time.min)).astimezone(pytz.UTC).replace(tzinfo=None)
+            orders = request.env["pos.order"].sudo().search([
+                ("date_order", ">=", fields.Datetime.to_string(start_utc)),
+                ("date_order", "<", fields.Datetime.to_string(end_utc)),
+                ("state", "in", ["paid", "done", "invoiced"]),
+            ], order="date_order asc")
+            total_net_sales = total_cogs = 0.0
+            prod_profit = defaultdict(lambda: {"qty": 0.0, "netSales": 0.0, "cogs": 0.0, "name": "", "category": ""})
+            daily_profit = defaultdict(lambda: {"netSales": 0.0, "cogs": 0.0, "ordersCount": 0})
+            for o in orders:
+                local_dt = pytz.UTC.localize(o.date_order).astimezone(lima) if o.date_order else None
+                day_key = local_dt.date().isoformat() if local_dt else start_date.isoformat()
+                daily_profit[day_key]["ordersCount"] += 1
+                for l in o.lines:
+                    cost_unit = float(l.product_id.standard_price or 0.0)
+                    line_cogs = cost_unit * l.qty
+                    line_net = float(l.price_subtotal or 0.0)
+                    total_net_sales += line_net
+                    total_cogs += line_cogs
+                    pid = l.product_id.id
+                    prod_profit[pid]["name"] = self._clean_product_name(l.product_id)
+                    prod_profit[pid]["category"] = l.product_id.categ_id.display_name or "Farmacia"
+                    prod_profit[pid]["qty"] += l.qty
+                    prod_profit[pid]["netSales"] += line_net
+                    prod_profit[pid]["cogs"] += line_cogs
+                    daily_profit[day_key]["netSales"] += line_net
+                    daily_profit[day_key]["cogs"] += line_cogs
+            gross_profit = round(total_net_sales - total_cogs, 2)
+            margin_pct = round((gross_profit / total_net_sales * 100), 1) if total_net_sales > 0 else 0.0
+            by_medicine = []
+            for pid, val in prod_profit.items():
+                p_gross = round(val["netSales"] - val["cogs"], 2)
+                p_margin = round((p_gross / val["netSales"] * 100), 1) if val["netSales"] > 0 else 0.0
+                by_medicine.append({
+                    "medicineId": pid,
+                    "medicineName": val["name"],
+                    "category": val["category"],
+                    "unitsSold": round(val["qty"], 0),
+                    "netSales": round(val["netSales"], 2),
+                    "cogs": round(val["cogs"], 2),
+                    "grossProfit": p_gross,
+                    "marginPercent": p_margin,
+                })
+            by_medicine.sort(key=lambda x: x["grossProfit"], reverse=True)
+            by_day = []
+            for dkey, dval in sorted(daily_profit.items()):
+                d_gross = round(dval["netSales"] - dval["cogs"], 2)
+                d_margin = round((d_gross / dval["netSales"] * 100), 1) if dval["netSales"] > 0 else 0.0
+                by_day.append({
+                    "date": dkey,
+                    "ordersCount": dval["ordersCount"],
+                    "netSales": round(dval["netSales"], 2),
+                    "cogs": round(dval["cogs"], 2),
+                    "grossProfit": d_gross,
+                    "marginPercent": d_margin,
+                })
+            return self._json({
+                "startDate": start_date.isoformat(),
+                "endDate": end_date.isoformat(),
+                "totalNetSales": round(total_net_sales, 2),
+                "totalCogs": round(total_cogs, 2),
+                "grossProfit": gross_profit,
+                "profitMarginPercent": margin_pct,
+                "profitByDay": by_day,
+                "profitByMedicine": by_medicine[:50],
+            })
+
+        if resource.endswith("top-selling"):
+            lima = pytz.timezone("America/Lima")
+            start_text = query.get("startDate") or fields.Date.context_today(request.env.user).replace(day=1).isoformat()
+            end_text = query.get("endDate") or fields.Date.context_today(request.env.user).isoformat()
+            limit = min(50, int(query.get("limit") or 20))
+            try:
+                start_date = fields.Date.from_string(start_text)
+                end_date = fields.Date.from_string(end_text)
+            except (TypeError, ValueError):
+                return self._json({"message": "Rango de fechas no válido."}, 400)
+            start_utc = lima.localize(datetime.combine(start_date, time.min)).astimezone(pytz.UTC).replace(tzinfo=None)
+            end_utc = lima.localize(datetime.combine(end_date + timedelta(days=1), time.min)).astimezone(pytz.UTC).replace(tzinfo=None)
+            orders = request.env["pos.order"].sudo().search([
+                ("date_order", ">=", fields.Datetime.to_string(start_utc)),
+                ("date_order", "<", fields.Datetime.to_string(end_utc)),
+                ("state", "in", ["paid", "done", "invoiced"]),
+            ])
+            prod_summary = defaultdict(lambda: {"qty": 0.0, "revenue": 0.0, "cost": 0.0, "name": "", "category": ""})
+            for o in orders:
+                for l in o.lines:
+                    pid = l.product_id.id
+                    prod_summary[pid]["name"] = self._clean_product_name(l.product_id)
+                    prod_summary[pid]["category"] = l.product_id.categ_id.display_name or "Farmacia"
+                    prod_summary[pid]["qty"] += l.qty
+                    prod_summary[pid]["revenue"] += float(l.price_subtotal_incl or 0.0)
+                    prod_summary[pid]["cost"] += float(l.product_id.standard_price or 0.0) * l.qty
+            results = []
+            for pid, pdata in prod_summary.items():
+                profit = round(pdata["revenue"] - pdata["cost"], 2)
+                results.append({
+                    "medicineId": pid,
+                    "medicineName": pdata["name"],
+                    "category": pdata["category"],
+                    "unitsSold": round(pdata["qty"], 0),
+                    "totalRevenue": round(pdata["revenue"], 2),
+                    "profit": profit,
+                })
+            results.sort(key=lambda x: x["unitsSold"], reverse=True)
+            return self._json({
+                "startDate": start_date.isoformat(),
+                "endDate": end_date.isoformat(),
+                "topProducts": results[:limit],
+            })
+
+        if resource.endswith("purchases"):
+            start_text = query.get("startDate") or fields.Date.context_today(request.env.user).replace(day=1).isoformat()
+            end_text = query.get("endDate") or fields.Date.context_today(request.env.user).isoformat()
+            try:
+                start_date = fields.Date.from_string(start_text)
+                end_date = fields.Date.from_string(end_text)
+            except (TypeError, ValueError):
+                return self._json({"message": "Rango de fechas no válido."}, 400)
+            orders = request.env["purchase.order"].sudo().search([
+                ("date_order", ">=", start_date.isoformat() + " 00:00:00"),
+                ("date_order", "<=", end_date.isoformat() + " 23:59:59"),
+            ], order="date_order desc")
+            total_invoiced = sum(orders.mapped("amount_total"))
+            by_supplier = defaultdict(lambda: {"orderCount": 0, "totalAmount": 0.0, "name": ""})
+            order_list = []
+            for po in orders:
+                s_id = po.partner_id.id
+                by_supplier[s_id]["name"] = po.partner_id.name or "Proveedor"
+                by_supplier[s_id]["orderCount"] += 1
+                by_supplier[s_id]["totalAmount"] += po.amount_total
+                order_list.append({
+                    "id": po.id,
+                    "name": po.name,
+                    "supplierName": po.partner_id.name,
+                    "dateOrder": po.date_order.isoformat() if po.date_order else "",
+                    "state": po.state,
+                    "medizanoState": getattr(po, "medizano_state", po.state),
+                    "amountTotal": round(po.amount_total, 2),
+                })
+            return self._json({
+                "startDate": start_date.isoformat(),
+                "endDate": end_date.isoformat(),
+                "totalOrders": len(orders),
+                "totalAmountInvoiced": round(total_invoiced, 2),
+                "suppliers": list(by_supplier.values()),
+                "orders": order_list[:50],
             })
 
         lima = pytz.timezone("America/Lima")
@@ -1172,15 +1463,25 @@ class PharmacyFrontendApi(http.Controller):
                 line_cost += qty * float(line.product_id.standard_price or 0.0)
         margin = ((line_revenue - line_cost) / line_revenue * 100.0) if line_revenue else None
 
+        # Use the same operational-inventory scope as the Medicines screen:
+        # active pharmacy products with physical stock, excluding historical
+        # catalogue rows that would otherwise inflate stockout KPIs.
         products = request.env["product.product"].sudo().search([
-            ("active", "=", True), ("type", "!=", "service"),
+            ("active", "=", True), ("is_pharma_product", "=", True),
         ])
         lots = request.env["stock.lot"].sudo().search([("product_id", "in", products.ids)])
         total_by_product = defaultdict(float)
         for lot in lots:
             total_by_product[lot.product_id.id] += float(lot.available_quantity or 0.0)
-        stockout = len([product for product in products if total_by_product.get(product.id, float(product.qty_available or 0.0)) <= 0])
-        low_stock = len([product for product in products if 0 < total_by_product.get(product.id, float(product.qty_available or 0.0)) <= 10])
+        current_products = [
+            product for product in products
+            if total_by_product.get(product.id, float(product.qty_available or 0.0)) > 0
+        ]
+        stockout = 0
+        low_stock = len([
+            product for product in current_products
+            if total_by_product.get(product.id, float(product.qty_available or 0.0)) <= 10
+        ])
         expiring_limit = today + timedelta(days=90)
         expiring = len(lots.filtered(lambda lot: lot.available_quantity > 0 and lot.expiry_date and today <= lot.expiry_date <= expiring_limit))
         expired_value = sum(
@@ -1247,6 +1548,13 @@ class PharmacyFrontendApi(http.Controller):
             indicator("OPS-RECEIPTS", "operations", "Cumplir abastecimiento", "Órdenes recibidas completas", "percent", "up", 90, receipt_rate, "Compras y recepciones"),
             indicator("CTL-AUDIT", "control", "Mantener trazabilidad operativa", "Operaciones auditadas", "number", "up", 1, audit_count, "Bitácora de actividad"),
         ]
+        for row in indicators:
+            setting = configured.get(row["code"])
+            if setting:
+                setting.sudo().write({
+                    "actual": float(row["actual"]) if row["actual"] is not None else 0.0,
+                    "last_review": today,
+                })
         measured = [row["achievement"] for row in indicators if row["achievement"] is not None]
         status_count = {key: len([row for row in indicators if row["status"] == key]) for key in ("on_track", "warning", "critical", "no_data")}
         return self._json({
@@ -1258,6 +1566,43 @@ class PharmacyFrontendApi(http.Controller):
                 "critical": status_count["critical"], "noData": status_count["no_data"],
             },
         })
+
+    def _bsc_targets(self, payload):
+        """Persist BSC targets configured from the MediZano portal."""
+        if request.httprequest.method not in ("PUT", "PATCH"):
+            return self._json({"message": "Método no permitido para metas BSC."}, 405)
+        targets = payload.get("targets") if isinstance(payload, dict) else None
+        if not isinstance(targets, list) or not targets:
+            return self._json({"message": "Envía al menos una meta para actualizar."}, 400)
+
+        values_by_code = {}
+        for item in targets:
+            if not isinstance(item, dict):
+                return self._json({"message": "El formato de una meta no es válido."}, 400)
+            code = str(item.get("code") or "").strip()
+            if not code or code in values_by_code:
+                return self._json({"message": "Cada indicador debe enviarse una sola vez."}, 400)
+            try:
+                target = float(item.get("target"))
+            except (TypeError, ValueError):
+                return self._json({"message": "Todas las metas deben ser números válidos."}, 400)
+            if target != target or target in (float("inf"), float("-inf")) or target < 0:
+                return self._json({"message": "Las metas no pueden ser negativas."}, 400)
+            values_by_code[code] = target
+
+        indicators = request.env["pharmacy.bsc.indicator"].sudo().search([
+            ("code", "in", list(values_by_code)), ("active", "=", True),
+        ])
+        missing_codes = sorted(set(values_by_code) - set(indicators.mapped("code")))
+        if missing_codes:
+            return self._json({"message": "No se encontraron indicadores BSC configurados: %s" % ", ".join(missing_codes)}, 404)
+
+        previous = {indicator.code: indicator.target for indicator in indicators}
+        for indicator in indicators:
+            indicator.write({"target": values_by_code[indicator.code]})
+        self._record_audit("BSC_TARGETS_UPDATED", "BSC", 0, "Metas BSC actualizadas desde el portal",
+                           old_value=json.dumps(previous), new_value=json.dumps(values_by_code))
+        return self._json({"success": True, "updated": len(indicators)})
 
     def _partners(self, resource, query, payload):
         model = request.env["res.partner"].sudo().with_context(active_test=False)
@@ -1482,11 +1827,17 @@ class PharmacyFrontendApi(http.Controller):
         product_model = request.env["product.product"].sudo().with_context(active_test=False)
         for item in items:
             name = (item.get("nombreProducto") or "").strip()
+            barcode = (item.get("codigoBarra") or "").strip()
             quantity = float(item.get("cantidadComprada") or item.get("cantidad") or 0)
             cost = 0.0
             if not name or quantity <= 0:
                 return self._json({"message": "Revisa el nombre y la cantidad de cada medicamento."}, 400)
-            product = product_model.search([("name", "=ilike", name)], limit=1)
+            # El GTIN/EAN identifica al producto aunque el proveedor cambie la
+            # descripción. Priorizarlo evita crear otro catálogo al reponer el
+            # mismo medicamento con el mismo código de barras.
+            product = product_model.search([("barcode", "=", barcode)], limit=1) if barcode else product_model.browse()
+            if not product:
+                product = product_model.search([("name", "=ilike", name)], limit=1)
             if not product:
                 product = product_model.create({
                     "name": name,
@@ -1498,8 +1849,14 @@ class PharmacyFrontendApi(http.Controller):
                     "sale_ok": True,
                     "standard_price": 0,
                     "lst_price": float(item.get("precioVenta") or 0),
-                    "barcode": (item.get("codigoBarra") or "").strip() or False,
+                    "barcode": barcode or False,
                 })
+            # Las compras de botica se facturan completas al confirmar la
+            # orden, no quedan pendientes hasta la recepción física.
+            template = product.product_tmpl_id
+            if "purchase_method" in template._fields and template.purchase_method != "purchase":
+                template.write({"purchase_method": "purchase"})
+            suggested_lot = (item.get("loteSugerido") or "").strip()
             vendor_price = request.env["product.supplierinfo"].sudo().search(
                 [
                     ("partner_id", "=", supplier.id),
@@ -1523,9 +1880,10 @@ class PharmacyFrontendApi(http.Controller):
                 "date_planned": fields.Datetime.now(),
                 "medizano_selling_price": float(item.get("precioVenta") or 0),
                 "medizano_discount": float(item.get("descuento") or 0),
-                "medizano_suggested_lot": item.get("loteSugerido") or False,
+                # El proveedor confirma estos datos físicos al aceptar la orden.
+                "medizano_suggested_lot": suggested_lot or False,
                 "medizano_expiry_date": item.get("fechaVencimiento") or False,
-                "medizano_barcode": (item.get("codigoBarra") or "").strip() or False,
+                "medizano_barcode": barcode or False,
             }))
 
         order = model.create({
@@ -1547,36 +1905,52 @@ class PharmacyFrontendApi(http.Controller):
     def _vendor_catalog(self, resource, query, payload):
         if request.httprequest.method == "GET" and resource.endswith("productos"):
             term = (query.get("q") or "").strip()
+            product_domain = [
+                ("active", "=", True),
+                ("purchase_ok", "=", True),
+                ("type", "!=", "service"),
+            ]
+            if term:
+                product_domain += ["|", "|", ("name", "ilike", term), ("default_code", "ilike", term), ("barcode", "ilike", term)]
+            templates = request.env["product.template"].sudo().search(product_domain, limit=200, order="name asc")
+
             infos = request.env["product.supplierinfo"].sudo().search([
-                ("partner_id.supplier_rank", ">", 0),
+                ("product_tmpl_id", "in", templates.ids),
                 ("partner_id.active", "=", True),
-                ("product_tmpl_id.name", "ilike", term),
-                ("product_tmpl_id.categ_id", "=", request.env.ref("product.product_category_all").id),
-                ("product_tmpl_id.type", "!=", "service"),
-            ], limit=500)
-            products = {}
+            ])
+            supplier_counts = defaultdict(int)
             for info in infos:
-                template = info.product_tmpl_id
-                if template.id not in products:
-                    products[template.id] = {
-                        "id": template.id,
-                        "nombre": template.name,
-                        "proveedores": set(),
-                    }
-                products[template.id]["proveedores"].add(info.partner_id.id)
+                supplier_counts[info.product_tmpl_id.id] += 1
+
             records = [
-                {"id": item["id"], "nombre": item["nombre"], "proveedores": len(item["proveedores"]), "origen": "Tarifa registrada"}
-                for item in products.values()
+                {
+                    "id": tmpl.id,
+                    "nombre": tmpl.name,
+                    "barcode": tmpl.barcode or "",
+                    "codigo": tmpl.default_code or "",
+                    "precioReferencial": float(tmpl.standard_price or tmpl.lst_price or 0.0),
+                    "proveedores": supplier_counts.get(tmpl.id, 0),
+                    "origen": "Catálogo Odoo" if supplier_counts.get(tmpl.id, 0) == 0 else "Tarifa registrada",
+                }
+                for tmpl in templates
             ]
             existing = {self._catalog_key(item["nombre"]) for item in records}
             for item in self._pnume_medicines():
-                if self._catalog_key(term) not in self._catalog_key(item["nombre"]):
+                if term and self._catalog_key(term) not in self._catalog_key(item["nombre"]):
                     continue
                 if self._catalog_key(item["nombre"]) in existing:
                     continue
-                records.append({"id": 0, "nombre": item["nombre"], "proveedores": 0, "precioReferencial": self._estimated_purchase_price(item["nombre"]), "origen": "PNUME 2023 · precio estimado"})
+                records.append({
+                    "id": 0,
+                    "nombre": item["nombre"],
+                    "barcode": "",
+                    "codigo": "",
+                    "proveedores": 0,
+                    "precioReferencial": self._estimated_purchase_price(item["nombre"]),
+                    "origen": "PNUME 2023 · precio estimado",
+                })
             records.sort(key=lambda item: (item["proveedores"] == 0, self._catalog_key(item["nombre"])))
-            return self._json({"productos": records[:50], "total": len(records)})
+            return self._json({"productos": records[:100], "total": len(records)})
         if request.httprequest.method != "POST" or not resource.endswith("comparar"):
             return self._json({"message": "Usa el comparador de tarifas."}, 405)
         items = payload.get("detalles") or payload.get("items") or []
@@ -1671,13 +2045,20 @@ class PharmacyFrontendApi(http.Controller):
         for line in order.order_line:
             received_lines = line.move_ids.filtered(lambda move: move.state == "done").mapped("move_line_ids").filtered(lambda move_line: move_line.quantity > 0 and move_line.lot_id)
             received_lots = received_lines.mapped("lot_id")
+            registered_lot = request.env["stock.lot"].sudo().search([
+                ("product_id", "=", line.product_id.id),
+                ("company_id", "=", order.company_id.id),
+            ], limit=1)
             lot_names = ", ".join(received_lots.mapped("name"))
             expiry_dates = ", ".join(sorted({lot.expiry_date.isoformat() for lot in received_lots if lot.expiry_date}))
             details.append({
                 "id": line.id,
                 "productoId": line.product_id.id,
-                "nombreProducto": line.product_id.display_name or line.name,
-                "codigoBarra": line.medizano_barcode or line.product_id.barcode or "",
+                "nombreProducto": PharmacyFrontendApi._clean_product_name(line.product_id) or PharmacyFrontendApi._clean_product_name(line) or "",
+                # El código se muestra automáticamente solo para productos
+                # que ya existen físicamente en Inventario. Los nuevos deben
+                # escanearse durante su primera recepción.
+                "codigoBarra": (line.medizano_barcode or line.product_id.barcode or "") if registered_lot else "",
                 "cantidadComprada": line.product_qty,
                 "cantidadRecibida": line.qty_received,
                 "costoUnitario": line.price_unit,
@@ -1690,6 +2071,17 @@ class PharmacyFrontendApi(http.Controller):
             })
         done_pickings = order.picking_ids.filtered(lambda picking: picking.picking_type_id.code == "incoming" and picking.state == "done")
         receipt_date = max(done_pickings.mapped("date_done")) if done_pickings else False
+        estado = order.medizano_state or "BORRADOR"
+        incomings = order.picking_ids.filtered(lambda p: p.picking_type_id.code == "incoming")
+        if estado in ("BORRADOR", "PENDIENTE") and order.state in ("purchase", "done"):
+            if incomings and all(p.state in ("done", "cancel") for p in incomings):
+                estado = "RECIBIDA"
+            elif any(p.state == "done" for p in incomings):
+                estado = "PARCIALMENTE_RECIBIDA"
+            else:
+                estado = "POR_VERIFICAR"
+        elif order.state == "cancel":
+            estado = "CANCELADA"
         return {
             "id": order.id,
             "numeroDocumento": order.partner_ref or order.name,
@@ -1703,7 +2095,7 @@ class PharmacyFrontendApi(http.Controller):
             "fechaEmision": order.date_order.isoformat() if order.date_order else "",
             "fechaRegistro": order.create_date.isoformat() if order.create_date else "",
             "fechaRecepcion": receipt_date.isoformat() if receipt_date else "",
-            "estado": order.medizano_state or "BORRADOR",
+            "estado": estado,
             "subtotal": order.amount_untaxed,
             "igv": order.amount_tax,
             "descuento": sum(line.medizano_discount for line in order.order_line),
@@ -1743,14 +2135,14 @@ class PharmacyFrontendApi(http.Controller):
             return self._json(self._order_response(order))
 
         orders = Order.search([
-            ("medizano_payment_method", "in", ("PAYPAL", "MERCADO_PAGO")),
+            ("medizano_payment_method", "in", ("PAYPAL", "MERCADO_PAGO", "CULQI")),
         ], order="date_order desc, id desc", limit=100)
         return self._json([self._order_response(row) for row in orders])
 
     def _create_pending_order(self, payload):
         items = payload.get("items") or []
         method = str(payload.get("metodoPago") or "").upper()
-        if method not in ("PAYPAL", "MERCADO_PAGO"):
+        if method not in ("PAYPAL", "MERCADO_PAGO", "CULQI"):
             return self._json({"message": "El medio de pago electrónico no es válido."}, 400)
         if not items:
             return self._json({"message": "Agrega al menos un producto."}, 400)
@@ -1804,7 +2196,7 @@ class PharmacyFrontendApi(http.Controller):
             )
             if available + 1e-6 < quantity:
                 return self._json({"message": "Stock insuficiente de %s." % product.display_name}, 409)
-            public_price = float(product.lst_price or 0)
+            public_price = self._cash_price(float(product.lst_price or 0) * 1.18)
             if public_price <= 0:
                 return self._json({"message": "%s no tiene precio de venta." % product.display_name}, 409)
             taxes = product.taxes_id.filtered(lambda tax: tax.company_id == config.company_id)
@@ -1883,6 +2275,8 @@ class PharmacyFrontendApi(http.Controller):
                 "payPalBaseUrl": params.get_param("medizano.paypal.base_url", "https://api-m.sandbox.paypal.com"),
                 "mpPublicKey": params.get_param("medizano.mercadopago.public_key", ""),
                 "mpCurrency": "PEN",
+                "culqiPublicKey": params.get_param("medizano.culqi.public_key", ""),
+                "culqiCurrency": "PEN",
             })
         if resource.startswith("v1/pagos/orden/"):
             try:
@@ -1905,6 +2299,8 @@ class PharmacyFrontendApi(http.Controller):
             return self._mercadopago_verify(payload)
         if resource.startswith("v1/pagos/mercadopago/reconcile/"):
             return self._mercadopago_reconcile(resource.rsplit("/", 1)[-1])
+        if resource == "v1/pagos/culqi/charge":
+            return self._culqi_charge(payload)
         return self._json({"message": "Ruta de pagos no soportada."}, 404)
 
     @staticmethod
@@ -2052,12 +2448,29 @@ class PharmacyFrontendApi(http.Controller):
             "timestamp": fields.Datetime.now().isoformat(), "orderConfirmed": confirmed,
         })
 
+    _mp_test_seller_cache = {}
+
     def _mercadopago_config(self):
         params = request.env["ir.config_parameter"].sudo()
         token = params.get_param("medizano.mercadopago.access_token", "").strip()
         if not token:
             return None, self._json({"message": "Mercado Pago no está configurado en Odoo."}, 503)
         return token, None
+
+    def _mercadopago_is_test_seller(self, token):
+        if token in self._mp_test_seller_cache:
+            return self._mp_test_seller_cache[token]
+        is_test = token.startswith("TEST-")
+        if not is_test:
+            status, me = self._gateway_json(
+                "https://api.mercadopago.com/users/me",
+                headers={"Authorization": "Bearer " + token},
+            )
+            if status == 200 and isinstance(me, dict):
+                tags = me.get("tags") or []
+                is_test = ("test_user" in tags) or str(me.get("email") or "").endswith("@testuser.com")
+        self._mp_test_seller_cache[token] = is_test
+        return is_test
 
     def _mercadopago_preference(self, payload):
         order = request.env["pos.order"].sudo().browse(int(payload.get("ordenId") or 0)).exists()
@@ -2066,15 +2479,49 @@ class PharmacyFrontendApi(http.Controller):
         token, error = self._mercadopago_config()
         if error:
             return error
+        params = request.env["ir.config_parameter"].sudo()
+        base_url = (params.get_param("web.base.url") or request.httprequest.host_url).rstrip("/")
+        mp_items = [
+            {
+                "id": str(line.product_id.id),
+                "title": (line.product_id.display_name or line.full_product_name or "Medicamento")[:250],
+                "quantity": max(1, int(round(line.qty))),
+                "currency_id": "PEN",
+                "unit_price": round(line.price_subtotal_incl / max(1.0, float(line.qty)), 2),
+            }
+            for line in order.lines
+            if line.qty > 0
+        ] or [{
+            "id": str(order.id),
+            "title": "Compra MediZano %s" % order.name,
+            "quantity": 1,
+            "currency_id": "PEN",
+            "unit_price": round(order.amount_total, 2),
+        }]
+        raw_payer_email = (payload.get("customerEmail") or order.medizano_customer_email or order.partner_id.email or "").strip()
+        is_test_seller = self._mercadopago_is_test_seller(token)
+        if is_test_seller:
+            sandbox_payer = (params.get_param("medizano.mercadopago.sandbox_payer_email", "") or "").strip()
+            payer_email = raw_payer_email if raw_payer_email.lower().endswith("@testuser.com") else sandbox_payer
+        else:
+            payer_email = raw_payer_email
+        pref_body = {
+            "external_reference": str(order.id),
+            "items": mp_items,
+            **({"payer": {"email": payer_email}} if payer_email else {}),
+            "back_urls": {
+                "success": "%s/medizano/#/billing?mp_status=approved&ordenId=%s" % (base_url, order.id),
+                "pending": "%s/medizano/#/billing?mp_status=pending&ordenId=%s" % (base_url, order.id),
+                "failure": "%s/medizano/#/billing?mp_status=failure&ordenId=%s" % (base_url, order.id),
+            },
+            "notification_url": "%s/api/v1/pagos/mercadopago/webhook" % base_url,
+        }
+        if base_url.startswith("https://"):
+            pref_body["auto_return"] = "approved"
         status, provider = self._gateway_json("https://api.mercadopago.com/checkout/preferences", "POST", {
             "Authorization": "Bearer " + token,
             "X-Idempotency-Key": "medizano-preference-%s" % order.id,
-        }, {
-            "external_reference": str(order.id),
-            "items": [{"id": str(order.id), "title": "Compra MediZano %s" % order.name,
-                       "quantity": 1, "currency_id": "PEN", "unit_price": round(order.amount_total, 2)}],
-            "payer": {"email": payload.get("customerEmail") or order.medizano_customer_email or order.partner_id.email or ""},
-        })
+        }, pref_body)
         if status not in (200, 201):
             return self._json({"message": provider.get("message") or "Mercado Pago rechazó la preferencia."}, 502)
         order.write({"medizano_provider_order_id": provider.get("id"), "medizano_provider_status": "PENDING"})
@@ -2144,14 +2591,194 @@ class PharmacyFrontendApi(http.Controller):
             "orderConfirmed": order.state in ("paid", "done", "invoiced"),
         })
 
-    def _confirm_electronic_order(self, order, payment_reference, provider_status):
+    def _mercadopago_webhook(self, query, payload):
+        """Receive Mercado Pago webhook notifications, verify signature & payment status, and confirm order idempotently."""
+        import hashlib, hmac
+        payload = payload if isinstance(payload, dict) else {}
+        topic = str(query.get("type") or query.get("topic") or payload.get("type") or payload.get("topic") or "").lower()
+        data_id = str(
+            query.get("data.id")
+            or query.get("id")
+            or (payload.get("data") or {}).get("id")
+            or payload.get("id")
+            or ""
+        ).strip()
+
+        # Verify HMAC-SHA256 x-signature if webhook_secret is configured
+        secret = request.env["ir.config_parameter"].sudo().get_param("medizano.mercadopago.webhook_secret", "").strip()
+        if secret and data_id:
+            sig_header = request.httprequest.headers.get("x-signature", "")
+            req_id = request.httprequest.headers.get("x-request-id", "")
+            parts = dict(item.split("=", 1) for item in sig_header.split(",") if "=" in item)
+            ts = parts.get("ts", "").strip()
+            v1 = parts.get("v1", "").strip()
+            manifest = f"id:{data_id};request-id:{req_id};ts:{ts};"
+            expected = hmac.new(secret.encode("utf-8"), manifest.encode("utf-8"), hashlib.sha256).hexdigest()
+            if not v1 or not hmac.compare_digest(expected, v1):
+                return self._json({"message": "Invalid webhook signature"}, 401)
+
+        if topic and topic != "payment":
+            return self._json({"received": True, "ignored": topic}, 200)
+        if not data_id:
+            return self._json({"received": True, "ignored": "missing_id"}, 200)
+
+        token, error = self._mercadopago_config()
+        if error:
+            return self._json({"received": True, "configured": False}, 200)
+
+        status, provider = self._gateway_json(
+            "https://api.mercadopago.com/v1/payments/" + urllib.parse.quote(data_id),
+            headers={"Authorization": "Bearer " + token},
+        )
+        if status != 200:
+            return self._json({"received": True, "verified": False}, 200)
+
+        ext_ref = str(provider.get("external_reference") or "").strip()
+        if not ext_ref.isdigit():
+            return self._json({"received": True, "ignored": "non_numeric_ref"}, 200)
+
+        order = request.env["pos.order"].sudo().browse(int(ext_ref)).exists()
+        if not order:
+            return self._json({"received": True, "ignored": "order_not_found"}, 200)
+
+        # Idempotency: if already paid/done/invoiced, do not register duplicate payment
+        if order.state in ("paid", "done", "invoiced"):
+            return self._json({"received": True, "alreadyConfirmed": True, "ordenId": order.id}, 200)
+
+        amount = float(provider.get("transaction_amount") or 0)
+        if abs(amount - order.amount_total) > 0.02:
+            return self._json({"received": True, "amountMismatch": True}, 200)
+
+        provider_status = str(provider.get("status") or "").lower()
+        if provider_status == "approved":
+            self._confirm_electronic_order(order, data_id, "APPROVED")
+        else:
+            order.write({
+                "medizano_provider_payment_id": data_id,
+                "medizano_provider_status": provider_status.upper(),
+            })
+        return self._json({"received": True, "ordenId": order.id, "status": provider_status}, 200)
+
+    def _culqi_config(self):
+        params = request.env["ir.config_parameter"].sudo()
+        secret = params.get_param("medizano.culqi.secret_key", "").strip()
+        if not secret:
+            return None, self._json({"message": "Culqi no está configurado en Odoo."}, 503)
+        return secret, None
+
+    def _culqi_charge(self, payload):
+        order_id = int(payload.get("ordenId") or 0)
+        token_id = str(payload.get("tokenId") or "").strip()
+        if not order_id or not token_id:
+            return self._json({"message": "Falta el token de Culqi o la orden."}, 400)
+        order = request.env["pos.order"].sudo().browse(order_id).exists()
+        if not order or order.medizano_payment_method != "CULQI":
+            return self._json({"message": "La orden de Culqi no existe."}, 404)
+        if order.state in ("paid", "done", "invoiced"):
+            return self._json({
+                "pagoId": order.payment_ids[:1].id or 0,
+                "ordenId": order.id,
+                "numeroOrden": order.name,
+                "chargeId": order.medizano_provider_payment_id or "",
+                "referenceCode": order.medizano_provider_order_id or order.medizano_provider_payment_id or "",
+                "status": "APPROVED",
+                "message": "El pago ya fue confirmado anteriormente.",
+                "amount": order.amount_total,
+                "currency": "PEN",
+                "timestamp": fields.Datetime.now().isoformat(),
+                "orderConfirmed": True,
+            })
+        if order.state != "draft":
+            return self._json({"message": "La orden ya no está pendiente de pago."}, 409)
+        secret, error = self._culqi_config()
+        if error:
+            return error
+        amount_cents = int(round(float(order.amount_total or 0.0) * 100))
+        if amount_cents < 100:
+            return self._json({"message": "El monto mínimo para cobrar con Culqi es S/ 1.00."}, 400)
+        email = (
+            payload.get("email")
+            or order.medizano_customer_email
+            or order.partner_id.email
+            or "medizano@univer.lat"
+        ).strip()
+        charge_body = {
+            "amount": amount_cents,
+            "currency_code": "PEN",
+            "email": email,
+            "source_id": token_id,
+            "capture": True,
+            "description": ("Venta MediZano %s" % order.name)[:80],
+            "metadata": {
+                "order_id": str(order.id),
+                "order_name": order.name,
+            },
+        }
+        status, provider = self._gateway_json(
+            "https://api.culqi.com/v2/charges",
+            "POST",
+            {"Authorization": "Bearer " + secret},
+            charge_body,
+        )
+        outcome = provider.get("outcome") if isinstance(provider, dict) else {}
+        outcome = outcome if isinstance(outcome, dict) else {}
+        if status not in (200, 201) or provider.get("object") != "charge":
+            msg = (
+                (provider.get("user_message") if isinstance(provider, dict) else None)
+                or (provider.get("merchant_message") if isinstance(provider, dict) else None)
+                or (provider.get("message") if isinstance(provider, dict) else None)
+                or "Culqi rechazó el pago con tarjeta."
+            )
+            if order.state == "draft":
+                order.sudo().unlink()
+            return self._json({"message": msg, "status": "REJECTED"}, 402 if status in (400, 402) else 502)
+
+        charge_id = str(provider.get("id") or "")
+        ref_code = str(provider.get("reference_code") or charge_id)
+        is_yape = token_id.lower().startswith("ype_") or str(payload.get("channel") or "").upper() == "YAPE"
+        payment_channel = "YAPE" if is_yape else "CARD"
+        order.write({"medizano_provider_order_id": ref_code})
+        self._confirm_electronic_order(order, charge_id, "APPROVED", payment_channel=payment_channel)
+        source = provider.get("source") if isinstance(provider.get("source"), dict) else {}
+        iin = source.get("iin") if isinstance(source.get("iin"), dict) else {}
+        return self._json({
+            "pagoId": order.payment_ids[:1].id or 0,
+            "ordenId": order.id,
+            "numeroOrden": order.name,
+            "chargeId": charge_id,
+            "referenceCode": ref_code,
+            "status": "APPROVED",
+            "paymentChannel": payment_channel,
+            "message": outcome.get("user_message") or ("Pago aprobado exitosamente con Yape." if is_yape else "Pago aprobado exitosamente con Culqi."),
+            "amount": order.amount_total,
+            "currency": "PEN",
+            "cardBrand": "YAPE" if is_yape else (iin.get("card_brand") or ""),
+            "last4": source.get("last_four") or "",
+            "timestamp": fields.Datetime.now().isoformat(),
+            "orderConfirmed": order.state in ("paid", "done", "invoiced"),
+        })
+
+    def _confirm_electronic_order(self, order, payment_reference, provider_status, payment_channel=None):
         """Finalize once only after a provider-side confirmation."""
         if order.state in ("paid", "done", "invoiced"):
             return True
         if order.state != "draft":
             return False
         config = order.session_id.config_id
-        method = config.payment_method_ids.filtered(lambda row: not row.is_cash_count)[:1]
+        if order.medizano_payment_method == "CULQI":
+            if payment_channel == "YAPE":
+                method = (
+                    config.payment_method_ids.filtered(lambda row: not row.is_cash_count and "yape" in row.name.lower())[:1]
+                    or config.payment_method_ids.filtered(lambda row: not row.is_cash_count and "billetera" in row.name.lower())[:1]
+                    or config.payment_method_ids.filtered(lambda row: not row.is_cash_count)[:1]
+                )
+            else:
+                method = (
+                    config.payment_method_ids.filtered(lambda row: not row.is_cash_count and ("tarjeta" in row.name.lower() or "card" in row.name.lower()))[:1]
+                    or config.payment_method_ids.filtered(lambda row: not row.is_cash_count)[:1]
+                )
+        else:
+            method = config.payment_method_ids.filtered(lambda row: not row.is_cash_count)[:1]
         if not method:
             raise ValidationError("Configura un medio de pago electrónico en el POS MediZano.")
         if not order.pos_reference.startswith("B001-"):
@@ -2377,7 +3004,7 @@ class PharmacyFrontendApi(http.Controller):
                 "id": line.id,
                 "medicineId": line.product_id.id,
                 "medicineName": line.full_product_name or line.product_id.display_name or "Producto",
-                "batchNumber": "",
+                "batchNumber": line.pack_lot_ids[:1].lot_name if line.pack_lot_ids else (line.lot_id.name if "lot_id" in line._fields and line.lot_id else ""),
                 "quantity": line.qty,
                 "unitPrice": (line.price_subtotal_incl / line.qty) if line.qty else line.price_unit,
                 "gstPercentage": 0,
@@ -2735,7 +3362,7 @@ class PharmacyFrontendApi(http.Controller):
         payments = [{
             "id": payment.id,
             "paymentReference": "",
-            "mode": "CASH" if payment.payment_method_id.is_cash_count else "MERCADO_PAGO",
+            "mode": "CASH" if payment.payment_method_id.is_cash_count else (order.medizano_payment_method or "MERCADO_PAGO"),
             "amount": payment.amount,
             "status": "COMPLETED",
             "paymentDate": payment.payment_date.isoformat() if payment.payment_date else "",
@@ -2771,16 +3398,13 @@ class PharmacyFrontendApi(http.Controller):
                 "code": "SMTP_NOT_CONFIGURED",
             }, 503)
 
-        order = request.env["pos.order"].sudo().browse(int(payload.get("billId") or 0)).exists()
+        order = request.env["pos.order"].sudo().browse(int(payload.get("billId") or payload.get("orderId") or 0)).exists()
         if not order and payload.get("seriesNumber"):
             requested_series = str(payload["seriesNumber"]).strip().upper()
-            if requested_series.startswith("B001-") and requested_series[5:].isdigit():
-                order = request.env["pos.order"].sudo().browse(int(requested_series[5:])).exists()
-        if not order and payload.get("seriesNumber"):
             order = request.env["pos.order"].sudo().search([
-                "|", ("name", "=", str(payload["seriesNumber"])),
-                ("pos_reference", "=", str(payload["seriesNumber"])),
-            ], limit=1)
+                "|", ("pos_reference", "=", requested_series),
+                ("name", "=", requested_series),
+            ], order="id desc", limit=1)
 
         if order:
             local_date = pytz.UTC.localize(order.date_order).astimezone(pytz.timezone("America/Lima"))
@@ -2830,72 +3454,182 @@ class PharmacyFrontendApi(http.Controller):
             })
             base_url = request.env["ir.config_parameter"].sudo().get_param("web.base.url", "").rstrip("/")
             qr_url = "%s/web/content/%s" % (base_url, attachment.id)
+        pm_lower = payment_mode.lower()
+        if "yape" in pm_lower:
+            pm_bg, pm_fg, pm_border = "#f5e8f8", "#742284", "#e5c5ec"
+        elif "tarjeta" in pm_lower or "culqi" in pm_lower or "card" in pm_lower:
+            pm_bg, pm_fg, pm_border = "#eef2ff", "#3730a3", "#c7d2fe"
+        else:
+            pm_bg, pm_fg, pm_border = "#ecfdf5", "#047857", "#a7f3d0"
+
+        receipt_date_es = receipt_date.replace(" AM", " a. m.").replace(" PM", " p. m.")
+        items_list = payload.get("items") or []
         items_html = "".join(
-            "<tr><td style='padding:14px 12px;border-bottom:1px solid #e7efec;color:#183d33;font-weight:600'>%s</td>"
-            "<td style='padding:14px 8px;text-align:center;border-bottom:1px solid #e7efec;color:#5f756e'>%s</td>"
-            "<td style='padding:14px 8px;text-align:right;border-bottom:1px solid #e7efec;color:#5f756e;white-space:nowrap'>S/ %.2f</td>"
-            "<td style='padding:14px 12px;text-align:right;border-bottom:1px solid #e7efec;color:#183d33;font-weight:700;white-space:nowrap'>S/ %.2f</td></tr>" % (
+            "<tr style='background:%s'>"
+            "<td style='padding:14px 14px;border-bottom:1px solid #edf2f0;color:#0f2922;font-size:14px;font-weight:600;line-height:1.35'>%s</td>"
+            "<td style='padding:14px 8px;text-align:center;border-bottom:1px solid #edf2f0'>"
+            "<span style='display:inline-block;padding:3px 9px;border-radius:999px;background:#eef5f2;color:#0f5132;font-size:12px;font-weight:700'>%s</span></td>"
+            "<td style='padding:14px 10px;text-align:right;border-bottom:1px solid #edf2f0;color:#526b64;font-size:13px;white-space:nowrap'>S/ %.2f</td>"
+            "<td style='padding:14px 14px;text-align:right;border-bottom:1px solid #edf2f0;color:#0f2922;font-size:14px;font-weight:700;white-space:nowrap'>S/ %.2f</td>"
+            "</tr>" % (
+                "#ffffff" if idx % 2 == 0 else "#f9fcfb",
                 html.escape(str(item.get("name") or "Medicamento")),
                 ("%g" % float(item.get("quantity") or 0)),
                 float(item.get("unitPrice") or 0),
                 float(item.get("total") or 0),
-            ) for item in (payload.get("items") or [])
+            ) for idx, item in enumerate(items_list)
         )
+        qr_block = (
+            "<table role='presentation' style='width:100%%;margin-top:26px;border-collapse:separate;border-spacing:0;background:#f8fbfa;border:1px solid #e0ece8;border-radius:16px'>"
+            "<tr><td style='padding:20px;text-align:center'>"
+            "<img src='%s' width='136' height='136' alt='Código QR del comprobante' style='display:inline-block;padding:8px;background:#ffffff;border:1px solid #dbe7e3;border-radius:12px'>"
+            "<div style='margin-top:10px;font-size:12px;font-weight:700;color:#173b32'>Código QR de verificación</div>"
+            "<div style='margin-top:3px;font-size:11px;color:#647d75'>Representación digital de Boleta Electrónica · RUC 20608945123</div>"
+            "</td></tr></table>" % html.escape(qr_url)
+        ) if qr_url else ""
+
         body = """
-        <div style="margin:0;padding:30px 12px;background:#f2f7f5;font-family:Arial,Helvetica,sans-serif;color:#173b32">
-          <div style="max-width:680px;margin:0 auto;background:#ffffff;border:1px solid #dce9e4;border-radius:24px;overflow:hidden;box-shadow:0 18px 45px rgba(17,74,57,.10)">
-            <div style="background:linear-gradient(135deg,#075d47,#0a8c67);padding:32px 34px;color:#ffffff">
-              <table role="presentation" style="width:100%%;border-collapse:collapse"><tr>
-                <td><div style="font-size:13px;font-weight:800;letter-spacing:3px">MEDIZANO</div><div style="margin-top:5px;font-size:12px;opacity:.82">BOTICA &amp; FARMACIA</div></td>
-                <td style="text-align:right"><span style="display:inline-block;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.16);font-size:12px;font-weight:700">✓ Venta confirmada</span></td>
-              </tr></table>
-              <h1 style="margin:28px 0 7px;font-size:29px;line-height:1.15">Gracias por tu compra</h1>
-              <p style="margin:0;font-size:15px;opacity:.9">Tu comprobante digital está listo.</p>
-            </div>
-
-            <div style="padding:30px 34px">
-              <p style="margin:0 0 22px;font-size:16px;line-height:1.6">Hola <strong>%s</strong>, registramos tu compra correctamente. Conserva este correo como constancia de la operación.</p>
-
-              <table role="presentation" style="width:100%%;border-collapse:separate;border-spacing:0;background:#eff8f5;border:1px solid #d9ebe5;border-radius:15px">
-                <tr><td style="padding:16px 18px;border-bottom:1px solid #d9ebe5"><div style="font-size:11px;color:#688078;text-transform:uppercase;letter-spacing:1px">Comprobante</div><div style="margin-top:4px;font-size:18px;font-weight:800;color:#08785a">%s</div></td>
-                <td style="padding:16px 18px;border-bottom:1px solid #d9ebe5"><div style="font-size:11px;color:#688078;text-transform:uppercase;letter-spacing:1px">Fecha</div><div style="margin-top:4px;font-size:14px;font-weight:700">%s</div></td></tr>
-                <tr><td style="padding:14px 18px"><div style="font-size:11px;color:#688078;text-transform:uppercase;letter-spacing:1px">Documento</div><div style="margin-top:4px;font-size:14px;font-weight:700">%s</div></td>
-                <td style="padding:14px 18px"><div style="font-size:11px;color:#688078;text-transform:uppercase;letter-spacing:1px">Pago</div><div style="margin-top:4px;font-size:14px;font-weight:700">%s</div></td></tr>
-              </table>
-
-              <h2 style="margin:28px 0 10px;font-size:17px">Detalle de la compra</h2>
-              <table style="width:100%%;border-collapse:collapse">
-                <thead><tr style="background:#f7faf9"><th style="padding:11px 12px;text-align:left;color:#647a73;font-size:11px;text-transform:uppercase">Producto</th><th style="padding:11px 8px;color:#647a73;font-size:11px;text-transform:uppercase">Cant.</th><th style="padding:11px 8px;text-align:right;color:#647a73;font-size:11px;text-transform:uppercase">P. unit.</th><th style="padding:11px 12px;text-align:right;color:#647a73;font-size:11px;text-transform:uppercase">Total</th></tr></thead>
-                <tbody>%s</tbody>
-              </table>
-
-              <table role="presentation" style="width:100%%;margin-top:20px;border-collapse:collapse"><tr><td style="width:48%%"></td><td>
+        <div lang="es" style="margin:0;padding:32px 12px;background:#edf4f1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;color:#123028">
+          <table role="presentation" style="width:100%%;max-width:640px;margin:0 auto;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #d7e7e1;border-radius:24px;overflow:hidden;box-shadow:0 20px 50px rgba(6,78,59,0.10)">
+            <!-- HEADER -->
+            <tr>
+              <td style="background:linear-gradient(135deg,#064e3b 0%%,#0a7c5e 60%%,#0d9488 100%%);padding:32px 34px 28px;color:#ffffff">
                 <table role="presentation" style="width:100%%;border-collapse:collapse">
-                  <tr><td style="padding:5px;color:#6b7f78">Subtotal</td><td style="padding:5px;text-align:right">S/ %.2f</td></tr>
-                  <tr><td style="padding:5px;color:#6b7f78">IGV (18%%)</td><td style="padding:5px;text-align:right">S/ %.2f</td></tr>
-                  <tr><td style="padding:13px 5px 5px;border-top:2px solid #173b32;font-size:18px;font-weight:800">Total</td><td style="padding:13px 5px 5px;border-top:2px solid #173b32;text-align:right;font-size:20px;font-weight:800;color:#08785a">S/ %.2f</td></tr>
+                  <tr>
+                    <td style="vertical-align:middle">
+                      <table role="presentation" style="border-collapse:collapse">
+                        <tr>
+                          <td style="width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,0.18);text-align:center;vertical-align:middle;font-size:22px;font-weight:900;color:#ffffff">+</td>
+                          <td style="padding-left:12px">
+                            <div style="font-size:15px;font-weight:800;letter-spacing:2.5px;line-height:1.1">MEDIZANO</div>
+                            <div style="margin-top:3px;font-size:11px;letter-spacing:1px;opacity:0.85">BOTICA &amp; FARMACIA</div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td style="text-align:right;vertical-align:middle">
+                      <span style="display:inline-block;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.28);font-size:12px;font-weight:700;color:#ffffff">✓ Pago confirmado</span>
+                    </td>
+                  </tr>
                 </table>
-              </td></tr></table>
 
-              %s
+                <table role="presentation" style="width:100%%;margin-top:26px;border-collapse:collapse">
+                  <tr>
+                    <td style="vertical-align:bottom">
+                      <div style="font-size:12px;text-transform:uppercase;letter-spacing:1.4px;opacity:0.8">Boleta de Venta Electrónica</div>
+                      <h1 style="margin:6px 0 4px;font-size:26px;font-weight:800;line-height:1.15;color:#ffffff">Gracias por tu compra</h1>
+                      <div style="font-size:14px;opacity:0.9">Comprobante <strong>%s</strong> emitido correctamente.</div>
+                    </td>
+                    <td style="text-align:right;vertical-align:bottom;white-space:nowrap">
+                      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:0.8">Total pagado</div>
+                      <div style="margin-top:4px;font-size:28px;font-weight:800;letter-spacing:-0.5px;color:#ffffff">S/ %.2f</div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
 
-              <div style="margin-top:30px;padding:17px 19px;border-radius:14px;background:#fff8e8;border:1px solid #f5e4b7;color:#6f5a25;font-size:13px;line-height:1.5">💡 Guarda este correo para futuras consultas o devoluciones.</div>
-            </div>
+            <!-- BODY -->
+            <tr>
+              <td style="padding:30px 34px 32px">
+                <p style="margin:0 0 22px;font-size:15px;line-height:1.65;color:#27473e">
+                  Hola <strong style="color:#0d2b23">%s</strong>, tu compra en <strong>MediZano Botica</strong> fue registrada con éxito. Conserva este comprobante digital como constancia de tu operación.
+                </p>
 
-            <div style="padding:22px 34px;background:#173b32;color:#ffffff;text-align:center">
-              <div style="font-weight:800;letter-spacing:.5px">MediZano Botica</div>
-              <div style="margin-top:6px;font-size:12px;opacity:.72">Salud, confianza y atención cerca de ti.</div>
-              <div style="margin-top:14px;font-size:10px;opacity:.55">Este mensaje fue generado automáticamente. No respondas a este correo.</div>
-            </div>
-          </div>
+                <!-- METADATA CARD -->
+                <table role="presentation" style="width:100%%;border-collapse:separate;border-spacing:0;background:#f4faf7;border:1px solid #d8ebe4;border-radius:16px">
+                  <tr>
+                    <td style="width:50%%;padding:15px 18px;border-bottom:1px solid #dcece6;border-right:1px solid #dcece6">
+                      <div style="font-size:10px;font-weight:700;color:#5f7a72;text-transform:uppercase;letter-spacing:1px">N.° de Comprobante</div>
+                      <div style="margin-top:5px;font-size:16px;font-weight:800;color:#066a50;letter-spacing:0.3px">%s</div>
+                    </td>
+                    <td style="width:50%%;padding:15px 18px;border-bottom:1px solid #dcece6">
+                      <div style="font-size:10px;font-weight:700;color:#5f7a72;text-transform:uppercase;letter-spacing:1px">Fecha y hora</div>
+                      <div style="margin-top:5px;font-size:14px;font-weight:700;color:#123028">%s</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="width:50%%;padding:15px 18px;border-right:1px solid #dcece6">
+                      <div style="font-size:10px;font-weight:700;color:#5f7a72;text-transform:uppercase;letter-spacing:1px">Cliente / Documento</div>
+                      <div style="margin-top:5px;font-size:14px;font-weight:700;color:#123028">%s</div>
+                    </td>
+                    <td style="width:50%%;padding:15px 18px">
+                      <div style="font-size:10px;font-weight:700;color:#5f7a72;text-transform:uppercase;letter-spacing:1px">Método de pago</div>
+                      <div style="margin-top:6px">
+                        <span style="display:inline-block;padding:4px 11px;border-radius:999px;background:%s;color:%s;border:1px solid %s;font-size:12px;font-weight:700">%s</span>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- ITEMS TABLE -->
+                <div style="margin:28px 0 12px;font-size:15px;font-weight:800;color:#0f2922;letter-spacing:0.2px">Detalle de productos</div>
+                <table role="presentation" style="width:100%%;border-collapse:separate;border-spacing:0;border:1px solid #e3eeea;border-radius:14px;overflow:hidden">
+                  <thead>
+                    <tr style="background:#f3f8f6">
+                      <th style="padding:11px 14px;text-align:left;color:#546f67;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;border-bottom:1px solid #e3eeea">Producto</th>
+                      <th style="padding:11px 8px;text-align:center;color:#546f67;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;border-bottom:1px solid #e3eeea">Cant.</th>
+                      <th style="padding:11px 10px;text-align:right;color:#546f67;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;border-bottom:1px solid #e3eeea">P. unit.</th>
+                      <th style="padding:11px 14px;text-align:right;color:#546f67;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;border-bottom:1px solid #e3eeea">Importe</th>
+                    </tr>
+                  </thead>
+                  <tbody>%s</tbody>
+                </table>
+
+                <!-- TOTALS BOX -->
+                <table role="presentation" style="width:100%%;margin-top:20px;border-collapse:collapse">
+                  <tr>
+                    <td style="width:42%%"></td>
+                    <td style="width:58%%">
+                      <table role="presentation" style="width:100%%;border-collapse:separate;border-spacing:0;background:#f7fbf9;border:1px solid #dcebe5;border-radius:14px;padding:12px 16px">
+                        <tr>
+                          <td style="padding:5px 0;font-size:13px;color:#5a756c">Op. Gravada (Subtotal)</td>
+                          <td style="padding:5px 0;text-align:right;font-size:13px;font-weight:600;color:#173b32">S/ %.2f</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:5px 0 10px;font-size:13px;color:#5a756c">I.G.V. (18%%)</td>
+                          <td style="padding:5px 0 10px;text-align:right;font-size:13px;font-weight:600;color:#173b32">S/ %.2f</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:12px 0 4px;border-top:2px solid #0d4a3a;font-size:16px;font-weight:800;color:#0f2922">Importe Total</td>
+                          <td style="padding:12px 0 4px;border-top:2px solid #0d4a3a;text-align:right;font-size:20px;font-weight:800;color:#066a50">S/ %.2f</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                %s
+
+                <!-- INFO NOTICE -->
+                <div style="margin-top:24px;padding:14px 18px;border-radius:14px;background:#fffbeb;border:1px solid #fde68a;color:#78530b;font-size:13px;line-height:1.55">
+                  <strong>Importante:</strong> Conserva este correo para consultas, garantías o devoluciones en cualquiera de nuestras sedes.
+                </div>
+              </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+              <td style="padding:24px 34px;background:#0e2f26;color:#ffffff;text-align:center">
+                <div style="font-size:15px;font-weight:800;letter-spacing:1px">MediZano Botica &amp; Farmacia</div>
+                <div style="margin-top:6px;font-size:12px;color:#b8d4cb">Av. Larco 742, Miraflores · Lima, Perú · RUC 20608945123</div>
+                <div style="margin-top:4px;font-size:12px;color:#8cb5a8">Atención al cliente: medizano@univer.lat</div>
+                <div style="margin-top:14px;font-size:10px;color:#6c9487">Este comprobante electrónico fue generado automáticamente. Por favor, no respondas a este mensaje.</div>
+              </td>
+            </tr>
+          </table>
         </div>
-        """ % (customer, series, receipt_date, customer_doc, payment_mode, items_html, subtotal, tax, total,
-                 ("<div style='margin:26px 0 4px;text-align:center'><img src='%s' width='150' height='150' alt='QR del comprobante' style='display:inline-block;border:8px solid #fff;border-radius:12px'><div style='margin-top:7px;font-size:11px;color:#6b7f78'>QR de verificación del comprobante</div></div>" % html.escape(qr_url)) if qr_url else "")
+        """ % (
+            series, total, customer, series, receipt_date_es, customer_doc,
+            pm_bg, pm_fg, pm_border, payment_mode,
+            items_html, subtotal, tax, total, qr_block,
+        )
         mail_server = request.env["ir.mail_server"].sudo().search([("active", "=", True)], order="sequence, id", limit=1)
-        sender = mail_server.smtp_user or request.env.company.email or request.env.user.email or "noreply@medizano.local"
+        sender = mail_server.smtp_user or request.env.company.email or request.env.user.email or "medizano@univer.lat"
+        sender_formatted = "MediZano Botica <%s>" % sender
         mail = request.env["mail.mail"].sudo().create({
             "subject": "Comprobante %s - MediZano Botica" % series,
-            "email_from": sender,
+            "email_from": sender_formatted,
             "email_to": recipient,
             "body_html": body,
         })
@@ -3144,6 +3878,242 @@ class PharmacyFrontendApi(http.Controller):
             })
         return self._json(records)
 
+    def _cashier_session(self, resource, payload=None, query=None):
+        payload = payload or {}
+        query = query or {}
+        env = request.env
+        config = env["pos.config"].sudo().search([("name", "ilike", "MediZano")], order="id", limit=1)
+        if not config:
+            return self._json({"message": "Punto de venta MediZano no configurado."}, 409)
+
+        method = request.httprequest.method
+        parts = resource.strip("/").split("/")
+        action = parts[-1] if len(parts) >= 3 else "status"
+
+        if action == "status" and method == "GET":
+            session = env["pos.session"].sudo().search([
+                ("config_id", "=", config.id),
+                ("state", "in", ("opening_control", "opened")),
+            ], order="id desc", limit=1)
+            if not session:
+                last_closed = env["pos.session"].sudo().search([
+                    ("config_id", "=", config.id),
+                    ("state", "=", "closed"),
+                ], order="stop_at desc, id desc", limit=1)
+                return self._json({
+                    "hasActiveSession": False,
+                    "lastSession": self._session_data(last_closed) if last_closed else None,
+                })
+            return self._json({
+                "hasActiveSession": True,
+                "session": self._session_data(session),
+            })
+
+        if action == "open" and method == "POST":
+            active = env["pos.session"].sudo().search([
+                ("config_id", "=", config.id),
+                ("state", "in", ("opening_control", "opened")),
+            ], limit=1)
+            if active:
+                return self._json({"message": "Ya existe un turno de caja abierto (%s)." % active.name}, 409)
+            opening_cash = float(payload.get("openingBalance") or 0.0)
+            notes = str(payload.get("notes") or "").strip()
+            user_id = request.session.uid or env.user.id
+            session = env["pos.session"].sudo().create({
+                "config_id": config.id,
+                "user_id": user_id,
+            })
+            if opening_cash > 0 or hasattr(session, "set_opening_control"):
+                try:
+                    session.set_opening_control(opening_cash, notes or "Apertura de turno")
+                except Exception:
+                    session.write({"cash_register_balance_start": opening_cash})
+            session.action_pos_session_open()
+            cajero_name = session.user_id.name or "Cajero"
+            self._record_audit(
+                "CASH_SESSION_OPENED", "POS_SESSION", session.id,
+                f"Turno de caja abierto por {cajero_name}. Fondo inicial: S/ {opening_cash:.2f}",
+                user_id=user_id,
+            )
+            return self._json({
+                "success": True,
+                "message": "Turno de caja abierto exitosamente.",
+                "session": self._session_data(session),
+            }, 201)
+
+        if action == "close" and method == "POST":
+            session = env["pos.session"].sudo().search([
+                ("config_id", "=", config.id),
+                ("state", "in", ("opening_control", "opened")),
+            ], order="id desc", limit=1)
+            if not session:
+                return self._json({"message": "No hay un turno de caja activo para cerrar."}, 404)
+            cash_counted = float(payload.get("cashCounted") or 0.0)
+            notes = str(payload.get("notes") or "").strip()
+            session.invalidate_recordset()
+            expected_cash = float(session.cash_register_balance_end or 0.0)
+            diff = round(cash_counted - expected_cash, 2)
+            try:
+                session.write({"cash_register_balance_end_real": cash_counted})
+                session.action_pos_session_closing_control()
+            except Exception:
+                session.write({
+                    "cash_register_balance_end_real": cash_counted,
+                    "state": "closed",
+                    "stop_at": fields.Datetime.now(),
+                })
+            cajero_name = session.user_id.name or "Cajero"
+            diff_text = "Exacto (S/ 0.00)" if abs(diff) < 0.01 else (f"Sobrante S/ {diff:.2f}" if diff > 0 else f"Faltante S/ {abs(diff):.2f}")
+            self._record_audit(
+                "CASH_SESSION_CLOSED", "POS_SESSION", session.id,
+                f"Turno de caja cerrado por {cajero_name}. Efectivo contado: S/ {cash_counted:.2f} (Esperado: S/ {expected_cash:.2f}, Arqueo: {diff_text}). Notas: {notes}",
+                user_id=session.user_id.id,
+            )
+            return self._json({
+                "success": True,
+                "message": "Turno de caja cerrado y arqueo registrado.",
+                "session": self._session_data(session),
+                "closingReport": {
+                    "sessionId": session.id,
+                    "sessionName": session.name,
+                    "cajero": cajero_name,
+                    "startAt": session.start_at.isoformat() if session.start_at else "",
+                    "stopAt": session.stop_at.isoformat() if session.stop_at else "",
+                    "openingBalance": session.cash_register_balance_start,
+                    "expectedCash": expected_cash,
+                    "cashCounted": cash_counted,
+                    "difference": diff,
+                    "differenceStatus": "BALANCED" if abs(diff) < 0.01 else ("SURPLUS" if diff > 0 else "DEFICIT"),
+                    "notes": notes,
+                }
+            })
+
+        if action == "history" and method == "GET":
+            limit = min(50, int(query.get("limit") or 20))
+            sessions = env["pos.session"].sudo().search([
+                ("config_id", "=", config.id),
+            ], order="id desc", limit=limit)
+            return self._json([self._session_data(s) for s in sessions])
+
+        return self._json({"message": "Acción de caja no reconocida."}, 400)
+
+    def _session_data(self, session):
+        if not session:
+            return None
+        orders = session.order_ids
+        total_cash = 0.0
+        total_card = 0.0
+        total_digital = 0.0
+        for o in orders:
+            for p in o.payment_ids:
+                amount = float(p.amount or 0.0)
+                mname = (p.payment_method_id.name or "").lower()
+                if any(x in mname for x in ("tarjeta", "card", "visa", "master")):
+                    total_card += amount
+                elif any(x in mname for x in ("yape", "plin", "transfer", "billetera", "upi")):
+                    total_digital += amount
+                else:
+                    total_cash += amount
+        expected_cash = float(session.cash_register_balance_end or (session.cash_register_balance_start + total_cash))
+        real_counted = float(session.cash_register_balance_end_real or 0.0)
+        diff = round(real_counted - expected_cash, 2) if session.state == "closed" else 0.0
+        return {
+            "id": session.id,
+            "name": session.name,
+            "state": session.state,
+            "cashierId": session.user_id.id if session.user_id else 0,
+            "cashierName": session.user_id.name if session.user_id else "Cajero no asignado",
+            "startAt": session.start_at.isoformat() if session.start_at else "",
+            "stopAt": session.stop_at.isoformat() if session.stop_at else "",
+            "openingBalance": float(session.cash_register_balance_start or 0.0),
+            "cashSales": round(total_cash, 2),
+            "cardSales": round(total_card, 2),
+            "digitalSales": round(total_digital, 2),
+            "expectedCash": round(expected_cash, 2),
+            "countedCash": round(real_counted, 2),
+            "difference": diff,
+            "ordersCount": len(orders.filtered(lambda x: x.amount_total > 0)),
+            "refundsCount": len(orders.filtered(lambda x: x.amount_total < 0)),
+            "totalRevenue": round(sum(orders.mapped("amount_total")), 2),
+        }
+
+    def _kardex(self, resource, query=None):
+        query = query or {}
+        env = request.env
+        parts = resource.strip("/").split("/")
+        
+        product_id = None
+        if len(parts) >= 3 and parts[1] == "medicines" and parts[2].isdigit():
+            product_id = int(parts[2])
+        elif query.get("medicineId"):
+            try:
+                product_id = int(query["medicineId"])
+            except (TypeError, ValueError):
+                pass
+
+        domain = [("state", "=", "done")]
+        if product_id:
+            domain.append(("product_id", "=", product_id))
+        
+        if query.get("startDate"):
+            domain.append(("date", ">=", query["startDate"] + " 00:00:00"))
+        if query.get("endDate"):
+            domain.append(("date", "<=", query["endDate"] + " 23:59:59"))
+
+        moves = env["stock.move"].sudo().search(domain, order="date asc, id asc", limit=300 if not product_id else 500)
+        
+        records = []
+        running_balances = defaultdict(float)
+        
+        for m in moves:
+            p = m.product_id
+            is_in = m.location_dest_id.usage == "internal" and m.location_id.usage != "internal"
+            is_out = m.location_id.usage == "internal" and m.location_dest_id.usage != "internal"
+            is_internal = m.location_id.usage == "internal" and m.location_dest_id.usage == "internal"
+            
+            qty = float(m.quantity or m.product_uom_qty or 0.0)
+            qty_in = qty if is_in else 0.0
+            qty_out = qty if is_out else 0.0
+            
+            running_balances[p.id] += (qty_in - qty_out)
+            
+            origin = m.picking_id.origin or m.reference or ""
+            op_type = "COMPRA" if is_in and (m.picking_id.purchase_id or "WH/IN" in origin or "P0" in origin) else (
+                "VENTA_POS" if is_out and ("POS" in origin or m.picking_id.pos_order_id) else (
+                    "DEVOLUCION" if is_in and ("REFUND" in origin or "DEV" in origin) else (
+                        "AJUSTE" if "INV" in origin or is_internal else ("ENTRADA" if is_in else "SALIDA")
+                    )
+                )
+            )
+            
+            lot_names = ", ".join(m.move_line_ids.mapped("lot_id.name")) or "-"
+            unit_cost = float(p.standard_price or 0.0)
+            
+            records.append({
+                "id": m.id,
+                "date": m.date.isoformat() if m.date else "",
+                "medicineId": p.id,
+                "medicineName": self._clean_product_name(p),
+                "operationType": op_type,
+                "document": m.reference or origin or "-",
+                "lot": lot_names,
+                "locationFrom": m.location_id.name or "Externo",
+                "locationTo": m.location_dest_id.name or "Almacén",
+                "quantityIn": round(qty_in, 2),
+                "quantityOut": round(qty_out, 2),
+                "balance": round(running_balances[p.id], 2),
+                "unitCost": round(unit_cost, 2),
+                "totalValue": round(running_balances[p.id] * unit_cost, 2),
+            })
+            
+        if query.get("order") == "desc":
+            records.reverse()
+            
+        return self._json({
+            "totalMovements": len(records),
+            "movements": records,
+        })
+
     @staticmethod
     def _json(data, status=200):
         return request.make_response(
@@ -3154,28 +4124,19 @@ class PharmacyFrontendApi(http.Controller):
 
 
 class MediZanoSsoHome(Home):
-    """Require the MediZano e-mail challenge for native Odoo sessions too."""
+    """Direct login for native Odoo sessions without MFA challenge."""
 
     @http.route()
     def web_login(self, redirect=None, **kw):
         response = super().web_login(redirect=redirect, **kw)
         if request.session.uid:
-            if request.session.get("medizano_mfa_verified_uid") == request.session.uid:
-                return response
-            if request.httprequest.method == "POST":
-                error = self._start_native_challenge()
-                if error:
-                    return self._mfa_page(error=error)
-            return request.redirect("/web/mfa")
+            request.session["medizano_mfa_verified_uid"] = request.session.uid
         return response
 
     @http.route()
     def web_client(self, s_action=None, **kw):
-        if (
-            request.session.uid
-            and request.session.get("medizano_mfa_verified_uid") != request.session.uid
-        ):
-            return request.redirect("/web/mfa")
+        if request.session.uid:
+            request.session["medizano_mfa_verified_uid"] = request.session.uid
         return super().web_client(s_action=s_action, **kw)
 
     @http.route(
@@ -3183,126 +4144,10 @@ class MediZanoSsoHome(Home):
         type="http",
         auth="none",
         methods=["GET", "POST"],
-        readonly=False,
+        csrf=False,
     )
     def web_mfa(self, **post):
-        if not request.session.uid:
-            return request.redirect("/web/login")
-        if request.session.get("medizano_mfa_verified_uid") == request.session.uid:
+        if request.session.uid:
+            request.session["medizano_mfa_verified_uid"] = request.session.uid
             return request.redirect("/web")
-
-        helper = PharmacyFrontendApi()
-        token = request.session.get("medizano_mfa_challenge")
-        challenge = helper._challenge(token)
-        if not challenge or challenge.user_id.id != request.session.uid:
-            error = self._start_native_challenge()
-            if error:
-                return self._mfa_page(error=error)
-            token = request.session.get("medizano_mfa_challenge")
-            challenge = helper._challenge(token)
-
-        if request.httprequest.method == "POST":
-            action = (post.get("action") or "verify").strip()
-            if action == "resend":
-                result = self._resend_native_challenge(helper, challenge)
-                return self._mfa_page(**result)
-            return self._verify_native_challenge(helper, challenge, post.get("code"))
-
-        return self._mfa_page()
-
-    def _start_native_challenge(self):
-        helper = PharmacyFrontendApi()
-        user = request.env["res.users"].sudo().browse(request.session.uid)
-        email = (user.email or "").strip()
-        if not email or "@" not in email or email.lower().endswith("@yourcompany.example.com"):
-            return "Esta cuenta no tiene un correo válido. Configúralo antes de ingresar."
-        challenge, code = helper._new_login_challenge(user)
-        if not helper._send_login_code(user, code):
-            challenge.unlink()
-            return "No pudimos enviar el código. Revisa la configuración del correo."
-        request.session["medizano_mfa_verified_uid"] = False
-        request.session["medizano_mfa_challenge"] = challenge.token
-        helper._record_audit(
-            "LOGIN_CODE_SENT", "ACCESS", user.id,
-            "Código de acceso enviado", user_id=user.id,
-        )
-        return None
-
-    def _verify_native_challenge(self, helper, challenge, raw_code):
-        now = fields.Datetime.now()
-        code = "".join(character for character in str(raw_code or "") if character.isdigit())
-        if not challenge or challenge.expires_at <= now:
-            if challenge:
-                challenge.used = True
-            return self._mfa_page(error="El código venció. Solicita uno nuevo.")
-        if challenge.attempts >= 3:
-            challenge.used = True
-            return self._mfa_page(error="Superaste los 3 intentos. Vuelve a iniciar sesión.")
-        valid = len(code) == 6 and secrets.compare_digest(
-            challenge.code_hash, helper._code_hash(challenge.token, code)
-        )
-        if not valid:
-            challenge.attempts += 1
-            remaining = max(0, 3 - challenge.attempts)
-            helper._record_audit(
-                "LOGIN_CODE_FAILED", "ACCESS", challenge.user_id.id,
-                "Código de acceso incorrecto", user_id=challenge.user_id.id, success=False,
-            )
-            if not remaining:
-                challenge.used = True
-            message = (
-                "Código incorrecto. Te quedan %s intento(s)." % remaining
-                if remaining else "Superaste los 3 intentos. Vuelve a iniciar sesión."
-            )
-            return self._mfa_page(error=message)
-        if challenge.user_id.id != request.session.uid:
-            challenge.used = True
-            request.session.logout()
-            return request.redirect("/web/login")
-
-        challenge.used = True
-        request.session["medizano_mfa_verified_uid"] = request.session.uid
-        request.session.pop("medizano_mfa_challenge", None)
-        helper._record_audit(
-            "USER_LOGIN", "ACCESS", request.session.uid,
-            "El usuario ingresó con verificación por correo", user_id=request.session.uid,
-        )
-        return request.redirect("/web")
-
-    def _resend_native_challenge(self, helper, challenge):
-        now = fields.Datetime.now()
-        if not challenge or challenge.expires_at <= now:
-            error = self._start_native_challenge()
-            return {"error": error, "notice": None if error else "Enviamos un código nuevo."}
-        if challenge.resends >= 2:
-            return {"error": "Ya utilizaste los 2 reenvíos disponibles."}
-        wait = 60 - int((now - challenge.last_sent_at).total_seconds())
-        if wait > 0:
-            return {"error": "Podrás reenviar el código en %s segundos." % wait}
-        code = "%06d" % secrets.randbelow(1000000)
-        if not helper._send_login_code(challenge.user_id, code):
-            return {"error": "No pudimos reenviar el código."}
-        challenge.write({
-            "code_hash": helper._code_hash(challenge.token, code),
-            "expires_at": now + timedelta(minutes=5),
-            "attempts": 0,
-            "resends": challenge.resends + 1,
-            "last_sent_at": now,
-        })
-        return {"notice": "Código reenviado. Revisa tu correo."}
-
-    def _mfa_page(self, error=None, notice=None):
-        user = request.env["res.users"].sudo().browse(request.session.uid)
-        email = PharmacyFrontendApi._mask_email(user.email) if user.email and "@" in user.email else "correo no configurado"
-        csrf = request.csrf_token()
-        alert = ""
-        if error:
-            alert = '<div class="alert error">%s</div>' % html.escape(error)
-        elif notice:
-            alert = '<div class="alert notice">%s</div>' % html.escape(notice)
-        page = """<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Verificación de acceso | MediZano</title><style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(145deg,#eef7f5,#edf4fb);font-family:Inter,Arial,sans-serif;color:#173b37}.card{width:min(92vw,470px);background:#fff;border:1px solid #d7e6e2;border-radius:24px;box-shadow:0 24px 70px rgba(20,63,70,.14);overflow:hidden}.head{padding:30px 34px;background:linear-gradient(135deg,#0f766e,#075985);color:#fff}.brand{font-size:12px;font-weight:800;letter-spacing:2.2px;opacity:.86}.head h1{margin:12px 0 7px;font-size:27px}.head p{margin:0;opacity:.85}.body{padding:32px 34px}.mail{background:#f0f8f6;border-radius:13px;padding:14px 16px;margin-bottom:22px;color:#41645f}.body label{display:block;font-weight:750;margin-bottom:10px}.code{width:100%%;height:64px;border:2px solid #cbded9;border-radius:14px;text-align:center;font-size:30px;font-weight:800;letter-spacing:10px;color:#123f3a;outline:0}.code:focus{border-color:#0f766e;box-shadow:0 0 0 4px #d8f0eb}.primary{width:100%%;height:54px;margin-top:18px;border:0;border-radius:13px;background:#0f766e;color:white;font-size:17px;font-weight:800;cursor:pointer}.resend{width:100%%;margin-top:12px;border:0;background:transparent;color:#075985;font-weight:700;cursor:pointer}.alert{padding:13px 15px;border-radius:11px;margin-bottom:18px;font-size:14px}.error{background:#fff0f0;color:#b42318;border:1px solid #ffd0cc}.notice{background:#ecfdf3;color:#067647;border:1px solid #abefc6}.foot{text-align:center;color:#718b87;font-size:13px;margin-top:20px}
-</style></head><body><main class="card"><header class="head"><div class="brand">MEDIZANO BOTICA</div><h1>Confirma que eres tú</h1><p>Protegemos el acceso a Odoo y al frontend.</p></header><section class="body">%s<div class="mail">Enviamos un código de 6 dígitos a <strong>%s</strong>. Es válido por 5 minutos.</div><form method="post" action="/web/mfa"><input type="hidden" name="csrf_token" value="%s"><label for="code">Código de acceso</label><input id="code" class="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" autofocus required><button class="primary" type="submit" name="action" value="verify">Verificar e ingresar</button><button class="resend" type="submit" name="action" value="resend" formnovalidate>Reenviar código</button></form><div class="foot">3 intentos · máximo 2 reenvíos</div></section></main></body></html>""" % (alert, html.escape(email), html.escape(csrf))
-        return request.make_response(page, headers=[("Content-Type", "text/html; charset=utf-8")])
+        return request.redirect("/web/login")

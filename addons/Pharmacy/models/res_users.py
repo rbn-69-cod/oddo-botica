@@ -35,12 +35,12 @@ class ResUsers(models.Model):
     @api.constrains("branch_id")
     def _check_branch_assignment(self):
         """Check branch assignment based on user groups"""
+        default_branch = self.env["pharmacy.branch"].sudo().search([("active", "=", True)], order="id asc", limit=1)
         for user in self:
-            if user.has_group("Pharmacy.group_pharmacy_cashier"):
-                if not user.branch_id:
-                    raise ValidationError(
-                        _("Cashiers must have a home branch assigned")
-                    )
+            if user.share or user.login in ("__system__", "default", "public", "portaltemplate"):
+                continue
+            if not user.branch_id and default_branch:
+                user.sudo().write({"branch_id": default_branch.id})
 
     @api.constrains("controlled_substance_pin")
     def _check_controlled_substance_pin(self):
@@ -97,7 +97,10 @@ class ResUsers(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        default_branch = self.env["pharmacy.branch"].sudo().search([("active", "=", True)], order="id asc", limit=1)
         for vals in vals_list:
+            if not vals.get("branch_id") and not vals.get("share") and default_branch:
+                vals["branch_id"] = default_branch.id
             # Auto-set allowed branches if home branch is set
             if vals.get("branch_id") and not vals.get("allowed_branch_ids"):
                 vals["allowed_branch_ids"] = [(6, 0, [vals["branch_id"]])]

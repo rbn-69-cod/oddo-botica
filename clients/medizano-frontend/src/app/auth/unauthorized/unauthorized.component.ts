@@ -21,27 +21,27 @@ export class UnauthorizedComponent {
       const defaultRoute = this.getDefaultRoute(user.role);
       this.router.navigate([defaultRoute]);
     } else {
-      this.router.navigate(['/acceso/iniciar-sesion']);
+      this.router.navigate(['/auth/login']);
     }
   }
 
   private getDefaultRoute(role: string): string {
     switch (role) {
       case 'CASHIER':
-        return '/ventas';
+        return '/billing';
       case 'STOCK_MONITOR':
-        return '/inventario';
+        return '/inventory';
       case 'STOCK_KEEPER':
-        return '/medicamentos';
+        return '/medicines';
       case 'CUSTOMER_SUPPORT':
-        return '/devoluciones';
+        return '/returns';
       case 'ANALYST':
       case 'MANAGER':
-        return '/reportes';
+        return '/reports';
       case 'ADMIN':
-        return '/ventas';
+        return '/billing';
       default:
-        return '/ventas';
+        return '/billing';
     }
   }
 }

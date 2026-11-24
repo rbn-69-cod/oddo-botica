@@ -33,8 +33,19 @@
 
         <menuitem id="menu_pharmacy_sales" name="Ventas"
                   parent="menu_pharmacy_root" sequence="30"/>
-        <menuitem id="menu_pharmacy_pos_orders" name="Comprobantes y ventas POS"
-                  parent="menu_pharmacy_sales" action="point_of_sale.action_pos_pos_form" sequence="10"/>
+        <!-- Abre directamente la caja POS nativa de Odoo, no el historial. -->
+        <record id="action_pharmacy_open_native_pos" model="ir.actions.server">
+            <field name="name">Registrar venta en caja POS</field>
+            <field name="model_id" ref="point_of_sale.model_pos_config"/>
+            <field name="state">code</field>
+            <field name="code">action = env['pos.config'].search([('active', '=', True)], limit=1).open_ui()</field>
+        </record>
+        <menuitem id="menu_pharmacy_pos_orders" name="Nueva venta en caja POS"
+                  parent="menu_pharmacy_sales" action="action_pharmacy_open_native_pos" sequence="10"/>
+        <menuitem id="menu_pharmacy_pos_dashboard" name="Configurar / abrir caja POS"
+                  parent="menu_pharmacy_sales" action="point_of_sale.action_pos_config_kanban" sequence="15"/>
+        <menuitem id="menu_pharmacy_pos_history" name="Historial de ventas POS"
+                  parent="menu_pharmacy_sales" action="point_of_sale.action_pos_pos_form" sequence="20"/>
 
         <record id="menu_pharmacy_accounting" model="ir.ui.menu">
             <field name="name">Compras</field>
@@ -116,6 +127,21 @@
         <record id="menu_pharmacy_discount_rule" model="ir.ui.menu"><field name="active" eval="False"/></record>
         <record id="menu_pharmacy_promotion" model="ir.ui.menu"><field name="active" eval="False"/></record>
         <record id="menu_pharmacy_pricelist" model="ir.ui.menu"><field name="active" eval="False"/></record>
+
+        <record id="view_product_template_pharmacy_barcode_inherit" model="ir.ui.view">
+            <field name="name">product.template.pharmacy.barcode.inherit</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_only_form_view"/>
+            <field name="priority">25</field>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='name']" position="after">
+                    <div class="mt-2 mb-2">
+                        <label for="barcode" string="Código de Barras (EAN-13):" class="fw-bold"/>
+                        <field name="barcode" placeholder="Escanea código o déjalo vacío para autogenerar..." class="oe_inline font-monospace"/>
+                    </div>
+                </xpath>
+            </field>
+        </record>
 
         <!-- Ocultar aplicaciones estándar; sus acciones siguen disponibles desde MediZano. -->
         <record id="mail.menu_root_discuss" model="ir.ui.menu"><field name="active" eval="False"/></record>

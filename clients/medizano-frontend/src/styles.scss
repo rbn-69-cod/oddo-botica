@@ -134,6 +134,30 @@
   --transition-slow: #{$motion-slow};
 }
 
+/* BSC target editing controls */
+app-bsc .target-actions {
+  display: flex;
+  gap: 6px;
+}
+
+app-bsc .target-actions button {
+  padding: 10px 12px;
+  border: 1px solid #d5e7e2;
+  border-radius: 10px;
+  background: #f6fbf9;
+  color: #416b61;
+  font: inherit;
+  font-size: .74rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+app-bsc .target-actions .save { color: #fff; background: #087a66; border-color: #087a66; }
+app-bsc .target-actions .cancel { color: #796142; background: #fff7e7; }
+app-bsc .target-actions button:disabled { opacity: .6; cursor: not-allowed; }
+app-bsc .target-editor { align-items: flex-end; color: #708982; font-size: .62rem; letter-spacing: 0; }
+app-bsc .target-editor input { width: 105px; height: 31px; }
+
 /* ============================================
    SEMANTIC DESIGN TOKENS - DARK THEME
    Luminance-based, not inverted light mode

@@ -416,9 +416,50 @@ class ProductTemplate(models.Model):
         """Generate barcode label for product"""
         return self.env.ref("Pharmacy.action_report_product_label").report_action(self)
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        pos_categ = self.env["pos.category"].search([("name", "ilike", "Medicamentos")], limit=1)
+        for vals in vals_list:
+            vals.setdefault("sale_ok", True)
+            vals.setdefault("purchase_ok", True)
+            vals.setdefault("available_in_pos", True)
+            vals.setdefault("tracking", "lot")
+            vals.setdefault("purchase_method", "purchase")
+            if not vals.get("barcode"):
+                vals["barcode"] = self._generate_unique_medizano_barcode()
+            if pos_categ and not vals.get("pos_categ_ids"):
+                vals["pos_categ_ids"] = [(4, pos_categ.id)]
+        return super().create(vals_list)
+
+    @api.model
+    def _generate_unique_medizano_barcode(self):
+        import random
+        for _ in range(100):
+            body = "775" + "".join([str(random.randint(0, 9)) for _ in range(9)])
+            evens = sum(int(body[i]) for i in range(1, 12, 2))
+            odds = sum(int(body[i]) for i in range(0, 12, 2))
+            check = (10 - ((odds + 3 * evens) % 10)) % 10
+            barcode = body + str(check)
+            if not self.env["product.product"].with_context(active_test=False).search_count([("barcode", "=", barcode)]):
+                return barcode
+        import random
+        return "775" + str(random.randint(1000000000, 9999999999))
+
 
 class ProductProduct(models.Model):
     _inherit = "product.product"
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get("barcode"):
+                tmpl_id = vals.get("product_tmpl_id")
+                tmpl = self.env["product.template"].browse(tmpl_id) if tmpl_id else None
+                if tmpl and tmpl.barcode:
+                    vals["barcode"] = tmpl.barcode
+                else:
+                    vals["barcode"] = self.env["product.template"]._generate_unique_medizano_barcode()
+        return super().create(vals_list)
 
     # Override methods to use template methods
     def get_available_lots(self, location_id, quantity_needed=0):

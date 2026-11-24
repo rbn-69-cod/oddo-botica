@@ -13,10 +13,10 @@ class PharmacyBscIndicator(models.Model):
     active = fields.Boolean(default=True)
     perspective = fields.Selection(
         [
-            ("financial", "Finanzas"),
+            ("financial", "Financiera"),
             ("customer", "Clientes"),
-            ("internal", "Operación y abastecimiento"),
-            ("learning", "Control y trazabilidad"),
+            ("internal", "Procesos internos"),
+            ("learning", "Aprendizaje y crecimiento"),
         ],
         string="Perspectiva",
         required=True,
@@ -72,26 +72,23 @@ class PharmacyBscIndicator(models.Model):
 
     _sql_constraints = [
         ("bsc_code_unique", "unique(code)", "El código del indicador debe ser único."),
-        ("bsc_target_non_negative", "check(target >= 0)", "La meta no puede ser negativa."),
+        ("bsc_target_positive", "check(target >= 0)", "La meta no puede ser negativa."),
     ]
 
     @api.depends("target", "actual", "direction")
     def _compute_status(self):
         for record in self:
-            # Cero es una meta válida cuando se busca eliminar quiebres de
-            # stock o valor vencido. Para esos KPI, 0 real = 100% cumplido.
-            if not record.target and record.direction == "down":
-                record.achievement = 100.0 if not record.actual else 0.0
-                record.status = "on_track" if not record.actual else "critical"
-                continue
-            if not record.target:
-                record.achievement = 0
-                record.status = "critical"
-                continue
             if record.direction == "up":
+                if not record.target:
+                    record.achievement = 100.0 if record.actual > 0 else 0.0
+                    record.status = "on_track" if record.actual > 0 else "critical"
+                    continue
                 achievement = record.actual / record.target * 100
             else:
-                achievement = record.target / record.actual * 100 if record.actual else 100
+                if not record.target:
+                    achievement = 100.0 if record.actual <= 0 else 0.0
+                else:
+                    achievement = record.target / record.actual * 100 if record.actual else 100
             record.achievement = min(achievement, 999.99)
             if achievement >= 100:
                 record.status = "on_track"

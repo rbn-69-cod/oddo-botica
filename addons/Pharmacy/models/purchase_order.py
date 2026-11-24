@@ -17,6 +17,7 @@ class PurchaseOrder(models.Model):
             ("EN_ENTREGA", "En entrega"),
             ("POR_VERIFICAR", "Por verificar"),
             ("VERIFICANDO", "Verificando"),
+            ("PARCIALMENTE_RECIBIDA", "Parcialmente recibida"),
             ("RECIBIDA", "Recibida"),
             ("CANCELADA", "Cancelada"),
         ],
@@ -41,7 +42,41 @@ class PurchaseOrder(models.Model):
         accepted = self.filtered(lambda order: order.medizano_state not in ("BORRADOR", "PENDIENTE", "CANCELADA") or order.state not in ("draft", "sent", "cancel"))
         if accepted:
             raise UserError("El proveedor ya aceptó esta orden. Registra diferencias o devoluciones sin cancelar la compra.")
-        return super().button_cancel()
+        result = super().button_cancel()
+        for order in self:
+            order.medizano_state = "CANCELADA"
+        return result
+
+    def button_confirm(self):
+        result = super().button_confirm()
+        # MediZano requires every confirmed supplier order to be invoiced.
+        for order in self.filtered(lambda item: item.state in ("purchase", "done")):
+            order.medizano_create_vendor_bill()
+            if order.medizano_state in ("BORRADOR", "PENDIENTE", False):
+                order.medizano_state = "POR_VERIFICAR"
+        return result
+
+    def medizano_create_vendor_bill(self):
+        """Create and post the supplier bill as soon as the PO is accepted.
+
+        Purchase orders in MediZano are never left awaiting an invoice: the
+        supplier has already confirmed each line's price before this method is
+        called.  Odoo's standard helper also prevents a second bill for the
+        same quantities.
+        """
+        self.ensure_one()
+        # Odoo 18 exposes this flow as ``action_create_invoice`` (earlier
+        # versions used ``_create_bills``). Keep the resulting moves so only
+        # the new vendor bills are posted.
+        existing_bills = self.invoice_ids
+        if self.invoice_status == "to invoice":
+            self.action_create_invoice()
+        bills = self.invoice_ids - existing_bills
+        drafts = bills.filtered(lambda bill: bill.state == "draft")
+        if drafts:
+            drafts.write({"invoice_date": fields.Date.today()})
+            drafts.action_post()
+        return bills
 
     def medizano_receive(self, items):
         self.ensure_one()
@@ -70,14 +105,38 @@ class PurchaseOrder(models.Model):
             line = self.order_line.filtered(lambda record: record.id == line_id)
             if quantity < 0 or quantity > line.product_qty or cost <= 0 or selling <= 0:
                 raise UserError("La cantidad recibida debe estar entre cero y lo pedido, con costo y PVP positivos.")
+            # Solo se hereda un código cuando el producto ya tiene un lote
+            # físico registrado. Para un producto que entra por primera vez,
+            # el operario debe escanear o ingresar el código del envase real.
+            has_inventory = bool(self.env["stock.lot"].search([
+                ("product_id", "=", line.product_id.id),
+                ("company_id", "=", self.company_id.id),
+            ], limit=1))
+            scanned_barcode = str(item.get("codigoBarra") or "").strip()
+            if quantity and not has_inventory and not scanned_barcode:
+                raise UserError("Escanea o ingresa el código de barras físico de %s antes de recibirlo." % line.product_id.name)
             lot_name = str(item.get("batchNumber") or "").strip()
             expiry_value = item.get("expiryDate")
             try:
                 expiry = fields.Date.to_date(expiry_value) if expiry_value else None
             except (TypeError, ValueError):
                 raise UserError("Revisa la fecha de vencimiento de %s." % line.product_id.name)
+            # Reposición del mismo producto: si el usuario no digitó un lote,
+            # reutilizamos automáticamente el lote físico vigente más próximo
+            # a vencer (FEFO). Para un producto nuevo seguimos exigiendo los
+            # datos impresos en el envase; nunca se fabrica un lote ficticio.
+            if quantity and not lot_name:
+                reusable_lot = self.env["stock.lot"].search([
+                    ("product_id", "=", line.product_id.id),
+                    ("company_id", "=", self.company_id.id),
+                    ("expiry_date", ">", fields.Date.today()),
+                ], order="expiry_date asc, id asc", limit=1)
+                if reusable_lot:
+                    lot_name = reusable_lot.name
+                    expiry = reusable_lot.expiry_date
             if quantity and (not lot_name or not expiry or expiry <= fields.Date.today()):
                 raise UserError("Ingresa lote y vencimiento futuro del envase físico de %s." % line.product_id.name)
+            item["codigoBarra"] = scanned_barcode if not has_inventory else (scanned_barcode or line.medizano_barcode or line.product_id.barcode or "")
             details[line_id] = (item, quantity, cost, selling, lot_name, expiry)
             total_received += quantity
         if not total_received:
@@ -100,7 +159,7 @@ class PurchaseOrder(models.Model):
                 other = self.env["product.product"].with_context(active_test=False).search([("barcode", "=", barcode), ("id", "!=", product.id)], limit=1)
                 if other:
                     raise UserError("El código %s ya pertenece a otro medicamento." % barcode)
-            values = {"active": True, "is_storable": True, "tracking": "lot", "standard_price": cost, "lst_price": selling}
+            values = {"active": True, "is_storable": True, "tracking": "lot", "available_in_pos": True, "standard_price": cost, "lst_price": selling}
             if barcode:
                 values["barcode"] = barcode
                 line.medizano_barcode = barcode
