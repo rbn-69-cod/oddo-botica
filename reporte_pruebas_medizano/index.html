@@ -1,0 +1,805 @@
+
+<!doctype html>
+<html lang="es" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="http://localhost:8000/reporte_pruebas_medizano/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.2">
+    
+    
+      
+        <title>Reporte Completo de Pruebas, Operaciones y Soluciones — MediZano Botica - Oddo Botica - ERP Odoo 18</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#reporte-completo-de-pruebas-operaciones-y-soluciones-medizano-botica" class="md-skip">
+          Saltar a contenido
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabecera">
+    <a href=".." title="Oddo Botica - ERP Odoo 18" class="md-header__button md-logo" aria-label="Oddo Botica - ERP Odoo 18" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Oddo Botica - ERP Odoo 18
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Reporte Completo de Pruebas, Operaciones y Soluciones — MediZano Botica
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Búsqueda" placeholder="Búsqueda" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Buscar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpiar" aria-label="Limpiar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando búsqueda
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rbn-69-cod/oddo-botica" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rbn-69-cod/oddo-botica
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navegación" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Oddo Botica - ERP Odoo 18" class="md-nav__button md-logo" aria-label="Oddo Botica - ERP Odoo 18" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Oddo Botica - ERP Odoo 18
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rbn-69-cod/oddo-botica" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rbn-69-cod/oddo-botica
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inicio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../odoo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migración a Odoo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-matriz-general-de-resultados-7-suites-18-pruebas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Matriz General de Resultados (7 Suites · 18 Pruebas)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Matriz General de Resultados (7 Suites · 18 Pruebas)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-pruebas-unitarias-y-de-logica-de-negocio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Pruebas Unitarias y de Lógica de Negocio
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-pruebas-http-frontend-y-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. Pruebas HTTP, Frontend y Caché
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-pruebas-de-rendimiento-y-carga-concurrente" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Pruebas de Rendimiento y Carga Concurrente
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-pruebas-de-seguridad-y-control-de-acceso" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. Pruebas de Seguridad y Control de Acceso
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-pruebas-e2e-de-pasarela-de-pagos-culqi-yape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. Pruebas E2E de Pasarela de Pagos (Culqi + Yape)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f-pruebas-de-correo-smtp-motor-pdf-y-qr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F. Pruebas de Correo SMTP, Motor PDF y QR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#g-pruebas-de-integridad-financiera-contable-y-de-inventario" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        G. Pruebas de Integridad Financiera, Contable y de Inventario
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-operaciones-y-hallazgos-con-soluciones-concretas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Operaciones y Hallazgos con Soluciones Concretas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-guia-rapida-de-pruebas-manuales-qa" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Guía Rápida de Pruebas Manuales (QA)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="reporte-completo-de-pruebas-operaciones-y-soluciones-medizano-botica">Reporte Completo de Pruebas, Operaciones y Soluciones — MediZano Botica<a class="headerlink" href="#reporte-completo-de-pruebas-operaciones-y-soluciones-medizano-botica" title="Permanent link">&para;</a></h1>
+<p><strong>Entorno evaluado:</strong> <code>http://34.207.242.153/medizano/</code> (<code>ec2-34-207-242-153.compute-1.amazonaws.com</code>)<br />
+<strong>Base de datos:</strong> <code>medizano_test</code> (<code>90 MB</code>, <code>6</code> conexiones activas, PostgreSQL 16)<br />
+<strong>Fecha de ejecución:</strong> 24 de noviembre de 2026  </p>
+<blockquote>
+<p>[!TIP]
+<strong>Resumen Ejecutivo: 18 / 18 pruebas aprobadas (100% PASS).</strong><br />
+Todos los flujos críticos (ventas, precios con IGV 18%, Culqi Tarjeta, Yape, SMTP SpaceMail, QR, PDF, seguridad <code>401</code>, carga concurrente e integridad contable/stock) superaron las pruebas en vivo sin errores en logs.</p>
+</blockquote>
+<hr />
+<h2 id="1-matriz-general-de-resultados-7-suites-18-pruebas">1. Matriz General de Resultados (7 Suites · 18 Pruebas)<a class="headerlink" href="#1-matriz-general-de-resultados-7-suites-18-pruebas" title="Permanent link">&para;</a></h2>
+<h3 id="a-pruebas-unitarias-y-de-logica-de-negocio">A. Pruebas Unitarias y de Lógica de Negocio<a class="headerlink" href="#a-pruebas-unitarias-y-de-logica-de-negocio" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">#</th>
+<th style="text-align: left;">Prueba</th>
+<th style="text-align: center;">Estado</th>
+<th style="text-align: center;">Tiempo</th>
+<th style="text-align: left;">Resultado verificado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">1</td>
+<td style="text-align: left;">Redondeo comercial <code>_cash_price(lst_price * 1.18)</code></td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>0.0 ms</code></td>
+<td style="text-align: left;">5/5 casos exactos (<code>11.14→13.20</code>, <code>10.00→11.80</code>, <code>50.00→59.00</code>, <code>0.85→1.10</code>, <code>65.59→77.40</code>)</td>
+</tr>
+<tr>
+<td style="text-align: center;">2</td>
+<td style="text-align: left;">Desglose tributario IGV 18% (<code>Subtotal + IGV = Total</code>)</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>0.0 ms</code></td>
+<td style="text-align: left;">Exactitud al céntimo en todos los casos</td>
+</tr>
+</tbody>
+</table>
+<h3 id="b-pruebas-http-frontend-y-cache">B. Pruebas HTTP, Frontend y Caché<a class="headerlink" href="#b-pruebas-http-frontend-y-cache" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">#</th>
+<th style="text-align: left;">Prueba</th>
+<th style="text-align: center;">Estado</th>
+<th style="text-align: center;">Tiempo</th>
+<th style="text-align: left;">Resultado verificado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">3</td>
+<td style="text-align: left;">Frontend <code>index.html</code> (<code>:8080</code>) y control de caché</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>&lt;10 ms</code></td>
+<td style="text-align: left;"><code>HTTP 200</code>, <code>Cache-Control: no-store, no-cache</code>, carga <code>main-KL5XJ37B.js</code> y <code>checkout.culqi.com/js/v4</code></td>
+</tr>
+<tr>
+<td style="text-align: center;">4</td>
+<td style="text-align: left;">Gateway SSO <code>/medizano/</code></td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>&lt;10 ms</code></td>
+<td style="text-align: left;"><code>HTTP 302 → /sso/frontend</code>; bundle sin Mercado Pago, con Culqi + Yape y fechas <code>dd/MM/yyyy</code></td>
+</tr>
+<tr>
+<td style="text-align: center;">5</td>
+<td style="text-align: left;">Odoo <code>/web/login</code></td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>25.2 ms</code></td>
+<td style="text-align: left;"><code>HTTP 200 OK</code></td>
+</tr>
+<tr>
+<td style="text-align: center;">6</td>
+<td style="text-align: left;">Bloqueo de <code>/web/database/selector</code> (<code>list_db = False</code>)</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>77.6 ms</code></td>
+<td style="text-align: left;">Selector de bases de datos deshabilitado correctamente</td>
+</tr>
+</tbody>
+</table>
+<h3 id="c-pruebas-de-rendimiento-y-carga-concurrente">C. Pruebas de Rendimiento y Carga Concurrente<a class="headerlink" href="#c-pruebas-de-rendimiento-y-carga-concurrente" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">#</th>
+<th style="text-align: left;">Prueba</th>
+<th style="text-align: center;">Estado</th>
+<th style="text-align: center;">Tiempo</th>
+<th style="text-align: left;">Resultado verificado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">7</td>
+<td style="text-align: left;"><strong>15 peticiones HTTP concurrentes</strong> a Odoo</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>352.1 ms</code></td>
+<td style="text-align: left;"><strong>15/15 <code>HTTP 200</code></strong> · latencia mediana <strong><code>p50 = 203.0 ms</code></strong> · <strong><code>p95 = 331.7 ms</code></strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="d-pruebas-de-seguridad-y-control-de-acceso">D. Pruebas de Seguridad y Control de Acceso<a class="headerlink" href="#d-pruebas-de-seguridad-y-control-de-acceso" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">#</th>
+<th style="text-align: left;">Prueba</th>
+<th style="text-align: center;">Estado</th>
+<th style="text-align: center;">Tiempo</th>
+<th style="text-align: left;">Resultado verificado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">8</td>
+<td style="text-align: left;">Acceso sin sesión a <strong>10 endpoints protegidos</strong> (<code>/bills</code>, <code>/returns</code>, <code>/users</code>, <code>/audit</code>, <code>/bsc</code>, <code>/medicines</code>, <code>/pagos/config</code>, <code>/enviar-correo</code>, <code>/compras</code>, <code>/kardex</code>)</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>217.1 ms</code></td>
+<td style="text-align: left;"><strong>10/10 rechazados con <code>HTTP 401 Unauthorized</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: center;">9</td>
+<td style="text-align: left;">Intento <code>POST /api/v1/pagos/culqi/charge</code> sin sesión</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>23.2 ms</code></td>
+<td style="text-align: left;">Rechazado con <strong><code>HTTP 401</code></strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="e-pruebas-e2e-de-pasarela-de-pagos-culqi-yape">E. Pruebas E2E de Pasarela de Pagos (Culqi + Yape)<a class="headerlink" href="#e-pruebas-e2e-de-pasarela-de-pagos-culqi-yape" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">#</th>
+<th style="text-align: left;">Prueba</th>
+<th style="text-align: center;">Estado</th>
+<th style="text-align: center;">Tiempo</th>
+<th style="text-align: left;">Resultado verificado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">10</td>
+<td style="text-align: left;"><code>GET https://api.culqi.com/v2/charges</code> (Secret Key)</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>256.9 ms</code></td>
+<td style="text-align: left;"><code>HTTP 200 OK</code> · 5 cargos recientes consultados</td>
+</tr>
+<tr>
+<td style="text-align: center;">11</td>
+<td style="text-align: left;">Tokenización <strong>Yape</strong> válida (<code>900000001</code> / <code>123456</code>, S/ 13.20)</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>362.6 ms</code></td>
+<td style="text-align: left;">Token real generado: <code>ype_test_8xRdubvQfap2SnOM</code></td>
+</tr>
+<tr>
+<td style="text-align: center;">12</td>
+<td style="text-align: left;"><strong>Prueba negativa Yape</strong> (celular inválido de 8 dígitos <code>90000001</code>)</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>413.5 ms</code></td>
+<td style="text-align: left;">Rechazo controlado <code>HTTP 400</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="f-pruebas-de-correo-smtp-motor-pdf-y-qr">F. Pruebas de Correo SMTP, Motor PDF y QR<a class="headerlink" href="#f-pruebas-de-correo-smtp-motor-pdf-y-qr" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">#</th>
+<th style="text-align: left;">Prueba</th>
+<th style="text-align: center;">Estado</th>
+<th style="text-align: center;">Tiempo</th>
+<th style="text-align: left;">Resultado verificado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">13</td>
+<td style="text-align: left;">Handshake SSL + Autenticación SMTP SpaceMail (<code>:465</code>)</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>713.3 ms</code></td>
+<td style="text-align: left;"><code>235 Authentication successful</code> (<code>medizano@univer.lat</code>)</td>
+</tr>
+<tr>
+<td style="text-align: center;">14</td>
+<td style="text-align: left;">Motor de boletas PDF (<code>wkhtmltopdf</code>)</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>8.1 ms</code></td>
+<td style="text-align: left;"><code>wkhtmltopdf 0.12.6.1 (with patched qt)</code> operativo</td>
+</tr>
+<tr>
+<td style="text-align: center;">15</td>
+<td style="text-align: left;">Generación de código QR PNG para boleta</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>15.2 ms</code></td>
+<td style="text-align: left;">PNG válido de <code>814 bytes</code> generado</td>
+</tr>
+</tbody>
+</table>
+<h3 id="g-pruebas-de-integridad-financiera-contable-y-de-inventario">G. Pruebas de Integridad Financiera, Contable y de Inventario<a class="headerlink" href="#g-pruebas-de-integridad-financiera-contable-y-de-inventario" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">#</th>
+<th style="text-align: left;">Prueba</th>
+<th style="text-align: center;">Estado</th>
+<th style="text-align: center;">Tiempo</th>
+<th style="text-align: left;">Resultado verificado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">16</td>
+<td style="text-align: left;">Cuadre financiero 100% (órdenes vs líneas vs pagos)</td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>6.1 ms</code></td>
+<td style="text-align: left;"><strong>97 boletas</strong> · <strong><code>S/ 14,322.50</code></strong> · descuadres líneas = <strong><code>0</code></strong>, pagos = <strong><code>0</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: center;">17</td>
+<td style="text-align: left;">Cajeros reales y correos de clientes <code>@univer.lat</code></td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>1.0 ms</code></td>
+<td style="text-align: left;">Ventas con <code>OdooBot</code> = <strong><code>0</code></strong> · correos fuera de <code>@univer.lat</code> = <strong><code>0</code></strong></td>
+</tr>
+<tr>
+<td style="text-align: center;">18</td>
+<td style="text-align: left;">Integridad de stock, precios y correlativo <code>B001</code></td>
+<td style="text-align: center;">✅ PASS</td>
+<td style="text-align: center;"><code>6.8 ms</code></td>
+<td style="text-align: left;">Stock negativo = <strong><code>0</code></strong>, productos precio <code>0</code> = <strong><code>0</code></strong>, duplicados = <strong><code>0</code></strong>, secuencia = <strong><code>97</code></strong> (próxima <code>B001-00000098</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-operaciones-y-hallazgos-con-soluciones-concretas">2. Operaciones y Hallazgos con Soluciones Concretas<a class="headerlink" href="#2-operaciones-y-hallazgos-con-soluciones-concretas" title="Permanent link">&para;</a></h2>
+<p>Aunque el 100% de las pruebas funcionales y de datos pasaron, se identificaron <strong>5 puntos operativos</strong> con su solución directa lista para ejecutar cuando lo decidas:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Prioridad</th>
+<th style="text-align: left;">Hallazgo detectado</th>
+<th style="text-align: left;">Impacto</th>
+<th style="text-align: left;">Solución operativa recomendada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>P0</strong></td>
+<td style="text-align: left;"><strong>Sitio solo en HTTP (<code>:80</code>) sin HTTPS</strong></td>
+<td style="text-align: left;">Navegador muestra <em>"No es seguro"</em>; Culqi en modo <code>live</code> y cámara de escáner requieren HTTPS</td>
+<td style="text-align: left;">Apuntar dominio (ej. <code>medizano.univer.lat</code>) a <code>34.207.242.153</code> e instalar certificado <strong>Certbot / Let's Encrypt</strong> + cabeceras <code>HSTS</code>, <code>X-Frame-Options</code>, <code>X-Content-Type-Options</code>.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P0</strong></td>
+<td style="text-align: left;"><strong>Llaves de Culqi en modo pruebas (<code>pk_test_</code> / <code>sk_test_</code>)</strong></td>
+<td style="text-align: left;">Solo acepta tarjetas y celulares de prueba</td>
+<td style="text-align: left;">Al pasar a producción, reemplazar <code>medizano.culqi.public_key</code> y <code>medizano.culqi.secret_key</code> por <code>pk_live_...</code> y <code>sk_live_...</code>.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P1</strong></td>
+<td style="text-align: left;"><strong>Sin backups automáticos programados</strong> (último dump: <code>2026-11-06</code>)</td>
+<td style="text-align: left;">Riesgo de pérdida de ventas recientes ante falla de disco</td>
+<td style="text-align: left;">Crear cron diario <code>0 3 * * *</code> con <code>docker exec medizano_db pg_dump -U odoo -Fc medizano_test &gt; /opt/medizano/backups/medizano_$(date +%F).dump</code> y retención de 14 días.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P1</strong></td>
+<td style="text-align: left;"><strong>Firewall UFW inactivo en el host (<code>Status: inactive</code>)</strong></td>
+<td style="text-align: left;">Depende únicamente del Security Group de AWS</td>
+<td style="text-align: left;">Activar UFW permitiendo solo <code>22/tcp</code>, <code>80/tcp</code> y <code>443/tcp</code>.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>P2</strong></td>
+<td style="text-align: left;"><strong>1 lote vencido (<code>AMOX-LOT-2026</code>, <code>Amoxicillin 500mg Capsules</code>, venció <code>2026-10-31</code>) y 39 correos viejos en <code>exception</code></strong></td>
+<td style="text-align: left;">Alerta de vencimiento pendiente y ruido histórico en <code>mail_mail</code></td>
+<td style="text-align: left;">Dar de baja/cuarentena al lote vencido en Inventario y depurar los 39 <code>mail_mail</code> fallidos anteriores a la reparación SMTP.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-guia-rapida-de-pruebas-manuales-qa">3. Guía Rápida de Pruebas Manuales (QA)<a class="headerlink" href="#3-guia-rapida-de-pruebas-manuales-qa" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Flujo</th>
+<th style="text-align: left;">Paso a paso</th>
+<th style="text-align: left;">Resultado esperado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Venta Efectivo</strong></td>
+<td style="text-align: left;">POS → Agregar producto → Paso Cliente → <strong>EFECTIVO</strong> → <em>Exacto</em> → <em>Registrar venta</em></td>
+<td style="text-align: left;">Boleta correlativa <code>B001-00000098</code>, descuento de stock FEFO y registro en Facturación + Caja diaria.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Venta Culqi Tarjeta</strong></td>
+<td style="text-align: left;">POS → Agregar producto → <strong>CULQI</strong> → <em>Pagar con Culqi</em> → Visa <code>4111 1111 1111 1111</code>, fecha futura, CVV <code>123</code></td>
+<td style="text-align: left;">Aprobación instantánea, boleta <code>B001-...</code>, monto idéntico en CulqiPanel y envío automático del correo rediseñado.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Venta Yape</strong></td>
+<td style="text-align: left;">POS → Agregar producto → <strong>YAPE</strong> → <em>Pagar con Yape</em> → Celular <code>900000001</code>, OTP <code>123456</code></td>
+<td style="text-align: left;">Aprobación instantánea, método POS <code>Yape</code>, boleta <code>YAPE (CULQI)</code> y correo automático con insignia morada de Yape.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Reportes y Fechas</strong></td>
+<td style="text-align: left;"><em>Reportes → Ventas</em> y <em>Facturación</em></td>
+<td style="text-align: left;">Fechas en <code>dd/MM/yyyy</code> (ej. <code>24/11/2026</code>), totales exactos y cajeros reales.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Volver al principio
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.top", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>

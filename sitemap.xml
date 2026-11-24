@@ -2,10 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>http://localhost:8000/</loc>
-         <lastmod>2026-11-19</lastmod>
+         <lastmod>2026-11-24</lastmod>
+    </url>
+    <url>
+         <loc>http://localhost:8000/auditoria_medizano/</loc>
+         <lastmod>2026-11-24</lastmod>
+    </url>
+    <url>
+         <loc>http://localhost:8000/documentacion_completa_medizano/</loc>
+         <lastmod>2026-11-24</lastmod>
     </url>
     <url>
          <loc>http://localhost:8000/odoo/</loc>
-         <lastmod>2026-11-19</lastmod>
+         <lastmod>2026-11-24</lastmod>
+    </url>
+    <url>
+         <loc>http://localhost:8000/reporte_pruebas_medizano/</loc>
+         <lastmod>2026-11-24</lastmod>
     </url>
 </urlset>
