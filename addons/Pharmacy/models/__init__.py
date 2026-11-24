@@ -38,6 +38,7 @@ from . import (
     # POS models
     pos_config,
     pos_order,
+    pos_payment_method,
     pos_session,
     
     # Integration models

@@ -328,6 +328,52 @@ class PosOrder(models.Model):
             "context": {"default_pos_order_id": self.id},
         }
 
+    def action_pos_order_paid(self):
+        """Synchronize native Odoo POS orders with MediZano Web (B001 sequence & payment metadata)."""
+        res = super().action_pos_order_paid()
+        seq = self.env["ir.sequence"].sudo().search(
+            [("code", "=", "medizano.pos.receipt")], limit=1
+        )
+        for order in self:
+            updates = {}
+            # Assign unified B001-XXXXXXXX boleta number if created from Odoo native POS
+            if (
+                order.amount_total > 0
+                and not str(order.name or "").startswith("B001-")
+                and seq
+            ):
+                boleta = seq.next_by_id()
+                updates["name"] = boleta
+                updates["pos_reference"] = boleta
+
+            # Populate MediZano payment metadata so Web Dashboard / Ventas / Caja stay 100% synced
+            if not order.medizano_payment_method and order.payment_ids:
+                culqi_pay = order.payment_ids.filtered(
+                    lambda p: p.payment_method_id.use_payment_terminal == "culqi"
+                    or str(p.transaction_id or "").startswith("chr_")
+                    or any(
+                        kw in (p.payment_method_id.name or "").lower()
+                        for kw in ("tarjeta", "yape", "plin", "culqi")
+                    )
+                )[:1]
+                if culqi_pay:
+                    updates["medizano_payment_method"] = "CULQI"
+                    if culqi_pay.transaction_id and not order.medizano_provider_payment_id:
+                        updates["medizano_provider_payment_id"] = culqi_pay.transaction_id
+                    if not order.medizano_provider_status:
+                        updates["medizano_provider_status"] = "APPROVED"
+                else:
+                    updates["medizano_payment_method"] = "CASH"
+                    if not order.medizano_provider_status:
+                        updates["medizano_provider_status"] = "APPROVED"
+
+            if order.partner_id and order.partner_id.email and not order.medizano_customer_email:
+                updates["medizano_customer_email"] = order.partner_id.email
+
+            if updates:
+                order.sudo().write(updates)
+        return res
+
     def write(self, vals):
         # Prevent modification of insurance sale after claim submission
         if self.claim_id and self.claim_id.status != "draft":
